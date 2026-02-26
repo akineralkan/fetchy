@@ -53,7 +53,7 @@ export default function Tooltip({ content, children, delay = 500 }: TooltipProps
 
       {isVisible && content && (
         <div
-          className="fixed px-3 py-1.5 bg-aki-bg border border-aki-border rounded-lg shadow-xl text-xs text-aki-text whitespace-nowrap z-[9999] pointer-events-none"
+          className="fixed px-3 py-1.5 bg-fetchy-tooltip border border-fetchy-border rounded-lg shadow-xl text-xs text-fetchy-text whitespace-nowrap z-[9999] pointer-events-none"
           style={{
             left: `${position.x}px`,
             top: `${position.y}px`,

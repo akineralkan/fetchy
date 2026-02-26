@@ -101,7 +101,7 @@ export default function VariableInput({ value, onChange, placeholder, className,
       // Add text before the match (use same color as regular text)
       if (match.index > lastIndex) {
         parts.push(
-          <span key={`text-${lastIndex}`} className="text-aki-text">
+          <span key={`text-${lastIndex}`} className="text-fetchy-text">
             {value.substring(lastIndex, match.index)}
           </span>
         );
@@ -128,7 +128,7 @@ export default function VariableInput({ value, onChange, placeholder, className,
     // Add remaining text
     if (lastIndex < value.length) {
       parts.push(
-        <span key={`text-${lastIndex}`} className="text-aki-text">
+        <span key={`text-${lastIndex}`} className="text-fetchy-text">
           {value.substring(lastIndex)}
         </span>
       );

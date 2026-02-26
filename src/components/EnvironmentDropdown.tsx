@@ -48,7 +48,7 @@ export default function EnvironmentDropdown({ onOpenSettings }: EnvironmentDropd
         className={`flex items-center gap-2 px-3 py-1.5 rounded text-sm transition-colors ${
           activeEnvironment
             ? 'env-active env-active-hover'
-            : 'bg-aki-border text-aki-text-muted hover:bg-aki-card'
+            : 'bg-fetchy-border text-fetchy-text-muted hover:bg-fetchy-card'
         }`}
         title="Select Environment"
       >
@@ -63,13 +63,13 @@ export default function EnvironmentDropdown({ onOpenSettings }: EnvironmentDropd
       </button>
 
       {isOpen && (
-        <div className="absolute top-full mt-1 right-0 w-64 bg-aki-card border border-aki-border rounded-lg shadow-xl z-50 overflow-hidden">
+        <div className="absolute top-full mt-1 right-0 w-64 bg-fetchy-dropdown border border-fetchy-border rounded-lg shadow-xl z-50 overflow-hidden">
           {/* Header with manage button */}
-          <div className="flex items-center justify-between px-3 py-2 border-b border-aki-border bg-aki-sidebar">
-            <span className="text-xs font-medium text-aki-text-muted uppercase">Environments</span>
+          <div className="flex items-center justify-between px-3 py-2 border-b border-fetchy-border bg-fetchy-sidebar">
+            <span className="text-xs font-medium text-fetchy-text-muted uppercase">Environments</span>
             <button
               onClick={handleSettingsClick}
-              className="flex items-center gap-1 px-2 py-1 text-xs text-aki-text-muted hover:text-aki-accent hover:bg-aki-border rounded transition-colors"
+              className="flex items-center gap-1 px-2 py-1 text-xs text-fetchy-text-muted hover:text-fetchy-accent hover:bg-fetchy-border rounded transition-colors"
               title="Manage Environments"
             >
               <Settings size={12} />
@@ -82,13 +82,13 @@ export default function EnvironmentDropdown({ onOpenSettings }: EnvironmentDropd
             {/* No environment option */}
             <button
               onClick={() => handleEnvironmentChange(null)}
-              className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-aki-border transition-colors ${
-                !activeEnvironmentId ? 'bg-aki-accent/10 text-aki-accent' : 'text-aki-text-muted'
+              className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-fetchy-border transition-colors ${
+                !activeEnvironmentId ? 'bg-fetchy-accent/10 text-fetchy-accent' : 'text-fetchy-text-muted'
               }`}
             >
               <div className="w-4 h-4 flex items-center justify-center">
                 {!activeEnvironmentId && (
-                  <div className="w-2 h-2 bg-aki-accent rounded-full" />
+                  <div className="w-2 h-2 bg-fetchy-accent rounded-full" />
                 )}
               </div>
               <span>No Environment</span>
@@ -96,7 +96,7 @@ export default function EnvironmentDropdown({ onOpenSettings }: EnvironmentDropd
 
             {/* Separator */}
             {environments.length > 0 && (
-              <div className="border-t border-aki-border/50" />
+              <div className="border-t border-fetchy-border/50" />
             )}
 
             {/* Environment options */}
@@ -104,10 +104,10 @@ export default function EnvironmentDropdown({ onOpenSettings }: EnvironmentDropd
               <button
                 key={env.id}
                 onClick={() => handleEnvironmentChange(env.id)}
-                className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-aki-border transition-colors ${
+                className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-fetchy-border transition-colors ${
                   activeEnvironmentId === env.id
                     ? 'env-active-bg env-active-text'
-                    : 'text-aki-text hover:text-aki-accent'
+                    : 'text-fetchy-text hover:text-fetchy-accent'
                 }`}
               >
                 <div className="w-4 h-4 flex items-center justify-center">
@@ -117,7 +117,7 @@ export default function EnvironmentDropdown({ onOpenSettings }: EnvironmentDropd
                 </div>
                 <span className="flex-1 text-left truncate">{env.name}</span>
                 {env.variables && env.variables.length > 0 && (
-                  <span className="text-xs text-aki-text-muted">
+                  <span className="text-xs text-fetchy-text-muted">
                     {env.variables.length} var{env.variables.length !== 1 ? 's' : ''}
                   </span>
                 )}
@@ -126,11 +126,11 @@ export default function EnvironmentDropdown({ onOpenSettings }: EnvironmentDropd
 
             {/* Empty state */}
             {environments.length === 0 && (
-              <div className="px-3 py-6 text-center text-sm text-aki-text-muted">
+              <div className="px-3 py-6 text-center text-sm text-fetchy-text-muted">
                 <p>No environments yet</p>
                 <button
                   onClick={handleSettingsClick}
-                  className="mt-2 text-aki-accent hover:underline text-xs"
+                  className="mt-2 text-fetchy-accent hover:underline text-xs"
                 >
                   Create your first environment
                 </button>

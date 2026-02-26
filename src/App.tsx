@@ -248,8 +248,8 @@ function App() {
   // Block the UI while workspaces are loading or until one is created/selected.
   if (workspacesLoading) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center bg-aki-bg">
-        <RefreshCw size={24} className="animate-spin text-aki-text-muted" />
+      <div className="h-screen w-screen flex items-center justify-center bg-fetchy-bg">
+        <RefreshCw size={24} className="animate-spin text-fetchy-text-muted" />
       </div>
     );
   }
@@ -259,14 +259,14 @@ function App() {
   }
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-aki-bg overflow-hidden">
+    <div className="h-screen w-screen flex flex-col bg-fetchy-bg overflow-hidden">
       {/* Top bar */}
-      <div className="h-12 bg-aki-sidebar border-b border-aki-border flex items-center px-4 justify-between shrink-0">
+      <div className="h-12 bg-fetchy-sidebar border-b border-fetchy-border flex items-center px-4 justify-between shrink-0">
         <div className="flex items-center gap-3">
           <img src="./logo.jpg" alt="Fetchy" className="h-8 w-8 rounded" />
-          <div className="text-xl font-bold text-aki-accent">Fetchy</div>
-          <span className="text-xs text-aki-text-muted italic">Local by design. Reliable by nature</span>
-          <span className="text-xs text-aki-text-muted">v{__APP_VERSION__}</span>
+          <div className="text-xl font-bold text-fetchy-accent">Fetchy</div>
+          <span className="text-xs text-fetchy-text-muted italic">Local by design. Reliable by nature</span>
+          <span className="text-xs text-fetchy-text-muted">v{__APP_VERSION__}</span>
         </div>
         <div className="flex items-center gap-2">
           <EnvironmentDropdown onOpenSettings={() => setShowEnvironmentModal(true)} />
@@ -274,7 +274,7 @@ function App() {
           <Tooltip content="Settings">
             <button
               onClick={() => setShowSettingsModal(true)}
-              className="p-2 hover:bg-aki-border rounded text-aki-text-muted hover:text-aki-text"
+              className="p-2 hover:bg-fetchy-border rounded text-fetchy-text-muted hover:text-fetchy-text"
             >
               <Settings size={18} />
             </button>
@@ -353,11 +353,11 @@ function App() {
       </div>
 
       {/* Bottom bar with toggle buttons */}
-      <div className="h-10 bg-aki-sidebar border-t border-aki-border flex items-center px-4 gap-2 shrink-0">
+      <div className="h-10 bg-fetchy-sidebar border-t border-fetchy-border flex items-center px-4 gap-2 shrink-0">
         <Tooltip content={sidebarCollapsed ? "Show Sidebar" : "Hide Sidebar"}>
           <button
             onClick={toggleSidebar}
-            className="p-2 hover:bg-aki-border rounded text-aki-text-muted hover:text-aki-text"
+            className="p-2 hover:bg-fetchy-border rounded text-fetchy-text-muted hover:text-fetchy-text"
           >
             {sidebarCollapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
           </button>
@@ -367,7 +367,7 @@ function App() {
           <Tooltip content={panelLayout === 'horizontal' ? "Switch to Vertical Layout" : "Switch to Horizontal Layout"}>
             <button
               onClick={togglePanelLayout}
-              className="p-2 hover:bg-aki-border rounded text-aki-text-muted hover:text-aki-text"
+              className="p-2 hover:bg-fetchy-border rounded text-fetchy-text-muted hover:text-fetchy-text"
             >
               {panelLayout === 'horizontal' ? <Rows size={18} /> : <Columns size={18} />}
             </button>
@@ -381,7 +381,7 @@ function App() {
         <Tooltip content="Check for Updates">
           <button
             onClick={() => setShowUpdateModal(true)}
-            className="p-2 hover:bg-aki-border rounded text-aki-text-muted hover:text-aki-text"
+            className="p-2 hover:bg-fetchy-border rounded text-fetchy-text-muted hover:text-fetchy-text"
           >
             <RefreshCw size={18} />
           </button>
@@ -390,7 +390,7 @@ function App() {
         <Tooltip content="Keyboard Shortcuts (Ctrl+/)">
           <button
             onClick={() => setShowShortcutsModal(true)}
-            className="p-2 hover:bg-aki-border rounded text-aki-text-muted hover:text-aki-text"
+            className="p-2 hover:bg-fetchy-border rounded text-fetchy-text-muted hover:text-fetchy-text"
           >
             <HelpCircle size={18} />
           </button>

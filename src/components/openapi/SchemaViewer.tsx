@@ -58,15 +58,15 @@ export const SchemaViewer = ({
 
   if (schemaType === 'object' && properties) {
     return (
-      <div className={`${depth > 0 ? 'ml-4 border-l border-aki-border pl-3' : ''}`}>
+      <div className={`${depth > 0 ? 'ml-4 border-l border-fetchy-border pl-3' : ''}`}>
         {title ? (
           <button
             onClick={() => setExpanded(!expanded)}
-            className="flex items-center gap-2 text-xs text-aki-text-muted hover:text-aki-text mb-1"
+            className="flex items-center gap-2 text-xs text-fetchy-text-muted hover:text-fetchy-text mb-1"
           >
             {expanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
             <span className="font-medium">{title}</span>
-            {refName ? <span className="text-aki-accent">({refName})</span> : null}
+            {refName ? <span className="text-fetchy-accent">({refName})</span> : null}
           </button>
         ) : null}
         {expanded ? (
@@ -79,19 +79,19 @@ export const SchemaViewer = ({
 
               return (
                 <div key={propName} className="text-xs">
-                  <div className="flex items-center gap-2 py-1 px-2 bg-aki-bg/50 rounded">
+                  <div className="flex items-center gap-2 py-1 px-2 bg-fetchy-bg/50 rounded">
                     {getTypeIcon(propSchema.type as string || (propSchema.$ref ? 'object' : 'any'))}
-                    <span className="font-mono text-aki-text">{propName}</span>
-                    <span className="text-aki-text-muted">{propType}</span>
+                    <span className="font-mono text-fetchy-text">{propName}</span>
+                    <span className="text-fetchy-text-muted">{propType}</span>
                     {isRequired ? (
                       <span className="px-1 py-0.5 text-[10px] bg-red-500/20 text-red-400 rounded">required</span>
                     ) : null}
                     {propSchema.format ? (
-                      <span className="text-aki-text-muted">({String(propSchema.format)})</span>
+                      <span className="text-fetchy-text-muted">({String(propSchema.format)})</span>
                     ) : null}
                   </div>
                   {propSchema.description ? (
-                    <p className="text-aki-text-muted ml-6 mt-0.5">{String(propSchema.description)}</p>
+                    <p className="text-fetchy-text-muted ml-6 mt-0.5">{String(propSchema.description)}</p>
                   ) : null}
                   {hasNestedProps && propSchema.type === 'object' ? (
                     <SchemaViewer schema={propSchema} spec={spec} depth={depth + 1} />
@@ -101,7 +101,7 @@ export const SchemaViewer = ({
                   ) : null}
                   {propSchema.type === 'array' && propSchema.items ? (
                     <div className="ml-4 mt-1">
-                      <span className="text-[10px] text-aki-text-muted">items:</span>
+                      <span className="text-[10px] text-fetchy-text-muted">items:</span>
                       <SchemaViewer schema={propSchema.items as Record<string, unknown>} spec={spec} depth={depth + 1} />
                     </div>
                   ) : null}
@@ -116,20 +116,20 @@ export const SchemaViewer = ({
 
   if (schemaType === 'array' && items) {
     return (
-      <div className={`${depth > 0 ? 'ml-4 border-l border-aki-border pl-3' : ''}`}>
+      <div className={`${depth > 0 ? 'ml-4 border-l border-fetchy-border pl-3' : ''}`}>
         {title && (
-          <div className="flex items-center gap-2 text-xs text-aki-text-muted mb-1">
+          <div className="flex items-center gap-2 text-xs text-fetchy-text-muted mb-1">
             <List size={12} className="text-yellow-400" />
             <span className="font-medium">{title}</span>
-            <span className="text-aki-accent">array</span>
+            <span className="text-fetchy-accent">array</span>
           </div>
         )}
-        <div className="text-xs text-aki-text-muted ml-2">
+        <div className="text-xs text-fetchy-text-muted ml-2">
           <span>items: </span>
           {items.$ref ? (
             <SchemaViewer schema={items} spec={spec} depth={depth + 1} />
           ) : (
-            <span className="text-aki-text">{getSchemaTypeDisplay(items)}</span>
+            <span className="text-fetchy-text">{getSchemaTypeDisplay(items)}</span>
           )}
         </div>
       </div>
@@ -140,10 +140,10 @@ export const SchemaViewer = ({
   return (
     <div className="flex items-center gap-2 text-xs py-1">
       {getTypeIcon(schemaType)}
-      {title ? <span className="font-medium text-aki-text-muted">{title}:</span> : null}
-      <span className="text-aki-text">{schemaType || 'any'}</span>
-      {resolvedSchema.format ? <span className="text-aki-text-muted">({String(resolvedSchema.format)})</span> : null}
-      {refName ? <span className="text-aki-accent">({refName})</span> : null}
+      {title ? <span className="font-medium text-fetchy-text-muted">{title}:</span> : null}
+      <span className="text-fetchy-text">{schemaType || 'any'}</span>
+      {resolvedSchema.format ? <span className="text-fetchy-text-muted">({String(resolvedSchema.format)})</span> : null}
+      {refName ? <span className="text-fetchy-accent">({refName})</span> : null}
     </div>
   );
 };

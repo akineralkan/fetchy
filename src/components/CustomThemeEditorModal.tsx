@@ -11,153 +11,219 @@ interface CustomThemeEditorModalProps {
 
 const PRESET_STARTERS: Record<string, { label: string; colors: CustomThemeColors }> = {
   dark: {
-    label: 'Dark',
+    label: 'Indigo',
     colors: {
-      bgColor: '#1a1a2e',
-      sidebarColor: '#16213e',
-      cardColor: '#0f3460',
-      textColor: '#eaeaea',
-      textMuted: '#a0a0a0',
-      borderColor: '#2a2a4a',
-      hoverBg: '#2a2a4a',
-      inputBg: '#0f0f1a',
-      accent: '#e94560',
-      accentHover: '#d63350',
+      bgColor: '#1a1a24',
+      sidebarColor: '#181e2e',
+      cardColor: '#172040',
+      textColor: '#d8d8d8',
+      textMuted: '#909090',
+      borderColor: '#26263a',
+      hoverBg: '#26263a',
+      inputBg: '#121218',
+      accent: '#906070',
+      accentHover: '#7a5060',
+      tabBarBg: '#181e2e',
+      tabActiveBg: '#1a1a24',
+      dropdownBg: '#181e2e',
+      modalBg: '#172040',
+      tooltipBg: '#1a1a24',
+      separatorColor: '#303045',
+      successColor: '#6a9878',
+      warningColor: '#a08848',
+      errorColor: '#a06060',
     },
   },
   light: {
     label: 'Light',
     colors: {
-      bgColor: '#e8eaed',
-      sidebarColor: '#f0f2f5',
-      cardColor: '#f5f6f8',
+      bgColor: '#e6e6e9',
+      sidebarColor: '#ededf0',
+      cardColor: '#f2f2f5',
       textColor: '#2a2a2a',
       textMuted: '#5a5f66',
-      borderColor: '#d0d4d8',
-      hoverBg: '#e0e2e5',
-      inputBg: '#f8f9fa',
-      accent: '#c93850',
-      accentHover: '#b52d45',
+      borderColor: '#c8ccce',
+      hoverBg: '#dadade',
+      inputBg: '#f2f2f4',
+      accent: '#8a5060',
+      accentHover: '#7a4050',
+      tabBarBg: '#ededf0',
+      tabActiveBg: '#e6e6e9',
+      dropdownBg: '#ededf0',
+      modalBg: '#f2f2f5',
+      tooltipBg: '#e6e6e9',
+      separatorColor: '#c0c4c8',
+      successColor: '#458856',
+      warningColor: '#987028',
+      errorColor: '#8a5050',
     },
   },
   ocean: {
     label: 'Ocean',
     colors: {
-      bgColor: '#071e2e',
-      sidebarColor: '#0a2740',
-      cardColor: '#0d3358',
-      textColor: '#e2eaf2',
-      textMuted: '#7fa8c9',
-      borderColor: '#1a4a6e',
-      hoverBg: '#1a4a6e',
-      inputBg: '#041524',
-      accent: '#0ea5e9',
-      accentHover: '#0284c7',
+      bgColor: '#dce8f0',
+      sidebarColor: '#c8dde8',
+      cardColor: '#e8f0f8',
+      textColor: '#1a3040',
+      textMuted: '#4a6070',
+      borderColor: '#90b8cc',
+      hoverBg: '#a8c4d4',
+      inputBg: '#f0f4f8',
+      accent: '#4a7090',
+      accentHover: '#3a5878',
+      tabBarBg: '#c8dde8',
+      tabActiveBg: '#dce8f0',
+      dropdownBg: '#c8dde8',
+      modalBg: '#e8f0f8',
+      tooltipBg: '#dce8f0',
+      separatorColor: '#78a8bc',
+      successColor: '#487858',
+      warningColor: '#906828',
+      errorColor: '#8a4040',
     },
   },
   forest: {
     label: 'Forest',
     colors: {
-      bgColor: '#091a0d',
-      sidebarColor: '#0c2213',
-      cardColor: '#0f331c',
-      textColor: '#e2f2e6',
-      textMuted: '#7abf92',
-      borderColor: '#1a4a2c',
-      hoverBg: '#1a4a2c',
-      inputBg: '#051209',
-      accent: '#22c55e',
-      accentHover: '#16a34a',
+      bgColor: '#e0eae4',
+      sidebarColor: '#cae0d0',
+      cardColor: '#e8f0ea',
+      textColor: '#1a2e1e',
+      textMuted: '#486050',
+      borderColor: '#90c0a0',
+      hoverBg: '#a8ccb4',
+      inputBg: '#f0f4f2',
+      accent: '#4a7858',
+      accentHover: '#3a6048',
+      tabBarBg: '#cae0d0',
+      tabActiveBg: '#e0eae4',
+      dropdownBg: '#cae0d0',
+      modalBg: '#e8f0ea',
+      tooltipBg: '#e0eae4',
+      separatorColor: '#78a888',
+      successColor: '#3a6048',
+      warningColor: '#906828',
+      errorColor: '#8a4040',
     },
   },
   earth: {
     label: 'Earth',
     colors: {
-      bgColor: '#1a120a',
-      sidebarColor: '#231810',
-      cardColor: '#2e1f0d',
-      textColor: '#f2ece4',
-      textMuted: '#a89070',
-      borderColor: '#4a3020',
-      hoverBg: '#4a3020',
-      inputBg: '#140e06',
-      accent: '#d97706',
-      accentHover: '#b45309',
+      bgColor: '#eee8de',
+      sidebarColor: '#e4d5c4',
+      cardColor: '#f2ece0',
+      textColor: '#2a1e14',
+      textMuted: '#705848',
+      borderColor: '#c8b090',
+      hoverBg: '#d8c0a0',
+      inputBg: '#f5f0e8',
+      accent: '#8a6040',
+      accentHover: '#705030',
+      tabBarBg: '#e4d5c4',
+      tabActiveBg: '#eee8de',
+      dropdownBg: '#e4d5c4',
+      modalBg: '#f2ece0',
+      tooltipBg: '#eee8de',
+      separatorColor: '#b89870',
+      successColor: '#487858',
+      warningColor: '#906828',
+      errorColor: '#8a4040',
     },
   },
   aurora: {
     label: 'Aurora',
     colors: {
-      bgColor: '#0d0d1a',
-      sidebarColor: '#130d2e',
-      cardColor: '#1a1040',
-      textColor: '#e8e2f8',
-      textMuted: '#8b7fc4',
-      borderColor: '#2e1f6e',
-      hoverBg: '#2e1f6e',
-      inputBg: '#08060f',
-      accent: '#c026d3',
-      accentHover: '#a21caf',
+      bgColor: '#111118',
+      sidebarColor: '#151228',
+      cardColor: '#181535',
+      textColor: '#d8d4e8',
+      textMuted: '#7870b0',
+      borderColor: '#2a2858',
+      hoverBg: '#2a2858',
+      inputBg: '#0c0c14',
+      accent: '#7a4880',
+      accentHover: '#604068',
+      tabBarBg: '#151228',
+      tabActiveBg: '#111118',
+      dropdownBg: '#151228',
+      modalBg: '#181535',
+      tooltipBg: '#111118',
+      separatorColor: '#302860',
+      successColor: '#6a9878',
+      warningColor: '#a08848',
+      errorColor: '#a06060',
     },
   },
   sunset: {
     label: 'Sunset',
     colors: {
-      bgColor: '#3d0800',
-      sidebarColor: '#2a0500',
-      cardColor: '#4d0a00',
-      textColor: '#fff5f0',
-      textMuted: '#ffaa88',
-      borderColor: '#7a1500',
-      hoverBg: '#7a1500',
-      inputBg: '#220400',
-      accent: '#ff1500',
-      accentHover: '#dd1000',
+      bgColor: '#2e1a14',
+      sidebarColor: '#201410',
+      cardColor: '#381e18',
+      textColor: '#e8ddd8',
+      textMuted: '#c09080',
+      borderColor: '#5a3028',
+      hoverBg: '#5a3028',
+      inputBg: '#180e0c',
+      accent: '#9a4840',
+      accentHover: '#7a3830',
+      tabBarBg: '#201410',
+      tabActiveBg: '#2e1a14',
+      dropdownBg: '#201410',
+      modalBg: '#381e18',
+      tooltipBg: '#2e1a14',
+      separatorColor: '#5a3028',
+      successColor: '#6a9878',
+      warningColor: '#a08848',
+      errorColor: '#a06060',
     },
   },
   candy: {
     label: 'Candy',
     colors: {
-      bgColor: '#4d0030',
-      sidebarColor: '#3a0022',
-      cardColor: '#600040',
-      textColor: '#fff0fa',
-      textMuted: '#ffaadd',
-      borderColor: '#880055',
-      hoverBg: '#880055',
-      inputBg: '#2a0018',
-      accent: '#ff0080',
-      accentHover: '#dd006e',
+      bgColor: '#f0e0ec',
+      sidebarColor: '#ead0e0',
+      cardColor: '#f0e8f0',
+      textColor: '#2a1830',
+      textMuted: '#785068',
+      borderColor: '#d0a0c0',
+      hoverBg: '#e0b0d0',
+      inputBg: '#f8f0f5',
+      accent: '#885068',
+      accentHover: '#704058',
+      tabBarBg: '#ead0e0',
+      tabActiveBg: '#f0e0ec',
+      dropdownBg: '#ead0e0',
+      modalBg: '#f0e8f0',
+      tooltipBg: '#f0e0ec',
+      separatorColor: '#c070a0',
+      successColor: '#487858',
+      warningColor: '#906828',
+      errorColor: '#8a4040',
     },
   },
-  rainbow: {
-    label: 'Rainbow',
+  dark: {
+    label: 'Dark',
     colors: {
-      bgColor: '#1a0a3d',
-      sidebarColor: '#120830',
-      cardColor: '#230d50',
-      textColor: '#fffdf0',
-      textMuted: '#b090e0',
-      borderColor: '#3d1880',
-      hoverBg: '#3d1880',
-      inputBg: '#0d051e',
-      accent: '#ffdd00',
-      accentHover: '#e0c000',
-    },
-  },
-  dungeon: {
-    label: 'Dungeon',
-    colors: {
-      bgColor: '#000000',
-      sidebarColor: '#080808',
-      cardColor: '#0d0d0d',
-      textColor: '#b0b0b0',
-      textMuted: '#484848',
-      borderColor: '#1c1c1c',
-      hoverBg: '#161616',
-      inputBg: '#020202',
-      accent: '#8b0000',
-      accentHover: '#6b0000',
+      bgColor: '#161616',
+      sidebarColor: '#171717',
+      cardColor: '#1c1c1c',
+      textColor: '#c8c8c8',
+      textMuted: '#686868',
+      borderColor: '#2c2c2c',
+      hoverBg: '#222222',
+      inputBg: '#1e1e1e',
+      accent: '#6066b0',
+      accentHover: '#505098',
+      tabBarBg: '#171717',
+      tabActiveBg: '#161616',
+      dropdownBg: '#1a1a1a',
+      modalBg: '#1c1c1c',
+      tooltipBg: '#1a1a1a',
+      separatorColor: '#2a2a2a',
+      successColor: '#6a9878',
+      warningColor: '#908030',
+      errorColor: '#a06060',
     },
   },
 };
@@ -173,6 +239,15 @@ const COLOR_FIELDS: Array<{ key: keyof CustomThemeColors; label: string; descrip
   { key: 'hoverBg', label: 'Hover Background', description: 'Hover state background' },
   { key: 'accent', label: 'Accent', description: 'Buttons and active highlights' },
   { key: 'accentHover', label: 'Accent Hover', description: 'Accent color on hover' },
+  { key: 'tabBarBg', label: 'Tab Bar', description: 'Tab strip background' },
+  { key: 'tabActiveBg', label: 'Active Tab', description: 'Active tab background' },
+  { key: 'dropdownBg', label: 'Dropdown', description: 'Dropdown and context menus' },
+  { key: 'modalBg', label: 'Modal', description: 'Modal / dialog background' },
+  { key: 'tooltipBg', label: 'Tooltip', description: 'Tooltip background' },
+  { key: 'separatorColor', label: 'Separator', description: 'Panel separator / resize handle' },
+  { key: 'successColor', label: 'Success', description: 'Success status indicators' },
+  { key: 'warningColor', label: 'Warning', description: 'Warning status indicators' },
+  { key: 'errorColor', label: 'Error', description: 'Error status indicators' },
 ];
 
 export default function CustomThemeEditorModal({
@@ -236,7 +311,7 @@ export default function CustomThemeEditorModal({
           style={{ borderBottom: '1px solid #2d2d44' }}
         >
           <div className="flex items-center gap-2">
-            <Palette size={18} className="text-[#e94560]" />
+            <Palette size={18} className="text-[#906070]" />
             <h2 className="text-base font-semibold text-white">
               {editingTheme ? 'Edit Custom Theme' : 'Create Custom Theme'}
             </h2>
@@ -266,11 +341,11 @@ export default function CustomThemeEditorModal({
               className="w-full px-3 py-2 rounded text-sm outline-none transition-colors"
               style={{
                 backgroundColor: '#0f0f1a',
-                border: nameError ? '1px solid #e94560' : '1px solid #2d2d44',
+                border: nameError ? '1px solid #906070' : '1px solid #2d2d44',
                 color: '#eaeaea',
               }}
             />
-            {nameError && <p className="mt-1 text-xs text-[#e94560]">{nameError}</p>}
+            {nameError && <p className="mt-1 text-xs text-[#906070]">{nameError}</p>}
           </div>
 
           {/* Start from preset */}
@@ -291,7 +366,7 @@ export default function CustomThemeEditorModal({
                     color: '#a0a0a0',
                   }}
                   onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLButtonElement).style.borderColor = '#e94560';
+                    (e.currentTarget as HTMLButtonElement).style.borderColor = '#906070';
                     (e.currentTarget as HTMLButtonElement).style.color = '#eaeaea';
                   }}
                   onMouseLeave={(e) => {
@@ -315,11 +390,14 @@ export default function CustomThemeEditorModal({
               <div className="flex-1" style={{ backgroundColor: colors.inputBg }} title="Input" />
               <div className="flex-1" style={{ backgroundColor: colors.borderColor }} title="Border" />
               <div className="flex-1" style={{ backgroundColor: colors.hoverBg }} title="Hover" />
+              <div className="flex-1" style={{ backgroundColor: colors.tabBarBg }} title="Tab Bar" />
+              <div className="flex-1" style={{ backgroundColor: colors.modalBg }} title="Modal" />
+              <div className="flex-1" style={{ backgroundColor: colors.dropdownBg }} title="Dropdown" />
               <div className="w-8" style={{ backgroundColor: colors.accent }} title="Accent" />
               <div className="w-8" style={{ backgroundColor: colors.accentHover }} title="Accent Hover" />
             </div>
-            <div className="flex mt-1">
-              <div className="flex-1 flex items-center gap-1">
+            <div className="flex mt-1 gap-3">
+              <div className="flex items-center gap-1">
                 <div
                   className="w-3 h-3 rounded-full border border-white/20"
                   style={{ backgroundColor: colors.textColor }}
@@ -332,6 +410,18 @@ export default function CustomThemeEditorModal({
                   style={{ backgroundColor: colors.textMuted }}
                 />
                 <span className="text-xs" style={{ color: '#a0a0a0' }}>Muted</span>
+              </div>
+              <div className="flex items-center gap-1 ml-auto">
+                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: colors.successColor }} />
+                <span className="text-xs" style={{ color: '#a0a0a0' }}>OK</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: colors.warningColor }} />
+                <span className="text-xs" style={{ color: '#a0a0a0' }}>Warn</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: colors.errorColor }} />
+                <span className="text-xs" style={{ color: '#a0a0a0' }}>Err</span>
               </div>
             </div>
           </div>
@@ -356,7 +446,7 @@ export default function CustomThemeEditorModal({
                     <div className="text-xs leading-tight mt-0.5" style={{ color: '#666' }}>
                       {description}
                     </div>
-                    <div className="text-xs font-mono mt-0.5" style={{ color: '#e94560' }}>
+                    <div className="text-xs font-mono mt-0.5" style={{ color: '#906070' }}>
                       {colors[key]}
                     </div>
                   </div>
@@ -404,12 +494,12 @@ export default function CustomThemeEditorModal({
           <button
             onClick={handleSave}
             className="px-4 py-2 text-sm rounded font-semibold text-white transition-colors"
-            style={{ backgroundColor: '#e94560' }}
+            style={{ backgroundColor: '#906070' }}
             onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#d63350';
+              (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#7a5060';
             }}
             onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#e94560';
+              (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#906070';
             }}
           >
             {editingTheme ? 'Save Changes' : 'Create Theme'}

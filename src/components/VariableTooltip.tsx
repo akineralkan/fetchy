@@ -104,11 +104,11 @@ export default function VariableTooltip({ variableName, position, onClose }: Var
   return (
     <div
       ref={tooltipRef}
-      className="bg-[#1e1e2e] border border-[#3d3d5c] rounded-lg shadow-xl min-w-[280px] max-w-[400px] overflow-hidden"
+      className="bg-fetchy-tooltip border border-fetchy-border rounded-lg shadow-xl min-w-[280px] max-w-[400px] overflow-hidden"
       style={tooltipStyle}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 bg-[#2a2a3e] border-b border-[#3d3d5c]">
+      <div className="flex items-center justify-between px-3 py-2 bg-fetchy-card border-b border-fetchy-border">
         <div className="flex items-center gap-2">
           <span className={`font-mono text-sm ${isSecretVar ? 'text-orange-400' : 'text-purple-400'}`}>{`<<${variableName}>>`}</span>
           {isDefined ? (
@@ -126,7 +126,7 @@ export default function VariableTooltip({ variableName, position, onClose }: Var
         </div>
         <button
           onClick={onClose}
-          className="p-1 hover:bg-[#3d3d5c] rounded text-gray-400 hover:text-white"
+          className="p-1 hover:bg-fetchy-border rounded text-fetchy-text-muted hover:text-fetchy-text"
         >
           <X size={14} />
         </button>
@@ -137,7 +137,7 @@ export default function VariableTooltip({ variableName, position, onClose }: Var
         {isDefined ? (
           <>
             {/* Environment info */}
-            <div className="text-xs text-gray-400 mb-2">
+            <div className="text-xs text-fetchy-text-muted mb-2">
               From: <span className="env-active-text">{activeEnvironment?.name}</span>
             </div>
 
@@ -153,13 +153,13 @@ export default function VariableTooltip({ variableName, position, onClose }: Var
                     if (e.key === 'Enter') handleSaveEdit();
                     if (e.key === 'Escape') setIsEditing(false);
                   }}
-                  className="w-full px-2 py-1.5 bg-[#0f0f1a] border border-[#3d3d5c] rounded text-sm text-white font-mono focus:outline-none focus:border-purple-500"
+                  className="w-full px-2 py-1.5 bg-fetchy-bg border border-fetchy-border rounded text-sm text-fetchy-text font-mono focus:outline-none focus:border-fetchy-accent"
                   placeholder="Enter value..."
                 />
                 <div className="flex justify-end gap-2">
                   <button
                     onClick={() => setIsEditing(false)}
-                    className="px-2 py-1 text-xs text-gray-400 hover:text-white"
+                    className="px-2 py-1 text-xs text-fetchy-text-muted hover:text-fetchy-text"
                   >
                     Cancel
                   </button>
@@ -173,9 +173,9 @@ export default function VariableTooltip({ variableName, position, onClose }: Var
               </div>
             ) : (
               <>
-                <div className="bg-[#0f0f1a] rounded px-2 py-1.5 mb-3">
-                  <code className="text-sm text-green-300 break-all">
-                    {value || <span className="text-gray-500 italic">empty</span>}
+                <div className="bg-fetchy-bg rounded px-2 py-1.5 mb-3">
+                  <code className="text-sm text-fetchy-success break-all">
+                    {value || <span className="text-fetchy-text-muted italic">empty</span>}
                   </code>
                 </div>
 
@@ -183,15 +183,15 @@ export default function VariableTooltip({ variableName, position, onClose }: Var
                 <div className="flex items-center gap-2">
                   <button
                     onClick={handleCopy}
-                    className="flex items-center gap-1.5 px-2 py-1 text-xs bg-[#2a2a3e] hover:bg-[#3d3d5c] rounded text-gray-300 transition-colors"
+                    className="flex items-center gap-1.5 px-2 py-1 text-xs bg-fetchy-card hover:bg-fetchy-border rounded text-fetchy-text transition-colors"
                     disabled={!value}
                   >
-                    {copied ? <Check size={12} className="text-green-400" /> : <Copy size={12} />}
+                    {copied ? <Check size={12} className="text-fetchy-success" /> : <Copy size={12} />}
                     {copied ? 'Copied!' : 'Copy'}
                   </button>
                   <button
                     onClick={handleEdit}
-                    className="flex items-center gap-1.5 px-2 py-1 text-xs bg-[#2a2a3e] hover:bg-[#3d3d5c] rounded text-gray-300 transition-colors"
+                    className="flex items-center gap-1.5 px-2 py-1 text-xs bg-fetchy-card hover:bg-fetchy-border rounded text-fetchy-text transition-colors"
                   >
                     <Edit2 size={12} />
                     Edit
@@ -232,7 +232,7 @@ export default function VariableTooltip({ variableName, position, onClose }: Var
                   <select
                     value={selectedEnvId}
                     onChange={(e) => setSelectedEnvId(e.target.value)}
-                    className="w-full px-2 py-1.5 bg-[#0f0f1a] border border-[#3d3d5c] rounded text-sm text-white focus:outline-none focus:border-purple-500"
+                    className="w-full px-2 py-1.5 bg-fetchy-bg border border-fetchy-border rounded text-sm text-fetchy-text focus:outline-none focus:border-fetchy-accent"
                   >
                     {environments.map(env => (
                       <option key={env.id} value={env.id}>{env.name}</option>
@@ -249,7 +249,7 @@ export default function VariableTooltip({ variableName, position, onClose }: Var
                       if (e.key === 'Enter') handleAddVariable();
                       if (e.key === 'Escape') setIsAdding(false);
                     }}
-                    className="w-full px-2 py-1.5 bg-[#0f0f1a] border border-[#3d3d5c] rounded text-sm text-white font-mono focus:outline-none focus:border-purple-500"
+                    className="w-full px-2 py-1.5 bg-fetchy-bg border border-fetchy-border rounded text-sm text-fetchy-text font-mono focus:outline-none focus:border-fetchy-accent"
                     placeholder="Enter value..."
                     autoFocus
                   />
@@ -260,20 +260,20 @@ export default function VariableTooltip({ variableName, position, onClose }: Var
                     className={`flex items-center gap-1.5 px-2 py-1 text-xs rounded transition-colors ${
                       isSecret
                         ? 'bg-orange-500/20 text-orange-400 hover:bg-orange-500/30'
-                        : 'bg-[#2a2a3e] text-gray-400 hover:bg-[#3d3d5c] hover:text-white'
+                        : 'bg-fetchy-card text-fetchy-text-muted hover:bg-fetchy-border hover:text-fetchy-text'
                     }`}
                   >
                     {isSecret ? <Lock size={12} /> : <Unlock size={12} />}
                     {isSecret ? 'Secret' : 'Not Secret'}
                   </button>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-fetchy-text-muted">
                     {isSecret ? 'Value hidden in history' : 'Value visible in history'}
                   </span>
                 </div>
                 <div className="flex justify-end gap-2">
                   <button
                     onClick={() => setIsAdding(false)}
-                    className="px-2 py-1 text-xs text-gray-400 hover:text-white"
+                    className="px-2 py-1 text-xs text-fetchy-text-muted hover:text-fetchy-text"
                   >
                     Cancel
                   </button>

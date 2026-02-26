@@ -83,18 +83,18 @@ export default function SortableApiDocItem({
     <div
       ref={setNodeRef}
       style={style}
-      className="tree-item px-2 py-2 cursor-pointer group rounded hover:bg-aki-border flex items-center gap-2 relative"
+      className="tree-item px-2 py-2 cursor-pointer group rounded hover:bg-fetchy-border flex items-center gap-2 relative"
       onClick={onClick}
     >
       <button
         {...attributes}
         {...listeners}
-        className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-aki-border rounded cursor-grab active:cursor-grabbing"
+        className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-fetchy-border rounded cursor-grab active:cursor-grabbing"
         onClick={(e) => e.stopPropagation()}
       >
-        <GripVertical size={12} className="text-aki-text-muted" />
+        <GripVertical size={12} className="text-fetchy-text-muted" />
       </button>
-      <FileCode size={14} className="text-aki-accent shrink-0" />
+      <FileCode size={14} className="text-fetchy-accent shrink-0" />
       {editingId === doc.id ? (
         <input
           ref={inputRef}
@@ -107,13 +107,13 @@ export default function SortableApiDocItem({
             else if (e.key === 'Escape') onEditComplete();
           }}
           onClick={(e) => e.stopPropagation()}
-          className="flex-1 text-sm text-aki-text bg-aki-bg border border-aki-accent rounded px-1 py-0.5 outline-none"
+          className="flex-1 text-sm text-fetchy-text bg-fetchy-bg border border-fetchy-accent rounded px-1 py-0.5 outline-none"
           autoFocus
         />
       ) : (
-        <span className="text-sm text-aki-text truncate flex-1">{doc.name}</span>
+        <span className="text-sm text-fetchy-text truncate flex-1">{doc.name}</span>
       )}
-      <span className="text-[10px] px-1.5 py-0.5 rounded bg-aki-bg text-aki-text-muted uppercase">
+      <span className="text-[10px] px-1.5 py-0.5 rounded bg-fetchy-bg text-fetchy-text-muted uppercase">
         {doc.format}
       </span>
       <div className="relative" ref={menuRef}>
@@ -122,19 +122,19 @@ export default function SortableApiDocItem({
             e.stopPropagation();
             setShowMenu(!showMenu);
           }}
-          className="opacity-0 group-hover:opacity-100 p-1 hover:bg-aki-border rounded"
+          className="opacity-0 group-hover:opacity-100 p-1 hover:bg-fetchy-border rounded"
           title="More options"
         >
           <MoreVertical size={14} />
         </button>
         {showMenu && (
-          <div className="absolute right-0 top-full mt-1 bg-aki-card border border-aki-border rounded-lg shadow-lg py-1 z-50 min-w-[180px]">
+          <div className="absolute right-0 top-full mt-1 bg-fetchy-card border border-fetchy-border rounded-lg shadow-lg py-1 z-50 min-w-[180px]">
             <button
               onClick={(e) => {
                 onGenerateCollection(e);
                 setShowMenu(false);
               }}
-              className="w-full px-3 py-2 text-left text-sm hover:bg-aki-border flex items-center gap-2"
+              className="w-full px-3 py-2 text-left text-sm hover:bg-fetchy-border flex items-center gap-2"
             >
               <FolderPlus size={14} />
               Generate Collection
@@ -145,7 +145,7 @@ export default function SortableApiDocItem({
                   onConvertToYaml(e);
                   setShowMenu(false);
                 }}
-                className="w-full px-3 py-2 text-left text-sm hover:bg-aki-border flex items-center gap-2"
+                className="w-full px-3 py-2 text-left text-sm hover:bg-fetchy-border flex items-center gap-2"
               >
                 <FileCode size={14} />
                 Convert to YAML
@@ -157,19 +157,19 @@ export default function SortableApiDocItem({
                   onConvertToJson(e);
                   setShowMenu(false);
                 }}
-                className="w-full px-3 py-2 text-left text-sm hover:bg-aki-border flex items-center gap-2"
+                className="w-full px-3 py-2 text-left text-sm hover:bg-fetchy-border flex items-center gap-2"
               >
                 <FileCode size={14} />
                 Convert to JSON
               </button>
             )}
-            <div className="border-t border-aki-border my-1" />
+            <div className="border-t border-fetchy-border my-1" />
             <button
               onClick={(e) => {
                 onExport(e);
                 setShowMenu(false);
               }}
-              className="w-full px-3 py-2 text-left text-sm hover:bg-aki-border flex items-center gap-2"
+              className="w-full px-3 py-2 text-left text-sm hover:bg-fetchy-border flex items-center gap-2"
             >
               <Download size={14} />
               Export
@@ -179,7 +179,7 @@ export default function SortableApiDocItem({
                 onEdit(e);
                 setShowMenu(false);
               }}
-              className="w-full px-3 py-2 text-left text-sm hover:bg-aki-border flex items-center gap-2"
+              className="w-full px-3 py-2 text-left text-sm hover:bg-fetchy-border flex items-center gap-2"
             >
               <Edit2 size={14} />
               Rename
@@ -189,7 +189,7 @@ export default function SortableApiDocItem({
                 onDelete(e);
                 setShowMenu(false);
               }}
-              className="w-full px-3 py-2 text-left text-sm hover:bg-aki-border flex items-center gap-2 text-red-400 hover:text-red-300"
+              className="w-full px-3 py-2 text-left text-sm hover:bg-fetchy-border flex items-center gap-2 text-red-400 hover:text-red-300"
             >
               <Trash2 size={14} />
               Delete

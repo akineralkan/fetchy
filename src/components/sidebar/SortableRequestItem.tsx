@@ -68,18 +68,18 @@ export default function SortableRequestItem({
         (itemRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
       }}
       style={style}
-      className={`tree-item flex items-center gap-2 px-2 py-1.5 cursor-pointer group rounded ${isActive && isHighlighted ? 'bg-aki-accent/15 ring-2 ring-yellow-500/70' : isActive ? 'bg-aki-accent/15 ring-1 ring-aki-accent/40' : isHighlighted ? 'bg-yellow-500/10 ring-1 ring-yellow-500/50' : ''}`}
+      className={`tree-item flex items-center gap-2 px-2 py-1.5 cursor-pointer group rounded ${isActive && isHighlighted ? 'bg-fetchy-accent/15 ring-2 ring-yellow-500/70' : isActive ? 'bg-fetchy-accent/15 ring-1 ring-fetchy-accent/40' : isHighlighted ? 'bg-yellow-500/10 ring-1 ring-yellow-500/50' : ''}`}
       onClick={onClick}
       onContextMenu={onContextMenu}
     >
       <button
         {...attributes}
         {...listeners}
-        className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-aki-border rounded cursor-grab active:cursor-grabbing"
+        className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-fetchy-border rounded cursor-grab active:cursor-grabbing"
         style={{ marginLeft: `${(depth - 1) * 16}px` }}
         onClick={(e) => e.stopPropagation()}
       >
-        <GripVertical size={12} className="text-aki-text-muted" />
+        <GripVertical size={12} className="text-fetchy-text-muted" />
       </button>
       <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded w-[52px] text-center ${getMethodBgColor(request.method)}`}>
         {request.method}
@@ -96,13 +96,13 @@ export default function SortableRequestItem({
             if (e.key === 'Enter') onEditComplete();
             if (e.key === 'Escape') onEditComplete();
           }}
-          className="flex-1 px-2 py-1 text-sm bg-aki-bg border border-aki-accent rounded outline-none"
+          className="flex-1 px-2 py-1 text-sm bg-fetchy-bg border border-fetchy-accent rounded outline-none"
         />
       ) : (
-        <span className="text-sm text-aki-text truncate flex-1">{request.name}</span>
+        <span className="text-sm text-fetchy-text truncate flex-1">{request.name}</span>
       )}
       <button
-        className="opacity-0 group-hover:opacity-100 p-1 hover:bg-aki-border rounded"
+        className="opacity-0 group-hover:opacity-100 p-1 hover:bg-fetchy-border rounded"
         onClick={(e) => {
           e.stopPropagation();
           onContextMenu(e);

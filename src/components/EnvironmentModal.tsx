@@ -75,17 +75,17 @@ function SortableEnvironmentItem({
       style={style}
       className={`flex items-center gap-2 px-3 py-2 rounded cursor-pointer group mb-1 ${
         isSelected
-          ? 'bg-aki-accent/20 text-aki-accent'
-          : 'hover:bg-aki-border text-aki-text'
+          ? 'bg-fetchy-accent/20 text-fetchy-accent'
+          : 'hover:bg-fetchy-border text-fetchy-text'
       }`}
       onClick={onSelect}
     >
       <button
         {...attributes}
         {...listeners}
-        className="cursor-grab active:cursor-grabbing p-0.5 hover:bg-aki-border rounded opacity-0 group-hover:opacity-100"
+        className="cursor-grab active:cursor-grabbing p-0.5 hover:bg-fetchy-border rounded opacity-0 group-hover:opacity-100"
       >
-        <GripVertical size={14} className="text-aki-text-muted" />
+        <GripVertical size={14} className="text-fetchy-text-muted" />
       </button>
       {isActive && (
         <Check size={14} className="text-green-400 shrink-0" />
@@ -100,7 +100,7 @@ function SortableEnvironmentItem({
             if (e.key === 'Enter') onSaveName();
             if (e.key === 'Escape') onCancelEdit();
           }}
-          className="flex-1 bg-transparent border-b border-aki-accent outline-none text-sm"
+          className="flex-1 bg-transparent border-b border-fetchy-accent outline-none text-sm"
           autoFocus
           onClick={(e) => e.stopPropagation()}
         />
@@ -108,7 +108,7 @@ function SortableEnvironmentItem({
         <span className="flex-1 text-sm truncate">{env.name}</span>
       )}
       <button
-        className="opacity-0 group-hover:opacity-100 p-1 hover:bg-aki-border rounded"
+        className="opacity-0 group-hover:opacity-100 p-1 hover:bg-fetchy-border rounded"
         onClick={(e) => {
           e.stopPropagation();
           onStartEdit();
@@ -118,7 +118,7 @@ function SortableEnvironmentItem({
         <Edit2 size={12} />
       </button>
       <button
-        className="opacity-0 group-hover:opacity-100 p-1 hover:bg-aki-border rounded"
+        className="opacity-0 group-hover:opacity-100 p-1 hover:bg-fetchy-border rounded"
         onClick={(e) => {
           e.stopPropagation();
           onDuplicate();
@@ -128,7 +128,7 @@ function SortableEnvironmentItem({
         <Copy size={12} />
       </button>
       <button
-        className="opacity-0 group-hover:opacity-100 p-1 hover:bg-aki-border rounded"
+        className="opacity-0 group-hover:opacity-100 p-1 hover:bg-fetchy-border rounded"
         onClick={(e) => {
           e.stopPropagation();
           onExport();
@@ -180,14 +180,14 @@ function SortableVariableRow({
   const currentVal = variable.currentValue ?? '';
 
   return (
-    <tr ref={setNodeRef} style={style} className="border-b border-aki-border/50">
+    <tr ref={setNodeRef} style={style} className="border-b border-fetchy-border/50">
       <td className="p-2">
         <button
           {...attributes}
           {...listeners}
-          className="cursor-grab active:cursor-grabbing p-0.5 hover:bg-aki-border rounded"
+          className="cursor-grab active:cursor-grabbing p-0.5 hover:bg-fetchy-border rounded"
         >
-          <GripVertical size={14} className="text-aki-text-muted" />
+          <GripVertical size={14} className="text-fetchy-text-muted" />
         </button>
       </td>
       <td className="p-2">
@@ -195,7 +195,7 @@ function SortableVariableRow({
           type="checkbox"
           checked={variable.enabled}
           onChange={(e) => onUpdate(variable.id, { enabled: e.target.checked })}
-          className="w-4 h-4 accent-aki-accent"
+          className="w-4 h-4 accent-fetchy-accent"
         />
       </td>
       <td className="p-0">
@@ -204,7 +204,7 @@ function SortableVariableRow({
           value={variable.key}
           onChange={(e) => onUpdate(variable.id, { key: e.target.value })}
           placeholder="Variable name"
-          className={`w-full bg-transparent p-2 text-sm outline-none focus:bg-aki-sidebar ${variable.isSecret ? 'text-orange-400' : ''}`}
+          className={`w-full bg-transparent p-2 text-sm outline-none focus:bg-fetchy-sidebar ${variable.isSecret ? 'text-orange-400' : ''}`}
         />
       </td>
       <td className="p-0">
@@ -218,7 +218,7 @@ function SortableVariableRow({
             })
           }
           placeholder="Preset value (shared)"
-          className="w-full bg-transparent p-2 text-sm outline-none focus:bg-aki-sidebar"
+          className="w-full bg-transparent p-2 text-sm outline-none focus:bg-fetchy-sidebar"
         />
       </td>
       <td className="p-0">
@@ -229,7 +229,7 @@ function SortableVariableRow({
             onUpdate(variable.id, { currentValue: e.target.value })
           }
           placeholder="Override value (local)"
-          className={`w-full bg-transparent p-2 text-sm outline-none focus:bg-aki-sidebar ${currentVal ? 'text-aki-accent font-medium' : 'text-aki-text-muted'}`}
+          className={`w-full bg-transparent p-2 text-sm outline-none focus:bg-fetchy-sidebar ${currentVal ? 'text-fetchy-accent font-medium' : 'text-fetchy-text-muted'}`}
           title="Current value overrides initial value during execution"
         />
       </td>
@@ -239,7 +239,7 @@ function SortableVariableRow({
           className={`p-1.5 rounded transition-colors ${
             variable.isSecret
               ? 'bg-orange-500/20 text-orange-400 hover:bg-orange-500/30'
-              : 'hover:bg-aki-border text-aki-text-muted hover:text-aki-text'
+              : 'hover:bg-fetchy-border text-fetchy-text-muted hover:text-fetchy-text'
           }`}
           title={variable.isSecret ? 'Secret (value hidden in history)' : 'Not secret (click to make secret)'}
         >
@@ -249,7 +249,7 @@ function SortableVariableRow({
       <td className="p-2">
         <button
           onClick={() => onDelete(variable.id)}
-          className="p-1 hover:bg-aki-border rounded text-aki-text-muted hover:text-red-400"
+          className="p-1 hover:bg-fetchy-border rounded text-fetchy-text-muted hover:text-red-400"
         >
           <Trash2 size={14} />
         </button>
@@ -450,13 +450,13 @@ export default function EnvironmentModal({ onClose }: EnvironmentModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
-      <div className="bg-aki-card border border-aki-border rounded-lg shadow-2xl w-full max-w-4xl mx-4 overflow-hidden max-h-[80vh] flex flex-col">
+      <div className="bg-fetchy-modal border border-fetchy-border rounded-lg shadow-2xl w-full max-w-4xl mx-4 overflow-hidden max-h-[80vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-aki-border shrink-0">
-          <h2 className="text-xl font-semibold text-aki-text">Environments</h2>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-fetchy-border shrink-0">
+          <h2 className="text-xl font-semibold text-fetchy-text">Environments</h2>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-aki-border rounded text-aki-text-muted hover:text-aki-text"
+            className="p-1 hover:bg-fetchy-border rounded text-fetchy-text-muted hover:text-fetchy-text"
           >
             <X size={20} />
           </button>
@@ -474,8 +474,8 @@ export default function EnvironmentModal({ onClose }: EnvironmentModalProps) {
           />
 
           {/* Environments list */}
-          <div className="w-64 border-r border-aki-border flex flex-col bg-aki-sidebar">
-            <div className="p-3 border-b border-aki-border space-y-2">
+          <div className="w-64 border-r border-fetchy-border flex flex-col bg-fetchy-sidebar">
+            <div className="p-3 border-b border-fetchy-border space-y-2">
               <button
                 onClick={handleAddEnvironment}
                 className="btn btn-primary w-full flex items-center justify-center gap-2 text-sm"
@@ -505,7 +505,7 @@ export default function EnvironmentModal({ onClose }: EnvironmentModalProps) {
 
             <div className="flex-1 overflow-y-auto p-2">
               {environments.length === 0 ? (
-                <p className="text-center text-aki-text-muted text-sm py-8">
+                <p className="text-center text-fetchy-text-muted text-sm py-8">
                   No environments yet
                 </p>
               ) : (
@@ -554,10 +554,10 @@ export default function EnvironmentModal({ onClose }: EnvironmentModalProps) {
           <div className="flex-1 flex flex-col overflow-hidden">
             {selectedEnv ? (
               <>
-                <div className="p-4 border-b border-aki-border flex items-center justify-between shrink-0">
+                <div className="p-4 border-b border-fetchy-border flex items-center justify-between shrink-0">
                   <div>
-                    <h3 className="font-medium text-aki-text">{selectedEnv.name}</h3>
-                    <p className="text-xs text-aki-text-muted">
+                    <h3 className="font-medium text-fetchy-text">{selectedEnv.name}</h3>
+                    <p className="text-xs text-fetchy-text-muted">
                       {selectedEnv.variables.length} variable{selectedEnv.variables.length !== 1 ? 's' : ''}
                     </p>
                   </div>
@@ -605,7 +605,7 @@ export default function EnvironmentModal({ onClose }: EnvironmentModalProps) {
                   >
                     <table className="w-full kv-table">
                       <thead>
-                        <tr className="text-left text-xs text-aki-text-muted border-b border-aki-border">
+                        <tr className="text-left text-xs text-fetchy-text-muted border-b border-fetchy-border">
                           <th className="w-8 p-2"></th>
                           <th className="w-8 p-2"></th>
                           <th className="p-2">Variable</th>
@@ -634,36 +634,36 @@ export default function EnvironmentModal({ onClose }: EnvironmentModalProps) {
                   </DndContext>
                   <button
                     onClick={handleAddVariable}
-                    className="flex items-center gap-1 px-3 py-2 text-sm text-aki-text-muted hover:text-aki-text mt-2"
+                    className="flex items-center gap-1 px-3 py-2 text-sm text-fetchy-text-muted hover:text-fetchy-text mt-2"
                   >
                     <Plus size={14} /> Add Variable
                   </button>
 
-                  <div className="mt-6 p-4 bg-aki-sidebar rounded-lg">
-                    <h4 className="text-sm font-medium text-aki-text mb-2">Initial vs Current Values</h4>
-                    <p className="text-xs text-aki-text-muted mb-3">
-                      <strong className="text-aki-text">Initial Value:</strong> The preset/default value that can be shared and exported.
+                  <div className="mt-6 p-4 bg-fetchy-sidebar rounded-lg">
+                    <h4 className="text-sm font-medium text-fetchy-text mb-2">Initial vs Current Values</h4>
+                    <p className="text-xs text-fetchy-text-muted mb-3">
+                      <strong className="text-fetchy-text">Initial Value:</strong> The preset/default value that can be shared and exported.
                       <br />
-                      <strong className="text-aki-text">Current Value:</strong> Local override value used during execution. Not exported by default.
+                      <strong className="text-fetchy-text">Current Value:</strong> Local override value used during execution. Not exported by default.
                     </p>
 
-                    <h4 className="text-sm font-medium text-aki-text mb-2 mt-4">Usage</h4>
-                    <p className="text-xs text-aki-text-muted mb-2">
+                    <h4 className="text-sm font-medium text-fetchy-text mb-2 mt-4">Usage</h4>
+                    <p className="text-xs text-fetchy-text-muted mb-2">
                       Use variables in your requests with double angle brackets:
                     </p>
-                    <code className="text-xs bg-aki-bg px-2 py-1 rounded text-aki-accent">
+                    <code className="text-xs bg-fetchy-bg px-2 py-1 rounded text-fetchy-accent">
                       {'<<variableName>>'}
                     </code>
-                    <p className="text-xs text-aki-text-muted mt-2">
+                    <p className="text-xs text-fetchy-text-muted mt-2">
                       Variables can be used in URLs, headers, body, and authentication fields.
                       The current value takes priority if set, otherwise the initial value is used.
                     </p>
 
-                    <div className="mt-4 pt-4 border-t border-aki-border">
+                    <div className="mt-4 pt-4 border-t border-fetchy-border">
                       <h4 className="text-sm font-medium text-orange-400 mb-2 flex items-center gap-2">
                         <Lock size={14} /> Secret Variables
                       </h4>
-                      <p className="text-xs text-aki-text-muted">
+                      <p className="text-xs text-fetchy-text-muted">
                         Mark variables as secret to keep their values hidden in request history.
                         Secret values will be replaced during execution but saved as{' '}
                         <code className="text-orange-400">{'<<variableName>>'}</code> in history.
@@ -673,7 +673,7 @@ export default function EnvironmentModal({ onClose }: EnvironmentModalProps) {
                 </div>
               </>
             ) : (
-              <div className="flex-1 flex items-center justify-center text-aki-text-muted">
+              <div className="flex-1 flex items-center justify-center text-fetchy-text-muted">
                 <div className="text-center">
                   <p className="mb-4">Select an environment or create a new one</p>
                   <button
@@ -689,7 +689,7 @@ export default function EnvironmentModal({ onClose }: EnvironmentModalProps) {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-aki-border bg-aki-sidebar shrink-0">
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-fetchy-border bg-fetchy-sidebar shrink-0">
           <button
             onClick={onClose}
             className="btn btn-primary"

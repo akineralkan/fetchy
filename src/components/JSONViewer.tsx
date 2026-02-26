@@ -48,21 +48,21 @@ export default function JSONViewer({ data }: JSONViewerProps) {
     // Handle array
     if (Array.isArray(value)) {
       if (value.length === 0) {
-        return <span className="text-aki-text">[]</span>;
+        return <span className="text-fetchy-text">[]</span>;
       }
 
       return (
         <div className="inline-block w-full">
-          <span className="text-aki-text">[</span>
+          <span className="text-fetchy-text">[</span>
           <div className="ml-4">
             {value.map((item, index) => (
               <div key={index} className="mb-1 break-words">
                 {renderValue(item, depth + 1)}
-                {index < value.length - 1 && <span className="text-aki-text-muted">,</span>}
+                {index < value.length - 1 && <span className="text-fetchy-text-muted">,</span>}
               </div>
             ))}
           </div>
-          <span className="text-aki-text">]</span>
+          <span className="text-fetchy-text">]</span>
         </div>
       );
     }
@@ -72,31 +72,31 @@ export default function JSONViewer({ data }: JSONViewerProps) {
       const entries = Object.entries(value);
 
       if (entries.length === 0) {
-        return <span className="text-aki-text">{'{}'}</span>;
+        return <span className="text-fetchy-text">{'{}'}</span>;
       }
 
       return (
         <div className="inline-block w-full">
-          <span className="text-aki-text">{'{'}</span>
+          <span className="text-fetchy-text">{'{'}</span>
           <div className="ml-4">
             {entries.map(([k, v], index) => (
               <div key={k} className="flex flex-wrap items-start gap-2 mb-1">
                 <span className="json-key flex-shrink-0">"{k}"</span>
-                <span className="text-aki-text-muted flex-shrink-0">:</span>
+                <span className="text-fetchy-text-muted flex-shrink-0">:</span>
                 <div className="flex-1 min-w-0 break-words">
                   {renderValue(v, depth + 1)}
-                  {index < entries.length - 1 && <span className="text-aki-text-muted">,</span>}
+                  {index < entries.length - 1 && <span className="text-fetchy-text-muted">,</span>}
                 </div>
               </div>
             ))}
           </div>
-          <span className="text-aki-text">{'}'}</span>
+          <span className="text-fetchy-text">{'}'}</span>
         </div>
       );
     }
 
     // Fallback
-    return <span className="text-aki-text">{String(value)}</span>;
+    return <span className="text-fetchy-text">{String(value)}</span>;
   };
 
   const parsedData = useMemo(() => {
@@ -110,7 +110,7 @@ export default function JSONViewer({ data }: JSONViewerProps) {
   if (!parsedData) {
     return (
       <div className="h-full overflow-auto p-4">
-        <pre className="text-sm text-aki-text whitespace-pre-wrap break-words">{data}</pre>
+        <pre className="text-sm text-fetchy-text whitespace-pre-wrap break-words">{data}</pre>
       </div>
     );
   }

@@ -78,13 +78,13 @@ export default function UpdateModal({ onClose }: UpdateModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
-      <div className="bg-aki-card border border-aki-border rounded-lg shadow-2xl w-full max-w-2xl mx-4 overflow-hidden">
+      <div className="bg-fetchy-modal border border-fetchy-border rounded-lg shadow-2xl w-full max-w-2xl mx-4 overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-aki-border">
-          <h2 className="text-xl font-semibold text-aki-text">Check for Updates</h2>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-fetchy-border">
+          <h2 className="text-xl font-semibold text-fetchy-text">Check for Updates</h2>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-aki-border rounded text-aki-text-muted hover:text-aki-text"
+            className="p-1 hover:bg-fetchy-border rounded text-fetchy-text-muted hover:text-fetchy-text"
           >
             <X size={20} />
           </button>
@@ -94,8 +94,8 @@ export default function UpdateModal({ onClose }: UpdateModalProps) {
         <div className="p-6">
           {isChecking && (
             <div className="flex flex-col items-center justify-center py-8">
-              <Loader2 className="w-12 h-12 text-aki-accent animate-spin mb-4" />
-              <p className="text-aki-text-muted">Checking for updates...</p>
+              <Loader2 className="w-12 h-12 text-fetchy-accent animate-spin mb-4" />
+              <p className="text-fetchy-text-muted">Checking for updates...</p>
             </div>
           )}
 
@@ -128,12 +128,12 @@ export default function UpdateModal({ onClose }: UpdateModalProps) {
               </div>
 
               <div>
-                <h3 className="font-medium text-aki-text mb-2">Release: {latestRelease.name}</h3>
-                <div className="text-sm text-aki-text-muted mb-2">
+                <h3 className="font-medium text-fetchy-text mb-2">Release: {latestRelease.name}</h3>
+                <div className="text-sm text-fetchy-text-muted mb-2">
                   Released on {new Date(latestRelease.published_at).toLocaleDateString()}
                 </div>
-                <div className="bg-aki-bg border border-aki-border rounded p-4 max-h-64 overflow-y-auto">
-                  <pre className="text-sm text-aki-text whitespace-pre-wrap font-mono">
+                <div className="bg-fetchy-bg border border-fetchy-border rounded p-4 max-h-64 overflow-y-auto">
+                  <pre className="text-sm text-fetchy-text whitespace-pre-wrap font-mono">
                     {latestRelease.body || 'No release notes available.'}
                   </pre>
                 </div>
@@ -162,8 +162,8 @@ export default function UpdateModal({ onClose }: UpdateModalProps) {
           )}
 
           {!isChecking && !error && (
-            <div className="mt-4 pt-4 border-t border-aki-border">
-              <p className="text-xs text-aki-text-muted text-center">
+            <div className="mt-4 pt-4 border-t border-fetchy-border">
+              <p className="text-xs text-fetchy-text-muted text-center">
                 Current Version: v{CURRENT_VERSION}
                 {latestRelease && ` • Latest Version: ${latestRelease.tag_name}`}
               </p>
@@ -172,7 +172,7 @@ export default function UpdateModal({ onClose }: UpdateModalProps) {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-aki-border bg-aki-sidebar">
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-fetchy-border bg-fetchy-sidebar">
           <button onClick={onClose} className="btn btn-secondary">
             Close
           </button>

@@ -426,18 +426,18 @@ export default function OpenApiEditor({ documentId }: OpenApiEditorProps) {
   }, [parsedSpec]);
 
   return (
-    <div ref={containerRef} className="h-full flex flex-col overflow-hidden bg-aki-bg">
+    <div ref={containerRef} className="h-full flex flex-col overflow-hidden bg-fetchy-bg">
       {/* Toolbar */}
-      <div className="h-12 bg-aki-sidebar border-b border-aki-border flex items-center px-4 gap-2 shrink-0 overflow-hidden">
+      <div className="h-12 bg-fetchy-sidebar border-b border-fetchy-border flex items-center px-4 gap-2 shrink-0 overflow-hidden">
         {/* Document Name */}
         <div className="flex items-center gap-2 min-w-0 max-w-[200px]">
-          <FileCode size={18} className="text-aki-accent shrink-0" />
+          <FileCode size={18} className="text-fetchy-accent shrink-0" />
           {isEditingName ? (
             <input
               ref={nameInputRef}
               type="text"
               defaultValue={documentName}
-              className="font-medium text-aki-text bg-aki-bg border border-aki-accent rounded px-2 py-0.5 text-sm outline-none w-full min-w-0"
+              className="font-medium text-fetchy-text bg-fetchy-bg border border-fetchy-accent rounded px-2 py-0.5 text-sm outline-none w-full min-w-0"
               onBlur={(e) => handleNameChange(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
@@ -450,11 +450,11 @@ export default function OpenApiEditor({ documentId }: OpenApiEditorProps) {
           ) : (
             <button
               onClick={() => setIsEditingName(true)}
-              className="font-medium text-aki-text hover:text-aki-accent flex items-center gap-1 group min-w-0 max-w-full"
+              className="font-medium text-fetchy-text hover:text-fetchy-accent flex items-center gap-1 group min-w-0 max-w-full"
               title={documentName}
             >
               <span className="truncate">{documentName}</span>
-              <Edit2 size={12} className="text-aki-text-muted opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+              <Edit2 size={12} className="text-fetchy-text-muted opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
             </button>
           )}
         </div>
@@ -467,8 +467,8 @@ export default function OpenApiEditor({ documentId }: OpenApiEditorProps) {
             disabled={!isModified}
             className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded transition-colors whitespace-nowrap ${
               isModified
-                ? 'bg-aki-accent text-white hover:bg-aki-accent/90'
-                : 'bg-aki-bg border border-aki-border text-aki-text-muted cursor-not-allowed'
+                ? 'bg-fetchy-accent text-white hover:bg-fetchy-accent/90'
+                : 'bg-fetchy-bg border border-fetchy-border text-fetchy-text-muted cursor-not-allowed'
             }`}
             title="Save (Ctrl+S)"
           >
@@ -490,14 +490,14 @@ export default function OpenApiEditor({ documentId }: OpenApiEditorProps) {
 
         {/* API Spec Info */}
         {parsedSpec ? (
-          <div className="flex items-center gap-2 text-sm text-aki-text-muted min-w-0 shrink">
-            <span className="px-2 py-0.5 bg-aki-accent/20 text-aki-accent rounded text-xs font-medium whitespace-nowrap shrink-0">
+          <div className="flex items-center gap-2 text-sm text-fetchy-text-muted min-w-0 shrink">
+            <span className="px-2 py-0.5 bg-fetchy-accent/20 text-fetchy-accent rounded text-xs font-medium whitespace-nowrap shrink-0">
               {parsedSpec.openapi || parsedSpec.swagger || 'Unknown'}
             </span>
             <span className="truncate hidden md:inline" title={parsedSpec.info?.title || 'Untitled API'}>
               {parsedSpec.info?.title || 'Untitled API'}
             </span>
-            <span className="text-aki-text-muted whitespace-nowrap shrink-0">
+            <span className="text-fetchy-text-muted whitespace-nowrap shrink-0">
               v{parsedSpec.info?.version || '0.0.0'}
             </span>
           </div>
@@ -507,13 +507,13 @@ export default function OpenApiEditor({ documentId }: OpenApiEditorProps) {
         <div className="w-[2px] h-8 bg-[#3a3a5a] dark:bg-[#3a3a5a] light:bg-[#dee2e6] mx-2 shrink-0" />
 
         {/* View Mode Toggle - with background extending to right edge to prevent overlap */}
-        <div className="flex items-center gap-1 shrink-0 relative z-10 bg-aki-sidebar pl-2 pr-4 -ml-2 -mr-4">
+        <div className="flex items-center gap-1 shrink-0 relative z-10 bg-fetchy-sidebar pl-2 pr-4 -ml-2 -mr-4">
           <button
             onClick={() => setViewMode('editor')}
             className={`p-1.5 rounded transition-colors ${
               viewMode === 'editor'
-                ? 'bg-aki-accent text-white'
-                : 'text-aki-text-muted hover:text-aki-text hover:bg-aki-border'
+                ? 'bg-fetchy-accent text-white'
+                : 'text-fetchy-text-muted hover:text-fetchy-text hover:bg-fetchy-border'
             }`}
             title="Editor only"
           >
@@ -523,8 +523,8 @@ export default function OpenApiEditor({ documentId }: OpenApiEditorProps) {
             onClick={() => setViewMode('both')}
             className={`p-1.5 rounded transition-colors ${
               viewMode === 'both'
-                ? 'bg-aki-accent text-white'
-                : 'text-aki-text-muted hover:text-aki-text hover:bg-aki-border'
+                ? 'bg-fetchy-accent text-white'
+                : 'text-fetchy-text-muted hover:text-fetchy-text hover:bg-fetchy-border'
             }`}
             title="Split view"
           >
@@ -534,8 +534,8 @@ export default function OpenApiEditor({ documentId }: OpenApiEditorProps) {
             onClick={() => setViewMode('preview')}
             className={`p-1.5 rounded transition-colors ${
               viewMode === 'preview'
-                ? 'bg-aki-accent text-white'
-                : 'text-aki-text-muted hover:text-aki-text hover:bg-aki-border'
+                ? 'bg-fetchy-accent text-white'
+                : 'text-fetchy-text-muted hover:text-fetchy-text hover:bg-fetchy-border'
             }`}
             title="Preview only"
           >
@@ -554,11 +554,11 @@ export default function OpenApiEditor({ documentId }: OpenApiEditorProps) {
           }}
           className="h-full flex-col shrink-0 overflow-hidden"
         >
-          <div className="h-8 bg-aki-sidebar border-b border-aki-border flex items-center px-3 gap-2">
+          <div className="h-8 bg-fetchy-sidebar border-b border-fetchy-border flex items-center px-3 gap-2">
             <span className={`text-xs px-2 py-0.5 rounded ${format === 'yaml' ? 'bg-purple-500/20 text-purple-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
               {format.toUpperCase()}
             </span>
-            <span className="text-xs text-aki-text-muted">Source</span>
+            <span className="text-xs text-fetchy-text-muted">Source</span>
           </div>
           <div ref={editorRef} className="flex-1 overflow-auto" />
         </div>
@@ -575,16 +575,16 @@ export default function OpenApiEditor({ documentId }: OpenApiEditorProps) {
           }}
           className="flex-1 h-full flex-col overflow-hidden"
         >
-          <div className="h-8 bg-aki-sidebar border-b border-aki-border flex items-center px-3">
-            <span className="text-xs text-aki-text-muted">Preview</span>
+          <div className="h-8 bg-fetchy-sidebar border-b border-fetchy-border flex items-center px-3">
+            <span className="text-xs text-fetchy-text-muted">Preview</span>
           </div>
 
           {parseError ? (
             <div className="flex-1 flex items-center justify-center p-8">
               <div className="max-w-md text-center">
                 <AlertCircle size={48} className="mx-auto mb-4 text-red-400" />
-                <h3 className="text-lg font-medium text-aki-text mb-2">Parse Error</h3>
-                <p className="text-sm text-aki-text-muted font-mono bg-aki-sidebar p-3 rounded">
+                <h3 className="text-lg font-medium text-fetchy-text mb-2">Parse Error</h3>
+                <p className="text-sm text-fetchy-text-muted font-mono bg-fetchy-sidebar p-3 rounded">
                   {parseError}
                 </p>
               </div>
@@ -592,21 +592,21 @@ export default function OpenApiEditor({ documentId }: OpenApiEditorProps) {
           ) : parsedSpec ? (
             <div className="flex-1 overflow-auto">
               {/* API Info Section */}
-              <div className="p-4 border-b border-aki-border">
-                <h2 className="text-xl font-bold text-aki-text mb-1">{parsedSpec.info?.title || 'Untitled API'}</h2>
+              <div className="p-4 border-b border-fetchy-border">
+                <h2 className="text-xl font-bold text-fetchy-text mb-1">{parsedSpec.info?.title || 'Untitled API'}</h2>
                 {parsedSpec.info?.description && (
-                  <div className="text-sm text-aki-text-muted mb-3"><HtmlDescription html={parsedSpec.info.description} /></div>
+                  <div className="text-sm text-fetchy-text-muted mb-3"><HtmlDescription html={parsedSpec.info.description} /></div>
                 )}
 
                 {/* Servers */}
                 {parsedSpec.servers && parsedSpec.servers.length > 0 && (
                   <div className="flex flex-wrap gap-2 mb-3">
                     {parsedSpec.servers.map((server, idx) => (
-                      <div key={idx} className="flex items-center gap-1.5 px-2 py-1 bg-aki-sidebar rounded text-xs">
-                        <Server size={12} className="text-aki-accent" />
-                        <span className="text-aki-text">{server.url}</span>
+                      <div key={idx} className="flex items-center gap-1.5 px-2 py-1 bg-fetchy-sidebar rounded text-xs">
+                        <Server size={12} className="text-fetchy-accent" />
+                        <span className="text-fetchy-text">{server.url}</span>
                         {server.description && (
-                          <span className="text-aki-text-muted">({server.description})</span>
+                          <span className="text-fetchy-text-muted">({server.description})</span>
                         )}
                       </div>
                     ))}
@@ -617,19 +617,19 @@ export default function OpenApiEditor({ documentId }: OpenApiEditorProps) {
                 <div className="flex gap-2 mt-4">
                   <button
                     onClick={() => setActiveSection('paths')}
-                    className={`px-3 py-1.5 text-sm rounded transition-colors ${activeSection === 'paths' ? 'bg-aki-accent text-white' : 'bg-aki-sidebar text-aki-text hover:bg-aki-border'}`}
+                    className={`px-3 py-1.5 text-sm rounded transition-colors ${activeSection === 'paths' ? 'bg-fetchy-accent text-white' : 'bg-fetchy-sidebar text-fetchy-text hover:bg-fetchy-border'}`}
                   >
                     Paths
                   </button>
                   <button
                     onClick={() => setActiveSection('schemas')}
-                    className={`px-3 py-1.5 text-sm rounded transition-colors ${activeSection === 'schemas' ? 'bg-aki-accent text-white' : 'bg-aki-sidebar text-aki-text hover:bg-aki-border'}`}
+                    className={`px-3 py-1.5 text-sm rounded transition-colors ${activeSection === 'schemas' ? 'bg-fetchy-accent text-white' : 'bg-fetchy-sidebar text-fetchy-text hover:bg-fetchy-border'}`}
                   >
                     Schemas
                   </button>
                   <button
                     onClick={() => setActiveSection('info')}
-                    className={`px-3 py-1.5 text-sm rounded transition-colors ${activeSection === 'info' ? 'bg-aki-accent text-white' : 'bg-aki-sidebar text-aki-text hover:bg-aki-border'}`}
+                    className={`px-3 py-1.5 text-sm rounded transition-colors ${activeSection === 'info' ? 'bg-fetchy-accent text-white' : 'bg-fetchy-sidebar text-fetchy-text hover:bg-fetchy-border'}`}
                   >
                     Info
                   </button>
@@ -644,16 +644,16 @@ export default function OpenApiEditor({ documentId }: OpenApiEditorProps) {
                       {/* Tag Header */}
                       <button
                         onClick={() => toggleTag(tag)}
-                        className="w-full flex items-center gap-2 p-2 rounded hover:bg-aki-sidebar transition-colors"
+                        className="w-full flex items-center gap-2 p-2 rounded hover:bg-fetchy-sidebar transition-colors"
                       >
                         {expandedTags.has(tag) ? (
-                          <ChevronDown size={16} className="text-aki-text-muted" />
+                          <ChevronDown size={16} className="text-fetchy-text-muted" />
                         ) : (
-                          <ChevronRight size={16} className="text-aki-text-muted" />
+                          <ChevronRight size={16} className="text-fetchy-text-muted" />
                         )}
-                        <Tag size={14} className="text-aki-accent" />
-                        <span className="font-medium text-aki-text">{tag}</span>
-                        <span className="text-xs text-aki-text-muted">({operations.length})</span>
+                        <Tag size={14} className="text-fetchy-accent" />
+                        <span className="font-medium text-fetchy-text">{tag}</span>
+                        <span className="text-xs text-fetchy-text-muted">({operations.length})</span>
                       </button>
 
                       {/* Operations */}
@@ -665,28 +665,28 @@ export default function OpenApiEditor({ documentId }: OpenApiEditorProps) {
                             const mergedParameters = getMergedParameters(pathItem, operation);
 
                             return (
-                              <div key={pathKey} className="border border-aki-border rounded overflow-hidden">
+                              <div key={pathKey} className="border border-fetchy-border rounded overflow-hidden">
                                 {/* Operation Header */}
                                 <button
                                   onClick={() => togglePath(pathKey)}
-                                  className="w-full flex items-center gap-3 p-3 hover:bg-aki-sidebar/50 transition-colors"
+                                  className="w-full flex items-center gap-3 p-3 hover:bg-fetchy-sidebar/50 transition-colors"
                                 >
                                   {isExpanded ? (
-                                    <ChevronDown size={14} className="text-aki-text-muted shrink-0" />
+                                    <ChevronDown size={14} className="text-fetchy-text-muted shrink-0" />
                                   ) : (
-                                    <ChevronRight size={14} className="text-aki-text-muted shrink-0" />
+                                    <ChevronRight size={14} className="text-fetchy-text-muted shrink-0" />
                                   )}
                                   <span className={`px-2 py-0.5 text-xs font-bold uppercase rounded border ${METHOD_COLORS[method] || METHOD_COLORS.get}`}>
                                     {method}
                                   </span>
-                                  <span className="font-mono text-sm text-aki-text flex-1 text-left">{path}</span>
+                                  <span className="font-mono text-sm text-fetchy-text flex-1 text-left">{path}</span>
                                   {operation.deprecated && (
                                     <span className="px-2 py-0.5 text-xs bg-red-500/20 text-red-400 rounded">
                                       Deprecated
                                     </span>
                                   )}
                                   {operation.summary && (
-                                    <span className="text-sm text-aki-text-muted truncate max-w-[200px]">
+                                    <span className="text-sm text-fetchy-text-muted truncate max-w-[200px]">
                                       {operation.summary}
                                     </span>
                                   )}
@@ -695,33 +695,33 @@ export default function OpenApiEditor({ documentId }: OpenApiEditorProps) {
                                       e.stopPropagation();
                                       copyEndpoint(method, path);
                                     }}
-                                    className="p-1 hover:bg-aki-border rounded"
+                                    className="p-1 hover:bg-fetchy-border rounded"
                                     title="Copy endpoint URL"
                                   >
                                     {copiedEndpoint === pathKey ? (
                                       <Check size={14} className="text-green-400" />
                                     ) : (
-                                      <Copy size={14} className="text-aki-text-muted" />
+                                      <Copy size={14} className="text-fetchy-text-muted" />
                                     )}
                                   </button>
                                 </button>
 
                                 {/* Operation Details */}
                                 {isExpanded && (
-                                  <div className="border-t border-aki-border bg-aki-sidebar/30">
+                                  <div className="border-t border-fetchy-border bg-fetchy-sidebar/30">
                                     {/* Description */}
                                     {operation.description && (
-                                      <div className="p-4 border-b border-aki-border">
-                                        <div className="text-sm text-aki-text"><HtmlDescription html={operation.description} /></div>
+                                      <div className="p-4 border-b border-fetchy-border">
+                                        <div className="text-sm text-fetchy-text"><HtmlDescription html={operation.description} /></div>
                                       </div>
                                     )}
 
-                                    <div className="grid grid-cols-2 divide-x divide-aki-border">
+                                    <div className="grid grid-cols-2 divide-x divide-fetchy-border">
                                       {/* REQUEST SIDE */}
                                       <div className="p-4">
                                         <div className="flex items-center gap-2 mb-4">
                                           <ArrowUpRight size={16} className="text-blue-400" />
-                                          <h4 className="text-sm font-semibold text-aki-text">Request</h4>
+                                          <h4 className="text-sm font-semibold text-fetchy-text">Request</h4>
                                         </div>
 
                                         {/* Path Parameters */}
@@ -729,25 +729,25 @@ export default function OpenApiEditor({ documentId }: OpenApiEditorProps) {
                                           const pathParams = mergedParameters?.filter(p => p.in === 'path') || [];
                                           return pathParams.length > 0 ? (
                                             <div className="mb-4">
-                                              <h5 className="text-xs font-medium text-aki-text-muted uppercase mb-2 flex items-center gap-1">
+                                              <h5 className="text-xs font-medium text-fetchy-text-muted uppercase mb-2 flex items-center gap-1">
                                                 <FileInput size={12} />
                                                 Path Parameters
                                               </h5>
                                               <div className="space-y-1">
                                                 {pathParams.map((param, idx) => (
-                                                  <div key={idx} className="p-2 bg-aki-bg rounded text-xs">
+                                                  <div key={idx} className="p-2 bg-fetchy-bg rounded text-xs">
                                                     <div className="flex items-center gap-2 flex-wrap">
-                                                      <span className="font-mono font-medium text-aki-accent">{param.name}</span>
+                                                      <span className="font-mono font-medium text-fetchy-accent">{param.name}</span>
                                                       {param.schema && (
-                                                        <span className="text-aki-text-muted">{getSchemaTypeDisplay(param.schema)}</span>
+                                                        <span className="text-fetchy-text-muted">{getSchemaTypeDisplay(param.schema)}</span>
                                                       )}
                                                       <span className="px-1 py-0.5 bg-red-500/20 text-red-400 rounded text-[10px]">required</span>
                                                     </div>
                                                     {param.description && (
-                                                      <div className="text-aki-text-muted mt-1"><HtmlDescription html={param.description} /></div>
+                                                      <div className="text-fetchy-text-muted mt-1"><HtmlDescription html={param.description} /></div>
                                                     )}
                                                     {param.example !== undefined && (
-                                                      <p className="text-aki-text mt-1">Example: <code className="bg-aki-sidebar px-1 rounded">{String(param.example)}</code></p>
+                                                      <p className="text-fetchy-text mt-1">Example: <code className="bg-fetchy-sidebar px-1 rounded">{String(param.example)}</code></p>
                                                     )}
                                                   </div>
                                                 ))}
@@ -761,27 +761,27 @@ export default function OpenApiEditor({ documentId }: OpenApiEditorProps) {
                                           const queryParams = mergedParameters?.filter(p => p.in === 'query') || [];
                                           return queryParams.length > 0 ? (
                                             <div className="mb-4">
-                                              <h5 className="text-xs font-medium text-aki-text-muted uppercase mb-2 flex items-center gap-1">
+                                              <h5 className="text-xs font-medium text-fetchy-text-muted uppercase mb-2 flex items-center gap-1">
                                                 <FileInput size={12} />
                                                 Query Parameters
                                               </h5>
                                               <div className="space-y-1">
                                                 {queryParams.map((param, idx) => (
-                                                  <div key={idx} className="p-2 bg-aki-bg rounded text-xs">
+                                                  <div key={idx} className="p-2 bg-fetchy-bg rounded text-xs">
                                                     <div className="flex items-center gap-2 flex-wrap">
-                                                      <span className="font-mono font-medium text-aki-accent">{param.name}</span>
+                                                      <span className="font-mono font-medium text-fetchy-accent">{param.name}</span>
                                                       {param.schema && (
-                                                        <span className="text-aki-text-muted">{getSchemaTypeDisplay(param.schema)}</span>
+                                                        <span className="text-fetchy-text-muted">{getSchemaTypeDisplay(param.schema)}</span>
                                                       )}
                                                       {param.required && (
                                                         <span className="px-1 py-0.5 bg-red-500/20 text-red-400 rounded text-[10px]">required</span>
                                                       )}
                                                     </div>
                                                     {param.description && (
-                                                      <div className="text-aki-text-muted mt-1"><HtmlDescription html={param.description} /></div>
+                                                      <div className="text-fetchy-text-muted mt-1"><HtmlDescription html={param.description} /></div>
                                                     )}
                                                     {param.schema?.default !== undefined && (
-                                                      <p className="text-aki-text mt-1">Default: <code className="bg-aki-sidebar px-1 rounded">{String(param.schema.default)}</code></p>
+                                                      <p className="text-fetchy-text mt-1">Default: <code className="bg-fetchy-sidebar px-1 rounded">{String(param.schema.default)}</code></p>
                                                     )}
                                                   </div>
                                                 ))}
@@ -795,41 +795,41 @@ export default function OpenApiEditor({ documentId }: OpenApiEditorProps) {
                                           const headerParams = mergedParameters?.filter(p => p.in === 'header') || [];
                                           return (
                                             <div className="mb-4">
-                                              <h5 className="text-xs font-medium text-aki-text-muted uppercase mb-2 flex items-center gap-1">
+                                              <h5 className="text-xs font-medium text-fetchy-text-muted uppercase mb-2 flex items-center gap-1">
                                                 <FileInput size={12} />
                                                 Request Headers
                                                 {headerParams.length > 0 && (
-                                                  <span className="text-[10px] text-aki-accent ml-1">
+                                                  <span className="text-[10px] text-fetchy-accent ml-1">
                                                     ({headerParams.length})
                                                   </span>
                                                 )}
                                               </h5>
                                               {headerParams.length > 0 ? (
-                                                <div className="bg-aki-bg rounded overflow-hidden">
+                                                <div className="bg-fetchy-bg rounded overflow-hidden">
                                                   <table className="w-full text-xs">
                                                     <thead>
-                                                      <tr className="border-b border-aki-border bg-aki-sidebar/50">
-                                                        <th className="text-left p-2 font-medium text-aki-text-muted">Header</th>
-                                                        <th className="text-left p-2 font-medium text-aki-text-muted">Type</th>
-                                                        <th className="text-left p-2 font-medium text-aki-text-muted">Required</th>
-                                                        <th className="text-left p-2 font-medium text-aki-text-muted">Description</th>
+                                                      <tr className="border-b border-fetchy-border bg-fetchy-sidebar/50">
+                                                        <th className="text-left p-2 font-medium text-fetchy-text-muted">Header</th>
+                                                        <th className="text-left p-2 font-medium text-fetchy-text-muted">Type</th>
+                                                        <th className="text-left p-2 font-medium text-fetchy-text-muted">Required</th>
+                                                        <th className="text-left p-2 font-medium text-fetchy-text-muted">Description</th>
                                                       </tr>
                                                     </thead>
                                                     <tbody>
                                                       {headerParams.map((param, idx) => (
-                                                        <tr key={idx} className="border-b border-aki-border/50 last:border-0">
+                                                        <tr key={idx} className="border-b border-fetchy-border/50 last:border-0">
                                                           <td className="p-2">
-                                                            <span className="font-mono font-medium text-aki-accent">{param.name}</span>
+                                                            <span className="font-mono font-medium text-fetchy-accent">{param.name}</span>
                                                           </td>
-                                                          <td className="p-2 text-aki-text-muted">
+                                                          <td className="p-2 text-fetchy-text-muted">
                                                             {param.schema ? getSchemaTypeDisplay(param.schema) : 'string'}
                                                             {param.schema?.format ? (
-                                                              <div className="text-[10px] text-aki-text-muted mt-0.5">
+                                                              <div className="text-[10px] text-fetchy-text-muted mt-0.5">
                                                                 format: {String(param.schema.format)}
                                                               </div>
                                                             ) : null}
                                                             {param.schema?.enum ? (
-                                                              <div className="text-[10px] text-aki-text-muted mt-0.5">
+                                                              <div className="text-[10px] text-fetchy-text-muted mt-0.5">
                                                                 enum: [{(param.schema.enum as string[]).join(', ')}]
                                                               </div>
                                                             ) : null}
@@ -838,15 +838,15 @@ export default function OpenApiEditor({ documentId }: OpenApiEditorProps) {
                                                             {param.required ? (
                                                               <span className="px-1.5 py-0.5 bg-red-500/20 text-red-400 rounded text-[10px]">Yes</span>
                                                             ) : (
-                                                              <span className="text-aki-text-muted">No</span>
+                                                              <span className="text-fetchy-text-muted">No</span>
                                                             )}
                                                           </td>
-                                                          <td className="p-2 text-aki-text-muted">
+                                                          <td className="p-2 text-fetchy-text-muted">
                                                             {param.description || '-'}
                                                             {param.example !== undefined ? (
                                                               <div className="mt-1">
                                                                 <span className="text-[10px]">Example: </span>
-                                                                <code className="bg-aki-sidebar px-1 rounded text-aki-text">{String(param.example)}</code>
+                                                                <code className="bg-fetchy-sidebar px-1 rounded text-fetchy-text">{String(param.example)}</code>
                                                               </div>
                                                             ) : null}
                                                           </td>
@@ -856,7 +856,7 @@ export default function OpenApiEditor({ documentId }: OpenApiEditorProps) {
                                                   </table>
                                                 </div>
                                               ) : (
-                                                <p className="text-xs text-aki-text-muted italic bg-aki-bg p-2 rounded">No request headers defined</p>
+                                                <p className="text-xs text-fetchy-text-muted italic bg-fetchy-bg p-2 rounded">No request headers defined</p>
                                               )}
                                             </div>
                                           );
@@ -867,7 +867,7 @@ export default function OpenApiEditor({ documentId }: OpenApiEditorProps) {
                                           const resolvedRequestBody = resolveRequestBody(operation.requestBody);
                                           return (
                                           <div className="mb-4">
-                                            <h5 className="text-xs font-medium text-aki-text-muted uppercase mb-2 flex items-center gap-1">
+                                            <h5 className="text-xs font-medium text-fetchy-text-muted uppercase mb-2 flex items-center gap-1">
                                               <FileInput size={12} />
                                               Request Body
                                               {resolvedRequestBody.required ? (
@@ -875,7 +875,7 @@ export default function OpenApiEditor({ documentId }: OpenApiEditorProps) {
                                               ) : null}
                                             </h5>
                                             {resolvedRequestBody.description ? (
-                                              <div className="text-xs text-aki-text-muted mb-2"><HtmlDescription html={resolvedRequestBody.description} /></div>
+                                              <div className="text-xs text-fetchy-text-muted mb-2"><HtmlDescription html={resolvedRequestBody.description} /></div>
                                             ) : null}
                                             {resolvedRequestBody.content ? Object.entries(resolvedRequestBody.content).map(([contentType, content]) => {
                                               // Generate example JSON from schema if no explicit example
@@ -884,13 +884,13 @@ export default function OpenApiEditor({ documentId }: OpenApiEditorProps) {
                                                 (typedContent.schema ? generateExampleFromSchema(typedContent.schema, parsedSpec!) : null);
 
                                               return (
-                                                <div key={contentType} className="bg-aki-bg rounded overflow-hidden mb-2">
-                                                  <div className="px-2 py-1 bg-aki-sidebar/50 border-b border-aki-border flex items-center justify-between">
-                                                    <span className="text-xs font-mono text-aki-accent">{contentType}</span>
+                                                <div key={contentType} className="bg-fetchy-bg rounded overflow-hidden mb-2">
+                                                  <div className="px-2 py-1 bg-fetchy-sidebar/50 border-b border-fetchy-border flex items-center justify-between">
+                                                    <span className="text-xs font-mono text-fetchy-accent">{contentType}</span>
                                                     {exampleJson ? (
                                                       <button
                                                         onClick={() => navigator.clipboard.writeText(JSON.stringify(exampleJson, null, 2))}
-                                                        className="p-1 hover:bg-aki-border rounded text-aki-text-muted hover:text-aki-text"
+                                                        className="p-1 hover:bg-fetchy-border rounded text-fetchy-text-muted hover:text-fetchy-text"
                                                         title="Copy JSON"
                                                       >
                                                         <Copy size={12} />
@@ -901,8 +901,8 @@ export default function OpenApiEditor({ documentId }: OpenApiEditorProps) {
                                                     {/* Show JSON Example First */}
                                                     {exampleJson ? (
                                                       <div className="mb-3">
-                                                        <span className="text-[10px] text-aki-text-muted uppercase font-medium">Example JSON:</span>
-                                                        <pre className="text-xs bg-aki-sidebar text-green-400 p-3 rounded mt-1 overflow-auto max-h-60 font-mono">
+                                                        <span className="text-[10px] text-fetchy-text-muted uppercase font-medium">Example JSON:</span>
+                                                        <pre className="text-xs bg-fetchy-sidebar text-green-400 p-3 rounded mt-1 overflow-auto max-h-60 font-mono">
                                                           {JSON.stringify(exampleJson, null, 2)}
                                                         </pre>
                                                       </div>
@@ -910,10 +910,10 @@ export default function OpenApiEditor({ documentId }: OpenApiEditorProps) {
                                                     {/* Schema Details (collapsible) */}
                                                     {typedContent.schema ? (
                                                       <details className="mt-2">
-                                                        <summary className="text-[10px] text-aki-text-muted uppercase cursor-pointer hover:text-aki-text">
+                                                        <summary className="text-[10px] text-fetchy-text-muted uppercase cursor-pointer hover:text-fetchy-text">
                                                           Schema Details
                                                         </summary>
-                                                        <div className="mt-2 pl-2 border-l-2 border-aki-border">
+                                                        <div className="mt-2 pl-2 border-l-2 border-fetchy-border">
                                                           <SchemaViewer schema={typedContent.schema} spec={parsedSpec!} />
                                                         </div>
                                                       </details>
@@ -929,17 +929,17 @@ export default function OpenApiEditor({ documentId }: OpenApiEditorProps) {
                                         {/* Security */}
                                         {operation.security && operation.security.length > 0 && (
                                           <div>
-                                            <h5 className="text-xs font-medium text-aki-text-muted uppercase mb-2 flex items-center gap-1">
+                                            <h5 className="text-xs font-medium text-fetchy-text-muted uppercase mb-2 flex items-center gap-1">
                                               <Lock size={12} />
                                               Security
                                             </h5>
                                             <div className="flex flex-wrap gap-1">
                                               {operation.security.map((sec, idx) => (
                                                 Object.entries(sec).map(([key, scopes]) => (
-                                                  <div key={`${idx}-${key}`} className="px-2 py-1 bg-aki-bg rounded text-xs">
-                                                    <span className="font-medium text-aki-accent">{key}</span>
+                                                  <div key={`${idx}-${key}`} className="px-2 py-1 bg-fetchy-bg rounded text-xs">
+                                                    <span className="font-medium text-fetchy-accent">{key}</span>
                                                     {scopes && scopes.length > 0 && (
-                                                      <span className="text-aki-text-muted ml-1">({scopes.join(', ')})</span>
+                                                      <span className="text-fetchy-text-muted ml-1">({scopes.join(', ')})</span>
                                                     )}
                                                   </div>
                                                 ))
@@ -950,7 +950,7 @@ export default function OpenApiEditor({ documentId }: OpenApiEditorProps) {
 
                                         {/* No request body message */}
                                         {!operation.requestBody && (
-                                          <p className="text-xs text-aki-text-muted italic bg-aki-bg p-2 rounded">No request body</p>
+                                          <p className="text-xs text-fetchy-text-muted italic bg-fetchy-bg p-2 rounded">No request body</p>
                                         )}
                                       </div>
 
@@ -958,7 +958,7 @@ export default function OpenApiEditor({ documentId }: OpenApiEditorProps) {
                                       <div className="p-4">
                                         <div className="flex items-center gap-2 mb-4">
                                           <ArrowDownLeft size={16} className="text-green-400" />
-                                          <h4 className="text-sm font-semibold text-aki-text">Responses</h4>
+                                          <h4 className="text-sm font-semibold text-fetchy-text">Responses</h4>
                                         </div>
 
                                         {operation.responses && Object.entries(operation.responses).map(([code, response]) => {
@@ -971,11 +971,11 @@ export default function OpenApiEditor({ documentId }: OpenApiEditorProps) {
                                                 code.startsWith('3') ? 'bg-blue-500/20 text-blue-400' :
                                                 code.startsWith('4') ? 'bg-yellow-500/20 text-yellow-400' :
                                                 code.startsWith('5') ? 'bg-red-500/20 text-red-400' :
-                                                'bg-aki-sidebar text-aki-text-muted'
+                                                'bg-fetchy-sidebar text-fetchy-text-muted'
                                               }`}>
                                                 {code}
                                               </span>
-                                              <span className="text-xs text-aki-text"><HtmlDescription html={resolvedResponse.description || ''} /></span>
+                                              <span className="text-xs text-fetchy-text"><HtmlDescription html={resolvedResponse.description || ''} /></span>
                                             </div>
 
                                             {/* Response Headers - Always show */}
@@ -983,40 +983,40 @@ export default function OpenApiEditor({ documentId }: OpenApiEditorProps) {
                                               const responseHeaders = resolvedResponse.headers ? Object.entries(resolvedResponse.headers) : [];
                                               return (
                                                 <div className="mb-2 ml-2">
-                                                  <h6 className="text-[10px] font-medium text-aki-text-muted uppercase mb-1 flex items-center gap-1">
+                                                  <h6 className="text-[10px] font-medium text-fetchy-text-muted uppercase mb-1 flex items-center gap-1">
                                                     <FileOutput size={10} />
                                                     Response Headers
                                                     {responseHeaders.length > 0 && (
-                                                      <span className="text-[10px] text-aki-accent ml-1">
+                                                      <span className="text-[10px] text-fetchy-accent ml-1">
                                                         ({responseHeaders.length})
                                                       </span>
                                                     )}
                                                   </h6>
                                                   {responseHeaders.length > 0 ? (
-                                                    <div className="bg-aki-bg rounded overflow-hidden">
+                                                    <div className="bg-fetchy-bg rounded overflow-hidden">
                                                       <table className="w-full text-xs">
                                                         <thead>
-                                                          <tr className="border-b border-aki-border bg-aki-sidebar/50">
-                                                            <th className="text-left p-1.5 font-medium text-aki-text-muted">Header</th>
-                                                            <th className="text-left p-1.5 font-medium text-aki-text-muted">Type</th>
-                                                            <th className="text-left p-1.5 font-medium text-aki-text-muted">Description</th>
+                                                          <tr className="border-b border-fetchy-border bg-fetchy-sidebar/50">
+                                                            <th className="text-left p-1.5 font-medium text-fetchy-text-muted">Header</th>
+                                                            <th className="text-left p-1.5 font-medium text-fetchy-text-muted">Type</th>
+                                                            <th className="text-left p-1.5 font-medium text-fetchy-text-muted">Description</th>
                                                           </tr>
                                                         </thead>
                                                         <tbody>
                                                           {responseHeaders.map(([headerName, headerDef]) => {
                                                             const typedHeaderDef = headerDef as { description?: string; schema?: Record<string, unknown> };
                                                             return (
-                                                            <tr key={headerName} className="border-b border-aki-border/50 last:border-0">
+                                                            <tr key={headerName} className="border-b border-fetchy-border/50 last:border-0">
                                                               <td className="p-1.5">
-                                                                <span className="font-mono font-medium text-aki-accent">{headerName}</span>
+                                                                <span className="font-mono font-medium text-fetchy-accent">{headerName}</span>
                                                               </td>
-                                                              <td className="p-1.5 text-aki-text-muted">
+                                                              <td className="p-1.5 text-fetchy-text-muted">
                                                                 {typedHeaderDef.schema ? getSchemaTypeDisplay(typedHeaderDef.schema) : 'string'}
                                                                 {typedHeaderDef.schema?.format ? (
                                                                   <div className="text-[10px] mt-0.5">format: {String(typedHeaderDef.schema.format)}</div>
                                                                 ) : null}
                                                               </td>
-                                                              <td className="p-1.5 text-aki-text-muted">
+                                                              <td className="p-1.5 text-fetchy-text-muted">
                                                                 {typedHeaderDef.description || '-'}
                                                               </td>
                                                             </tr>
@@ -1025,7 +1025,7 @@ export default function OpenApiEditor({ documentId }: OpenApiEditorProps) {
                                                       </table>
                                                     </div>
                                                   ) : (
-                                                    <p className="text-[10px] text-aki-text-muted italic bg-aki-bg p-1.5 rounded">No response headers defined</p>
+                                                    <p className="text-[10px] text-fetchy-text-muted italic bg-fetchy-bg p-1.5 rounded">No response headers defined</p>
                                                   )}
                                                 </div>
                                               );
@@ -1040,16 +1040,16 @@ export default function OpenApiEditor({ documentId }: OpenApiEditorProps) {
                                                 (typedContent.schema ? generateExampleFromSchema(typedContent.schema, parsedSpec!) : null);
 
                                               return (
-                                                <div key={contentType} className="bg-aki-bg rounded overflow-hidden ml-2 mb-2">
-                                                  <div className="px-2 py-1 bg-aki-sidebar/50 border-b border-aki-border flex items-center justify-between">
+                                                <div key={contentType} className="bg-fetchy-bg rounded overflow-hidden ml-2 mb-2">
+                                                  <div className="px-2 py-1 bg-fetchy-sidebar/50 border-b border-fetchy-border flex items-center justify-between">
                                                     <div className="flex items-center gap-2">
-                                                      <FileOutput size={10} className="text-aki-text-muted" />
-                                                      <span className="text-xs font-mono text-aki-accent">{contentType}</span>
+                                                      <FileOutput size={10} className="text-fetchy-text-muted" />
+                                                      <span className="text-xs font-mono text-fetchy-accent">{contentType}</span>
                                                     </div>
                                                     {exampleJson ? (
                                                       <button
                                                         onClick={() => navigator.clipboard.writeText(JSON.stringify(exampleJson, null, 2))}
-                                                        className="p-1 hover:bg-aki-border rounded text-aki-text-muted hover:text-aki-text"
+                                                        className="p-1 hover:bg-fetchy-border rounded text-fetchy-text-muted hover:text-fetchy-text"
                                                         title="Copy JSON"
                                                       >
                                                         <Copy size={12} />
@@ -1060,8 +1060,8 @@ export default function OpenApiEditor({ documentId }: OpenApiEditorProps) {
                                                     {/* Show JSON Example First */}
                                                     {exampleJson ? (
                                                       <div className="mb-3">
-                                                        <span className="text-[10px] text-aki-text-muted uppercase font-medium">Example JSON:</span>
-                                                        <pre className="text-xs bg-aki-sidebar text-green-400 p-3 rounded mt-1 overflow-auto max-h-60 font-mono">
+                                                        <span className="text-[10px] text-fetchy-text-muted uppercase font-medium">Example JSON:</span>
+                                                        <pre className="text-xs bg-fetchy-sidebar text-green-400 p-3 rounded mt-1 overflow-auto max-h-60 font-mono">
                                                           {JSON.stringify(exampleJson, null, 2)}
                                                         </pre>
                                                       </div>
@@ -1069,16 +1069,16 @@ export default function OpenApiEditor({ documentId }: OpenApiEditorProps) {
                                                     {/* Multiple examples if available */}
                                                     {typedContent.examples && Object.keys(typedContent.examples).length > 1 ? (
                                                       <details className="mb-2">
-                                                        <summary className="text-[10px] text-aki-text-muted uppercase cursor-pointer hover:text-aki-text">
+                                                        <summary className="text-[10px] text-fetchy-text-muted uppercase cursor-pointer hover:text-fetchy-text">
                                                           More Examples ({Object.keys(typedContent.examples).length})
                                                         </summary>
                                                         <div className="mt-2 space-y-2">
                                                           {Object.entries(typedContent.examples).slice(1).map(([exName, ex]) => (
                                                             <div key={exName}>
-                                                              <span className="text-[10px] text-aki-text-muted">
+                                                              <span className="text-[10px] text-fetchy-text-muted">
                                                                 {ex.summary || exName}:
                                                               </span>
-                                                              <pre className="text-xs bg-aki-sidebar text-green-400 p-2 rounded mt-1 overflow-auto max-h-40 font-mono">
+                                                              <pre className="text-xs bg-fetchy-sidebar text-green-400 p-2 rounded mt-1 overflow-auto max-h-40 font-mono">
                                                                 {JSON.stringify(ex.value, null, 2)}
                                                               </pre>
                                                             </div>
@@ -1089,10 +1089,10 @@ export default function OpenApiEditor({ documentId }: OpenApiEditorProps) {
                                                     {/* Schema Details (collapsible) */}
                                                     {typedContent.schema ? (
                                                       <details>
-                                                        <summary className="text-[10px] text-aki-text-muted uppercase cursor-pointer hover:text-aki-text">
+                                                        <summary className="text-[10px] text-fetchy-text-muted uppercase cursor-pointer hover:text-fetchy-text">
                                                           Schema Details
                                                         </summary>
-                                                        <div className="mt-2 pl-2 border-l-2 border-aki-border">
+                                                        <div className="mt-2 pl-2 border-l-2 border-fetchy-border">
                                                           <SchemaViewer schema={typedContent.schema} spec={parsedSpec!} />
                                                         </div>
                                                       </details>
@@ -1104,7 +1104,7 @@ export default function OpenApiEditor({ documentId }: OpenApiEditorProps) {
 
                                             {/* No response body message */}
                                             {!resolvedResponse.content ? (
-                                              <p className="text-[10px] text-aki-text-muted italic ml-2 bg-aki-bg p-1.5 rounded">No response body</p>
+                                              <p className="text-[10px] text-fetchy-text-muted italic ml-2 bg-fetchy-bg p-1.5 rounded">No response body</p>
                                             ) : null}
                                           </div>
                                         )})}
@@ -1132,42 +1132,42 @@ export default function OpenApiEditor({ documentId }: OpenApiEditorProps) {
                       const exampleJson = generateExampleFromSchema(schemaObj, parsedSpec);
 
                       return (
-                        <div key={name} className="border border-aki-border rounded overflow-hidden">
-                          <div className="flex items-center justify-between p-3 bg-aki-sidebar/50">
+                        <div key={name} className="border border-fetchy-border rounded overflow-hidden">
+                          <div className="flex items-center justify-between p-3 bg-fetchy-sidebar/50">
                             <div className="flex items-center gap-2">
                               <Braces size={14} className="text-purple-400" />
-                              <span className="font-mono font-medium text-aki-text">{name}</span>
+                              <span className="font-mono font-medium text-fetchy-text">{name}</span>
                               {schemaObj.type ? (
-                                <span className="text-xs text-aki-text-muted">({String(schemaObj.type)})</span>
+                                <span className="text-xs text-fetchy-text-muted">({String(schemaObj.type)})</span>
                               ) : null}
                             </div>
                             <button
                               onClick={() => navigator.clipboard.writeText(JSON.stringify(exampleJson, null, 2))}
-                              className="p-1.5 hover:bg-aki-border rounded text-aki-text-muted hover:text-aki-text"
+                              className="p-1.5 hover:bg-fetchy-border rounded text-fetchy-text-muted hover:text-fetchy-text"
                               title="Copy example JSON"
                             >
                               <Copy size={14} />
                             </button>
                           </div>
                           {schemaObj.description ? (
-                            <div className="px-3 py-2 border-b border-aki-border bg-aki-bg/50">
-                              <p className="text-xs text-aki-text-muted">{String(schemaObj.description)}</p>
+                            <div className="px-3 py-2 border-b border-fetchy-border bg-fetchy-bg/50">
+                              <p className="text-xs text-fetchy-text-muted">{String(schemaObj.description)}</p>
                             </div>
                           ) : null}
-                          <div className="p-3 bg-aki-bg">
+                          <div className="p-3 bg-fetchy-bg">
                             {/* Example JSON */}
                             <div className="mb-3">
-                              <span className="text-[10px] text-aki-text-muted uppercase font-medium">Example JSON:</span>
-                              <pre className="text-xs bg-aki-sidebar text-green-400 p-3 rounded mt-1 overflow-auto max-h-60 font-mono">
+                              <span className="text-[10px] text-fetchy-text-muted uppercase font-medium">Example JSON:</span>
+                              <pre className="text-xs bg-fetchy-sidebar text-green-400 p-3 rounded mt-1 overflow-auto max-h-60 font-mono">
                                 {JSON.stringify(exampleJson, null, 2)}
                               </pre>
                             </div>
                             {/* Schema Definition */}
                             <details>
-                              <summary className="text-[10px] text-aki-text-muted uppercase cursor-pointer hover:text-aki-text">
+                              <summary className="text-[10px] text-fetchy-text-muted uppercase cursor-pointer hover:text-fetchy-text">
                                 Schema Definition
                               </summary>
-                              <pre className="text-xs text-aki-text-muted overflow-auto mt-2 p-2 bg-aki-sidebar rounded">
+                              <pre className="text-xs text-fetchy-text-muted overflow-auto mt-2 p-2 bg-fetchy-sidebar rounded">
                                 {JSON.stringify(schema, null, 2)}
                               </pre>
                             </details>
@@ -1183,9 +1183,9 @@ export default function OpenApiEditor({ documentId }: OpenApiEditorProps) {
               {activeSection === 'info' && (
                 <div className="p-4 space-y-4">
                   {parsedSpec.info?.contact && (
-                    <div className="border border-aki-border rounded p-4">
-                      <h3 className="font-medium text-aki-text mb-2">Contact</h3>
-                      <div className="space-y-1 text-sm text-aki-text-muted">
+                    <div className="border border-fetchy-border rounded p-4">
+                      <h3 className="font-medium text-fetchy-text mb-2">Contact</h3>
+                      <div className="space-y-1 text-sm text-fetchy-text-muted">
                         {parsedSpec.info.contact.name && <p>Name: {parsedSpec.info.contact.name}</p>}
                         {parsedSpec.info.contact.email && <p>Email: {parsedSpec.info.contact.email}</p>}
                         {parsedSpec.info.contact.url && <p>URL: {parsedSpec.info.contact.url}</p>}
@@ -1194,9 +1194,9 @@ export default function OpenApiEditor({ documentId }: OpenApiEditorProps) {
                   )}
 
                   {parsedSpec.info?.license && (
-                    <div className="border border-aki-border rounded p-4">
-                      <h3 className="font-medium text-aki-text mb-2">License</h3>
-                      <div className="space-y-1 text-sm text-aki-text-muted">
+                    <div className="border border-fetchy-border rounded p-4">
+                      <h3 className="font-medium text-fetchy-text mb-2">License</h3>
+                      <div className="space-y-1 text-sm text-fetchy-text-muted">
                         <p>Name: {parsedSpec.info.license.name}</p>
                         {parsedSpec.info.license.url && <p>URL: {parsedSpec.info.license.url}</p>}
                       </div>
@@ -1204,13 +1204,13 @@ export default function OpenApiEditor({ documentId }: OpenApiEditorProps) {
                   )}
 
                   {parsedSpec.components?.securitySchemes && (
-                    <div className="border border-aki-border rounded p-4">
-                      <h3 className="font-medium text-aki-text mb-2">Security Schemes</h3>
+                    <div className="border border-fetchy-border rounded p-4">
+                      <h3 className="font-medium text-fetchy-text mb-2">Security Schemes</h3>
                       <div className="space-y-2">
                         {Object.entries(parsedSpec.components.securitySchemes).map(([name, scheme]) => (
-                          <div key={name} className="p-2 bg-aki-sidebar rounded">
-                            <span className="font-mono text-sm text-aki-accent">{name}</span>
-                            <pre className="text-xs text-aki-text-muted mt-1">
+                          <div key={name} className="p-2 bg-fetchy-sidebar rounded">
+                            <span className="font-mono text-sm text-fetchy-accent">{name}</span>
+                            <pre className="text-xs text-fetchy-text-muted mt-1">
                               {JSON.stringify(scheme, null, 2)}
                             </pre>
                           </div>
@@ -1222,7 +1222,7 @@ export default function OpenApiEditor({ documentId }: OpenApiEditorProps) {
               )}
             </div>
           ) : (
-            <div className="flex-1 flex items-center justify-center text-aki-text-muted">
+            <div className="flex-1 flex items-center justify-center text-fetchy-text-muted">
               Start typing your OpenAPI specification...
             </div>
           )}

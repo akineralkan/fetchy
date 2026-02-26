@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import {
   Sun,
   Moon,
+  MoonStar,
   Droplets,
   Leaf,
   Globe,
@@ -13,7 +14,6 @@ import {
   Sparkles,
   Flame,
   Star,
-  Aperture,
   Skull,
 } from 'lucide-react';
 import { usePreferencesStore } from '../store/preferencesStore';
@@ -24,23 +24,27 @@ import CustomThemeEditorModal from './CustomThemeEditorModal';
 // Theme metadata for built-in themes
 // ─────────────────────────────────────────────────────────────────
 
-type BuiltinKey = 'dark' | 'light' | 'ocean' | 'forest' | 'earth' | 'aurora' | 'sunset' | 'candy' | 'rainbow' | 'dungeon';
+type BuiltinKey = 'indigo' | 'light' | 'ocean' | 'forest' | 'earth' | 'aurora' | 'sunset' | 'candy' | 'dark' | 'black';
 
-const BUILTIN_THEMES: Array<{ id: BuiltinKey; label: string; dotColor: string }> = [
-  { id: 'dark', label: 'Dark', dotColor: '#e94560' },
-  { id: 'light', label: 'Light', dotColor: '#c93850' },
-  { id: 'ocean', label: 'Ocean', dotColor: '#0ea5e9' },
-  { id: 'forest', label: 'Forest', dotColor: '#22c55e' },
-  { id: 'earth', label: 'Earth', dotColor: '#d97706' },
-  { id: 'aurora', label: 'Aurora', dotColor: '#c026d3' },
-  { id: 'sunset', label: 'Sunset', dotColor: '#ff1500' },
-  { id: 'candy', label: 'Candy', dotColor: '#ff0080' },
-  { id: 'rainbow', label: 'Rainbow', dotColor: '#ffdd00' },
-  { id: 'dungeon', label: 'Dungeon', dotColor: '#8b0000' },
+const BUILTIN_THEMES: Array<{ id: BuiltinKey; label: string; dotColor: string; mode: 'light' | 'dark' }> = [
+  { id: 'light', label: 'Light', dotColor: '#8a5060', mode: 'light' },
+  { id: 'ocean', label: 'Ocean', dotColor: '#4a7090', mode: 'light' },
+  { id: 'forest', label: 'Forest', dotColor: '#4a7858', mode: 'light' },
+  { id: 'earth', label: 'Earth', dotColor: '#8a6040', mode: 'light' },
+  { id: 'candy', label: 'Candy', dotColor: '#885068', mode: 'light' },
+  { id: 'dark', label: 'Dark', dotColor: '#6066b0', mode: 'dark' },
+  { id: 'indigo', label: 'Indigo', dotColor: '#906070', mode: 'dark' },
+  { id: 'black', label: 'Black', dotColor: '#6466f1', mode: 'dark' },
+  { id: 'aurora', label: 'Aurora', dotColor: '#7a4880', mode: 'dark' },
+  { id: 'sunset', label: 'Sunset', dotColor: '#9a4840', mode: 'dark' },
 ];
 
+const LIGHT_THEMES = BUILTIN_THEMES.filter((t) => t.mode === 'light');
+const DARK_THEMES = BUILTIN_THEMES.filter((t) => t.mode === 'dark');
+
 const BUILTIN_ICONS: Record<BuiltinKey, React.ReactNode> = {
-  dark: <Moon size={15} />,
+  black: <Skull size={15} />,
+  indigo: <MoonStar size={15} />,
   light: <Sun size={15} />,
   ocean: <Droplets size={15} />,
   forest: <Leaf size={15} />,
@@ -48,8 +52,7 @@ const BUILTIN_ICONS: Record<BuiltinKey, React.ReactNode> = {
   aurora: <Sparkles size={15} />,
   sunset: <Flame size={15} />,
   candy: <Star size={15} />,
-  rainbow: <Aperture size={15} />,
-  dungeon: <Skull size={15} />,
+  dark: <Moon size={15} />,
 };
 
 // ─────────────────────────────────────────────────────────────────
@@ -67,10 +70,19 @@ const COLOR_VAR_MAP: Record<string, string> = {
   inputBg: '--input-bg',
   accent: '--accent',
   accentHover: '--accent-hover',
+  tabBarBg: '--tab-bar-bg',
+  tabActiveBg: '--tab-active-bg',
+  dropdownBg: '--dropdown-bg',
+  modalBg: '--modal-bg',
+  tooltipBg: '--tooltip-bg',
+  separatorColor: '--separator-color',
+  successColor: '--success',
+  warningColor: '--warning',
+  errorColor: '--error',
 };
 
 const ALL_CSS_VARS = Object.values(COLOR_VAR_MAP);
-const THEME_CLASSES = ['light-theme', 'ocean-theme', 'forest-theme', 'earth-theme', 'aurora-theme', 'sunset-theme', 'candy-theme', 'rainbow-theme', 'dungeon-theme'];
+const THEME_CLASSES = ['light-theme', 'ocean-theme', 'forest-theme', 'earth-theme', 'aurora-theme', 'sunset-theme', 'candy-theme', 'black-theme', 'pure-black-theme'];
 
 function applyTheme(theme: string, customThemes: CustomTheme[]) {
   const body = document.body;
@@ -87,15 +99,12 @@ function applyTheme(theme: string, customThemes: CustomTheme[]) {
       break;
     case 'ocean':
       body.classList.add('ocean-theme');
-      html.classList.add('dark');
       break;
     case 'forest':
       body.classList.add('forest-theme');
-      html.classList.add('dark');
       break;
     case 'earth':
       body.classList.add('earth-theme');
-      html.classList.add('dark');
       break;
     case 'aurora':
       body.classList.add('aurora-theme');
@@ -107,17 +116,16 @@ function applyTheme(theme: string, customThemes: CustomTheme[]) {
       break;
     case 'candy':
       body.classList.add('candy-theme');
-      html.classList.add('dark');
-      break;
-    case 'rainbow':
-      body.classList.add('rainbow-theme');
-      html.classList.add('dark');
-      break;
-    case 'dungeon':
-      body.classList.add('dungeon-theme');
-      html.classList.add('dark');
       break;
     case 'dark':
+      body.classList.add('black-theme');
+      html.classList.add('dark');
+      break;
+    case 'black':
+      body.classList.add('pure-black-theme');
+      html.classList.add('dark');
+      break;
+    case 'indigo':
       html.classList.add('dark');
       break;
     default: {
@@ -176,7 +184,7 @@ export default function ThemeToggle() {
 
   const currentLabel = builtinMeta?.label ?? customMeta?.name ?? 'Theme';
   const currentDotColor =
-    builtinMeta?.dotColor ?? customMeta?.colors.accent ?? '#e94560';
+    builtinMeta?.dotColor ?? customMeta?.colors.accent ?? '#906070';
   const currentIcon = builtinMeta
     ? BUILTIN_ICONS[builtinMeta.id]
     : <Palette size={15} />;
@@ -231,7 +239,7 @@ export default function ThemeToggle() {
         {/* Trigger button */}
         <button
           onClick={() => setIsOpen((prev) => !prev)}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded transition-colors text-aki-text-muted hover:text-aki-text hover:bg-aki-border"
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded transition-colors text-fetchy-text-muted hover:text-fetchy-text hover:bg-fetchy-border"
           title="Change Theme"
         >
           <span className="flex-shrink-0" style={{ color: currentDotColor }}>
@@ -254,15 +262,15 @@ export default function ThemeToggle() {
               border: '1px solid var(--border-color)',
             }}
           >
-            {/* Built-in themes */}
+            {/* Light themes */}
             <div className="py-1">
               <div
                 className="px-3 py-1 text-[10px] font-semibold uppercase tracking-widest"
                 style={{ color: 'var(--text-muted)' }}
               >
-                Built-in
+                Light
               </div>
-              {BUILTIN_THEMES.map(({ id, label, dotColor }) => (
+              {LIGHT_THEMES.map(({ id, label, dotColor }) => (
                 <button
                   key={id}
                   onClick={() => selectTheme(id)}
@@ -292,6 +300,48 @@ export default function ThemeToggle() {
                   )}
                 </button>
               ))}
+            </div>
+
+            {/* Dark themes */}
+            <div style={{ borderTop: '1px solid var(--border-color)' }}>
+              <div className="py-1">
+                <div
+                  className="px-3 py-1 text-[10px] font-semibold uppercase tracking-widest"
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  Dark
+                </div>
+                {DARK_THEMES.map(({ id, label, dotColor }) => (
+                  <button
+                    key={id}
+                    onClick={() => selectTheme(id)}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm transition-colors text-left"
+                    style={{
+                      color: currentTheme === id ? 'var(--accent)' : 'var(--text-color)',
+                      backgroundColor:
+                        currentTheme === id ? 'rgba(255,255,255,0.05)' : 'transparent',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (currentTheme !== id)
+                        (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                          'rgba(255,255,255,0.05)';
+                    }}
+                    onMouseLeave={(e) => {
+                      if (currentTheme !== id)
+                        (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent';
+                    }}
+                  >
+                    <span style={{ color: dotColor }}>{BUILTIN_ICONS[id]}</span>
+                    <span className="font-medium">{label}</span>
+                    {currentTheme === id && (
+                      <span
+                        className="ml-auto w-1.5 h-1.5 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: 'var(--accent)' }}
+                      />
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Custom themes */}
@@ -365,7 +415,7 @@ export default function ThemeToggle() {
                           className="p-1 rounded transition-colors"
                           style={{ color: 'var(--text-muted)' }}
                           onMouseEnter={(e) =>
-                            ((e.currentTarget as HTMLButtonElement).style.color = '#ef4444')
+                            ((e.currentTarget as HTMLButtonElement).style.color = '#a06060')
                           }
                           onMouseLeave={(e) =>
                             ((e.currentTarget as HTMLButtonElement).style.color =
@@ -387,7 +437,7 @@ export default function ThemeToggle() {
               <div className="py-1">
                 <button
                   onClick={handleCreateTheme}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm transition-colors"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm transition-colors text-left whitespace-nowrap"
                   style={{ color: 'var(--text-muted)' }}
                   onMouseEnter={(e) => {
                     (e.currentTarget as HTMLButtonElement).style.color = 'var(--accent)';
@@ -399,7 +449,7 @@ export default function ThemeToggle() {
                     (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent';
                   }}
                 >
-                  <Plus size={15} />
+                  <span style={{ color: 'var(--accent)' }}><Plus size={15} /></span>
                   <span className="font-medium">Create Custom Theme</span>
                 </button>
               </div>

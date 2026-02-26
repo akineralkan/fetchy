@@ -1,4 +1,4 @@
-ï»¿import { useState } from 'react';
+import { useState } from 'react';
 import { FolderOpen, Lock, Layers, RefreshCw, Upload } from 'lucide-react';
 import { useWorkspacesStore } from '../store/workspacesStore';
 
@@ -46,7 +46,7 @@ export default function CreateWorkspaceScreen({ onCreated }: CreateWorkspaceScre
     setIsBusy(true);
     setError(null);
     try {
-      // In browser mode directories are virtual â€” use a namespaced placeholder.
+      // In browser mode directories are virtual — use a namespaced placeholder.
       const home = form.homeDirectory || ('browser:' + name + ':home');
       const secrets = form.secretsDirectory || ('browser:' + name + ':secrets');
       await addWorkspace(name, home, secrets);
@@ -76,16 +76,16 @@ export default function CreateWorkspaceScreen({ onCreated }: CreateWorkspaceScre
   };
 
   return (
-    <div className="h-screen w-screen flex flex-col items-center justify-center bg-aki-bg overflow-auto p-6">
+    <div className="h-screen w-screen flex flex-col items-center justify-center bg-fetchy-bg overflow-auto p-6">
       <div className="w-full max-w-lg space-y-8">
         {/* Logo + headline */}
         <div className="flex flex-col items-center gap-3 text-center">
           <div className="flex items-center gap-3">
             <img src="./logo.jpg" alt="Fetchy" className="h-12 w-12 rounded-lg shadow-lg" />
-            <span className="text-3xl font-bold text-aki-accent">Fetchy</span>
+            <span className="text-3xl font-bold text-fetchy-accent">Fetchy</span>
           </div>
           <h1 className="text-xl font-semibold text-white">Create your first workspace</h1>
-          <p className="text-sm text-aki-text-muted max-w-sm">
+          <p className="text-sm text-fetchy-text-muted max-w-sm">
             Workspaces keep your collections, environments, APIs and secrets fully isolated from one
             another. You must create one to continue.
           </p>
@@ -112,14 +112,14 @@ export default function CreateWorkspaceScreen({ onCreated }: CreateWorkspaceScre
             />
           </div>
 
-          {/* Directories â€” Electron only */}
+          {/* Directories — Electron only */}
           {isElectron && (
             <>
               <div>
                 <label className="block text-xs text-gray-400 mb-1 flex items-center gap-1">
                   <FolderOpen size={12} />
                   Home directory *
-                  <span className="text-gray-600 ml-1">â€” collections, environments, APIs</span>
+                  <span className="text-gray-600 ml-1">— collections, environments, APIs</span>
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -143,7 +143,7 @@ export default function CreateWorkspaceScreen({ onCreated }: CreateWorkspaceScre
                 <label className="block text-xs text-gray-400 mb-1 flex items-center gap-1">
                   <Lock size={12} />
                   Secrets directory *
-                  <span className="text-gray-600 ml-1">â€” secret variable values only</span>
+                  <span className="text-gray-600 ml-1">— secret variable values only</span>
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -206,7 +206,7 @@ export default function CreateWorkspaceScreen({ onCreated }: CreateWorkspaceScre
               <Layers size={11} /> Isolation
             </p>
             <p>
-              Every workspace has its own collections, environments, history, and secrets â€” completely
+              Every workspace has its own collections, environments, history, and secrets — completely
               separated from other workspaces.
             </p>
           </div>

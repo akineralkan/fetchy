@@ -51,23 +51,23 @@ export default function SortableFolderItem({
   return (
     <div ref={setNodeRef} style={style}>
       <div
-        className={`tree-item flex items-center gap-2 px-2 py-1.5 cursor-pointer group rounded ${isOver ? 'bg-aki-accent/20' : ''}`}
+        className={`tree-item flex items-center gap-2 px-2 py-1.5 cursor-pointer group rounded ${isOver ? 'bg-fetchy-accent/20' : ''}`}
         onClick={onToggle}
         onContextMenu={onContextMenu}
       >
         <button
           {...attributes}
           {...listeners}
-          className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-aki-border rounded cursor-grab active:cursor-grabbing"
+          className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-fetchy-border rounded cursor-grab active:cursor-grabbing"
           style={{ marginLeft: `${(depth - 1) * 16}px` }}
           onClick={(e) => e.stopPropagation()}
         >
-          <GripVertical size={12} className="text-aki-text-muted" />
+          <GripVertical size={12} className="text-fetchy-text-muted" />
         </button>
         {folder.expanded ? (
-          <ChevronDown size={14} className="text-aki-text-muted shrink-0" />
+          <ChevronDown size={14} className="text-fetchy-text-muted shrink-0" />
         ) : (
-          <ChevronRight size={14} className="text-aki-text-muted shrink-0" />
+          <ChevronRight size={14} className="text-fetchy-text-muted shrink-0" />
         )}
         <Folder size={14} className="text-yellow-400 shrink-0" />
         {editingId === folder.id ? (
@@ -80,14 +80,14 @@ export default function SortableFolderItem({
               if (e.key === 'Enter') onEditComplete();
               if (e.key === 'Escape') onEditComplete();
             }}
-            className="flex-1 bg-transparent border-b border-aki-accent text-sm outline-none"
+            className="flex-1 bg-transparent border-b border-fetchy-accent text-sm outline-none"
             onClick={(e) => e.stopPropagation()}
           />
         ) : (
-          <span className="text-sm text-aki-text truncate flex-1">{folder.name}</span>
+          <span className="text-sm text-fetchy-text truncate flex-1">{folder.name}</span>
         )}
         <button
-          className="opacity-0 group-hover:opacity-100 p-1 hover:bg-aki-border rounded"
+          className="opacity-0 group-hover:opacity-100 p-1 hover:bg-fetchy-border rounded"
           onClick={(e) => {
             e.stopPropagation();
             onContextMenu(e);

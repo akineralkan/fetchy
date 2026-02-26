@@ -109,7 +109,7 @@ export default function VariableTextarea({ value, onChange, placeholder, classNa
       if (match.index > lastIndex) {
         const textBefore = value.substring(lastIndex, match.index);
         parts.push(
-          <span key={`text-${keyIndex++}`} className="text-aki-text whitespace-pre">
+          <span key={`text-${keyIndex++}`} className="text-fetchy-text whitespace-pre">
             {textBefore}
           </span>
         );
@@ -136,7 +136,7 @@ export default function VariableTextarea({ value, onChange, placeholder, classNa
     // Add remaining text
     if (lastIndex < value.length) {
       parts.push(
-        <span key={`text-${keyIndex++}`} className="text-aki-text whitespace-pre">
+        <span key={`text-${keyIndex++}`} className="text-fetchy-text whitespace-pre">
           {value.substring(lastIndex)}
         </span>
       );
@@ -158,8 +158,8 @@ export default function VariableTextarea({ value, onChange, placeholder, classNa
         onKeyDown={handleKeyDown}
         onScroll={handleScroll}
         placeholder={placeholder}
-        className={`${className} h-full w-full resize-none font-mono text-sm p-4 bg-[#1e1e2e] border-none outline-none`}
-        style={hasVariables ? { color: 'transparent', caretColor: 'white' } : undefined}
+        className={`${className} h-full w-full resize-none font-mono text-sm p-4 bg-[var(--input-bg)] border-none outline-none`}
+        style={hasVariables ? { color: 'transparent', caretColor: 'var(--text-color)' } : undefined}
         spellCheck={false}
       />
 

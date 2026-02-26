@@ -273,7 +273,7 @@ export default function WorkspacesModal({ isOpen, onClose }: WorkspacesModalProp
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-      <div className="bg-[#1a1a2e] rounded-lg shadow-xl w-[640px] max-h-[85vh] overflow-hidden border border-[#2d2d44] flex flex-col">
+      <div className="bg-fetchy-modal rounded-lg shadow-xl w-[640px] max-h-[85vh] overflow-hidden border border-fetchy-border flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-[#2d2d44] shrink-0">
           <div className="flex items-center gap-2">

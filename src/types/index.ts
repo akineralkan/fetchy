@@ -97,7 +97,7 @@ export interface RequestHistoryItem {
   timestamp: number;
 }
 
-export type BuiltinTheme = 'dark' | 'light' | 'ocean' | 'forest' | 'earth';
+export type BuiltinTheme = 'indigo' | 'light' | 'ocean' | 'forest' | 'earth' | 'aurora' | 'sunset' | 'candy' | 'dark';
 
 export interface CustomThemeColors {
   bgColor: string;
@@ -110,6 +110,15 @@ export interface CustomThemeColors {
   inputBg: string;
   accent: string;
   accentHover: string;
+  tabBarBg: string;
+  tabActiveBg: string;
+  dropdownBg: string;
+  modalBg: string;
+  tooltipBg: string;
+  separatorColor: string;
+  successColor: string;
+  warningColor: string;
+  errorColor: string;
 }
 
 export interface CustomTheme {

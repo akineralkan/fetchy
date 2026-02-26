@@ -53,15 +53,15 @@ export default function SortableCollectionItem({
         <button
           {...attributes}
           {...listeners}
-          className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-aki-border rounded cursor-grab active:cursor-grabbing"
+          className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-fetchy-border rounded cursor-grab active:cursor-grabbing"
           onClick={(e) => e.stopPropagation()}
         >
-          <GripVertical size={12} className="text-aki-text-muted" />
+          <GripVertical size={12} className="text-fetchy-text-muted" />
         </button>
         {collection.expanded ? (
-          <ChevronDown size={16} className="text-aki-text-muted shrink-0" />
+          <ChevronDown size={16} className="text-fetchy-text-muted shrink-0" />
         ) : (
-          <ChevronRight size={16} className="text-aki-text-muted shrink-0" />
+          <ChevronRight size={16} className="text-fetchy-text-muted shrink-0" />
         )}
         {editingId === collection.id ? (
           <input
@@ -73,16 +73,16 @@ export default function SortableCollectionItem({
               if (e.key === 'Enter') onEditComplete();
               if (e.key === 'Escape') onEditComplete();
             }}
-            className="flex-1 bg-transparent border-b border-aki-accent text-sm outline-none"
+            className="flex-1 bg-transparent border-b border-fetchy-accent text-sm outline-none"
             onClick={(e) => e.stopPropagation()}
           />
         ) : (
-          <span className="text-sm font-medium text-aki-text truncate flex-1">
+          <span className="text-sm font-medium text-fetchy-text truncate flex-1">
             {collection.name}
           </span>
         )}
         <button
-          className="opacity-0 group-hover:opacity-100 p-1 hover:bg-aki-border rounded"
+          className="opacity-0 group-hover:opacity-100 p-1 hover:bg-fetchy-border rounded"
           onClick={(e) => {
             e.stopPropagation();
             onContextMenu(e);

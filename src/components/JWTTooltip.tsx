@@ -100,7 +100,7 @@ export default function JWTTooltip({ decodedJWT, children }: JWTTooltipProps) {
       {showDropdown && (
         <div
           ref={dropdownRef}
-          className="fixed z-[9999] bg-aki-bg border border-aki-border rounded-lg shadow-xl min-w-[200px]"
+          className="fixed z-[9999] bg-fetchy-bg border border-fetchy-border rounded-lg shadow-xl min-w-[200px]"
           style={{
             left: `${dropdownPosition.x}px`,
             top: `${dropdownPosition.y}px`,
@@ -110,7 +110,7 @@ export default function JWTTooltip({ decodedJWT, children }: JWTTooltipProps) {
           <div className="py-1">
             <button
               onClick={handleCopyToken}
-              className="w-full px-4 py-2 text-left text-sm text-aki-text hover:bg-aki-border transition-colors flex items-center gap-2"
+              className="w-full px-4 py-2 text-left text-sm text-fetchy-text hover:bg-fetchy-border transition-colors flex items-center gap-2"
             >
               {tokenCopied ? (
                 <>
@@ -126,7 +126,7 @@ export default function JWTTooltip({ decodedJWT, children }: JWTTooltipProps) {
             </button>
             <button
               onClick={handleShowDecoded}
-              className="w-full px-4 py-2 text-left text-sm text-aki-text hover:bg-aki-border transition-colors flex items-center gap-2"
+              className="w-full px-4 py-2 text-left text-sm text-fetchy-text hover:bg-fetchy-border transition-colors flex items-center gap-2"
             >
               <Eye size={16} className="flex-shrink-0" />
               <span>Show Decoded Token</span>
@@ -146,7 +146,7 @@ export default function JWTTooltip({ decodedJWT, children }: JWTTooltipProps) {
 
           {/* Modal */}
           <div
-            className="fixed z-[9999] bg-aki-bg border border-aki-border rounded-lg shadow-2xl w-[90vw] max-w-3xl"
+            className="fixed z-[9999] bg-fetchy-bg border border-fetchy-border rounded-lg shadow-2xl w-[90vw] max-w-3xl"
             style={{
               left: '50%',
               top: '50%',
@@ -156,10 +156,10 @@ export default function JWTTooltip({ decodedJWT, children }: JWTTooltipProps) {
             onClick={(e) => e.stopPropagation()}
           >
           {/* Header */}
-          <div className="px-4 py-3 border-b border-aki-border bg-aki-accent/10 rounded-t-lg flex items-center justify-between">
+          <div className="px-4 py-3 border-b border-fetchy-border bg-fetchy-accent/10 rounded-t-lg flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Shield size={18} className="text-aki-accent" />
-              <h3 className="font-semibold text-aki-text">JWT Token Decoded</h3>
+              <Shield size={18} className="text-fetchy-accent" />
+              <h3 className="font-semibold text-fetchy-text">JWT Token Decoded</h3>
               {isExpired && (
                 <span className="flex items-center gap-1 text-xs text-red-400 bg-red-400/10 px-2 py-1 rounded">
                   <AlertCircle size={12} />
@@ -169,37 +169,37 @@ export default function JWTTooltip({ decodedJWT, children }: JWTTooltipProps) {
             </div>
             <button
               onClick={handleCloseModal}
-              className="p-1 hover:bg-aki-accent/20 rounded transition-colors"
+              className="p-1 hover:bg-fetchy-accent/20 rounded transition-colors"
               title="Close"
             >
-              <X size={18} className="text-aki-text-muted hover:text-aki-text" />
+              <X size={18} className="text-fetchy-text-muted hover:text-fetchy-text" />
             </button>
           </div>
 
           <div className="overflow-y-auto" style={{ maxHeight: 'calc(80vh - 120px)' }}>
             {/* Header Section */}
-            <div className="px-4 py-3 border-b border-aki-border/50">
+            <div className="px-4 py-3 border-b border-fetchy-border/50">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <Key size={14} className="text-purple-400" />
-                  <span className="text-sm font-medium text-aki-text">Header</span>
+                  <span className="text-sm font-medium text-fetchy-text">Header</span>
                 </div>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     copyToClipboard(JSON.stringify(decodedJWT.header, null, 2), 'header');
                   }}
-                  className="p-1 hover:bg-aki-accent/10 rounded transition-colors"
+                  className="p-1 hover:bg-fetchy-accent/10 rounded transition-colors"
                   title="Copy header"
                 >
                   {copiedSection === 'header' ? (
                     <Check size={14} className="text-green-400" />
                   ) : (
-                    <Copy size={14} className="text-aki-text-muted" />
+                    <Copy size={14} className="text-fetchy-text-muted" />
                   )}
                 </button>
               </div>
-              <pre className="text-xs text-aki-text bg-aki-bg-secondary p-2 rounded overflow-x-auto">
+              <pre className="text-xs text-fetchy-text bg-fetchy-bg-secondary p-2 rounded overflow-x-auto">
                 {JSON.stringify(decodedJWT.header, null, 2)}
               </pre>
             </div>
@@ -208,21 +208,21 @@ export default function JWTTooltip({ decodedJWT, children }: JWTTooltipProps) {
             <div className="px-4 py-3">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <Shield size={14} className="text-aki-accent" />
-                  <span className="text-sm font-medium text-aki-text">Payload</span>
+                  <Shield size={14} className="text-fetchy-accent" />
+                  <span className="text-sm font-medium text-fetchy-text">Payload</span>
                 </div>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     copyToClipboard(JSON.stringify(decodedJWT.payload, null, 2), 'payload');
                   }}
-                  className="p-1 hover:bg-aki-accent/10 rounded transition-colors"
+                  className="p-1 hover:bg-fetchy-accent/10 rounded transition-colors"
                   title="Copy payload"
                 >
                   {copiedSection === 'payload' ? (
                     <Check size={14} className="text-green-400" />
                   ) : (
-                    <Copy size={14} className="text-aki-text-muted" />
+                    <Copy size={14} className="text-fetchy-text-muted" />
                   )}
                 </button>
               </div>
@@ -231,20 +231,20 @@ export default function JWTTooltip({ decodedJWT, children }: JWTTooltipProps) {
               <div className="space-y-2 mb-3">
                 {decodedJWT.payload.iss && (
                   <div className="flex items-start gap-2">
-                    <span className="text-xs text-aki-text-muted min-w-20">Issuer:</span>
-                    <span className="text-xs text-aki-text font-mono">{decodedJWT.payload.iss}</span>
+                    <span className="text-xs text-fetchy-text-muted min-w-20">Issuer:</span>
+                    <span className="text-xs text-fetchy-text font-mono">{decodedJWT.payload.iss}</span>
                   </div>
                 )}
                 {decodedJWT.payload.sub && (
                   <div className="flex items-start gap-2">
-                    <span className="text-xs text-aki-text-muted min-w-20">Subject:</span>
-                    <span className="text-xs text-aki-text font-mono">{decodedJWT.payload.sub}</span>
+                    <span className="text-xs text-fetchy-text-muted min-w-20">Subject:</span>
+                    <span className="text-xs text-fetchy-text font-mono">{decodedJWT.payload.sub}</span>
                   </div>
                 )}
                 {decodedJWT.payload.aud && (
                   <div className="flex items-start gap-2">
-                    <span className="text-xs text-aki-text-muted min-w-20">Audience:</span>
-                    <span className="text-xs text-aki-text font-mono">
+                    <span className="text-xs text-fetchy-text-muted min-w-20">Audience:</span>
+                    <span className="text-xs text-fetchy-text font-mono">
                       {Array.isArray(decodedJWT.payload.aud)
                         ? decodedJWT.payload.aud.join(', ')
                         : decodedJWT.payload.aud}
@@ -253,27 +253,27 @@ export default function JWTTooltip({ decodedJWT, children }: JWTTooltipProps) {
                 )}
                 {decodedJWT.payload.exp && (
                   <div className="flex items-start gap-2">
-                    <Clock size={12} className="mt-0.5 text-aki-text-muted" />
-                    <span className="text-xs text-aki-text-muted min-w-20">Expires:</span>
-                    <span className={`text-xs font-mono ${isExpired ? 'text-red-400' : 'text-aki-text'}`}>
+                    <Clock size={12} className="mt-0.5 text-fetchy-text-muted" />
+                    <span className="text-xs text-fetchy-text-muted min-w-20">Expires:</span>
+                    <span className={`text-xs font-mono ${isExpired ? 'text-red-400' : 'text-fetchy-text'}`}>
                       {formatJWTDate(decodedJWT.payload.exp)}
                     </span>
                   </div>
                 )}
                 {decodedJWT.payload.iat && (
                   <div className="flex items-start gap-2">
-                    <Clock size={12} className="mt-0.5 text-aki-text-muted" />
-                    <span className="text-xs text-aki-text-muted min-w-20">Issued At:</span>
-                    <span className="text-xs text-aki-text font-mono">
+                    <Clock size={12} className="mt-0.5 text-fetchy-text-muted" />
+                    <span className="text-xs text-fetchy-text-muted min-w-20">Issued At:</span>
+                    <span className="text-xs text-fetchy-text font-mono">
                       {formatJWTDate(decodedJWT.payload.iat)}
                     </span>
                   </div>
                 )}
                 {decodedJWT.payload.nbf && (
                   <div className="flex items-start gap-2">
-                    <Clock size={12} className="mt-0.5 text-aki-text-muted" />
-                    <span className="text-xs text-aki-text-muted min-w-20">Not Before:</span>
-                    <span className="text-xs text-aki-text font-mono">
+                    <Clock size={12} className="mt-0.5 text-fetchy-text-muted" />
+                    <span className="text-xs text-fetchy-text-muted min-w-20">Not Before:</span>
+                    <span className="text-xs text-fetchy-text font-mono">
                       {formatJWTDate(decodedJWT.payload.nbf)}
                     </span>
                   </div>
@@ -282,46 +282,46 @@ export default function JWTTooltip({ decodedJWT, children }: JWTTooltipProps) {
 
               {/* Full Payload */}
               <details className="group">
-                <summary className="text-xs text-aki-text-muted cursor-pointer hover:text-aki-text mb-2 select-none">
+                <summary className="text-xs text-fetchy-text-muted cursor-pointer hover:text-fetchy-text mb-2 select-none">
                   Show full payload
                 </summary>
-                <pre className="text-xs text-aki-text bg-aki-bg-secondary p-2 rounded overflow-x-auto">
+                <pre className="text-xs text-fetchy-text bg-fetchy-bg-secondary p-2 rounded overflow-x-auto">
                   {JSON.stringify(decodedJWT.payload, null, 2)}
                 </pre>
               </details>
             </div>
 
             {/* Signature Section */}
-            <div className="px-4 py-3 border-t border-aki-border/50">
+            <div className="px-4 py-3 border-t border-fetchy-border/50">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <Key size={14} className="text-green-400" />
-                  <span className="text-sm font-medium text-aki-text">Signature</span>
+                  <span className="text-sm font-medium text-fetchy-text">Signature</span>
                 </div>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     copyToClipboard(decodedJWT.signature, 'signature');
                   }}
-                  className="p-1 hover:bg-aki-accent/10 rounded transition-colors"
+                  className="p-1 hover:bg-fetchy-accent/10 rounded transition-colors"
                   title="Copy signature"
                 >
                   {copiedSection === 'signature' ? (
                     <Check size={14} className="text-green-400" />
                   ) : (
-                    <Copy size={14} className="text-aki-text-muted" />
+                    <Copy size={14} className="text-fetchy-text-muted" />
                   )}
                 </button>
               </div>
-              <pre className="text-xs text-aki-text bg-aki-bg-secondary p-2 rounded overflow-x-auto break-all">
+              <pre className="text-xs text-fetchy-text bg-fetchy-bg-secondary p-2 rounded overflow-x-auto break-all">
                 {decodedJWT.signature}
               </pre>
             </div>
           </div>
 
           {/* Footer */}
-          <div className="px-4 py-2 border-t border-aki-border bg-aki-bg-secondary/50 rounded-b-lg">
-            <p className="text-xs text-aki-text-muted">
+          <div className="px-4 py-2 border-t border-fetchy-border bg-fetchy-bg-secondary/50 rounded-b-lg">
+            <p className="text-xs text-fetchy-text-muted">
               💡 Click JWT tokens to copy or view decoded values
             </p>
           </div>

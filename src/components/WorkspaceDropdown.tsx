@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Layers, Settings } from 'lucide-react';
 import { useWorkspacesStore } from '../store/workspacesStore';
 
@@ -38,7 +38,7 @@ export default function WorkspaceDropdown({ onOpenSettings }: WorkspaceDropdownP
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-1.5 rounded text-sm transition-colors bg-aki-border text-aki-text-muted hover:bg-aki-card"
+        className="flex items-center gap-2 px-3 py-1.5 rounded text-sm transition-colors bg-fetchy-border text-fetchy-text-muted hover:bg-fetchy-card"
         title="Switch Workspace"
       >
         <Layers size={16} />
@@ -49,13 +49,13 @@ export default function WorkspaceDropdown({ onOpenSettings }: WorkspaceDropdownP
       </button>
 
       {isOpen && (
-        <div className="absolute top-full mt-1 right-0 w-64 bg-aki-card border border-aki-border rounded-lg shadow-xl z-50 overflow-hidden">
+        <div className="absolute top-full mt-1 right-0 w-64 bg-fetchy-dropdown border border-fetchy-border rounded-lg shadow-xl z-50 overflow-hidden">
           {/* Header */}
-          <div className="flex items-center justify-between px-3 py-2 border-b border-aki-border bg-aki-sidebar">
-            <span className="text-xs font-medium text-aki-text-muted uppercase">Workspaces</span>
+          <div className="flex items-center justify-between px-3 py-2 border-b border-fetchy-border bg-fetchy-sidebar">
+            <span className="text-xs font-medium text-fetchy-text-muted uppercase">Workspaces</span>
             <button
               onClick={handleManageClick}
-              className="flex items-center gap-1 px-2 py-1 text-xs text-aki-text-muted hover:text-aki-accent hover:bg-aki-border rounded transition-colors"
+              className="flex items-center gap-1 px-2 py-1 text-xs text-fetchy-text-muted hover:text-fetchy-accent hover:bg-fetchy-border rounded transition-colors"
               title="Manage Workspaces"
             >
               <Settings size={12} />
@@ -71,8 +71,8 @@ export default function WorkspaceDropdown({ onOpenSettings }: WorkspaceDropdownP
                 <button
                   key={ws.id}
                   onClick={() => handleSwitch(ws.id)}
-                  className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-aki-border transition-colors ${
-                    isActive ? 'env-active-bg env-active-text' : 'text-aki-text hover:text-aki-accent'
+                  className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-fetchy-border transition-colors ${
+                    isActive ? 'env-active-bg env-active-text' : 'text-fetchy-text hover:text-fetchy-accent'
                   }`}
                 >
                   <div className="w-4 h-4 flex items-center justify-center shrink-0">
@@ -84,11 +84,11 @@ export default function WorkspaceDropdown({ onOpenSettings }: WorkspaceDropdownP
             })}
 
             {workspaces.length === 0 && (
-              <div className="px-3 py-6 text-center text-sm text-aki-text-muted">
+              <div className="px-3 py-6 text-center text-sm text-fetchy-text-muted">
                 <p>No workspaces yet</p>
                 <button
                   onClick={handleManageClick}
-                  className="mt-2 text-aki-accent hover:underline text-xs"
+                  className="mt-2 text-fetchy-accent hover:underline text-xs"
                 >
                   Create your first workspace
                 </button>

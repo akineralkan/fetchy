@@ -70,22 +70,22 @@ export default function CollectionAuthModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-aki-card border border-aki-border rounded-lg shadow-xl w-[500px] max-h-[80vh] flex flex-col">
-        <div className="flex items-center justify-between p-4 border-b border-aki-border">
+      <div className="bg-fetchy-modal border border-fetchy-border rounded-lg shadow-xl w-[500px] max-h-[80vh] flex flex-col">
+        <div className="flex items-center justify-between p-4 border-b border-fetchy-border">
           <div>
             <h2 className="text-lg font-semibold">Authorization Settings</h2>
-            <p className="text-sm text-aki-text-muted mt-0.5">
-              Configure auth for <span className="text-aki-accent">{targetName}</span>
+            <p className="text-sm text-fetchy-text-muted mt-0.5">
+              Configure auth for <span className="text-fetchy-accent">{targetName}</span>
             </p>
           </div>
-          <button onClick={onClose} className="p-1 hover:bg-aki-border rounded">
+          <button onClick={onClose} className="p-1 hover:bg-fetchy-border rounded">
             <X size={18} />
           </button>
         </div>
 
         <div className="flex-1 overflow-auto p-4">
           <div className="mb-4">
-            <label className="block text-sm text-aki-text-muted mb-2">Authorization Type</label>
+            <label className="block text-sm text-fetchy-text-muted mb-2">Authorization Type</label>
             <div className="flex flex-wrap gap-2">
               {availableAuthTypes.map((type) => (
                 <button
@@ -93,8 +93,8 @@ export default function CollectionAuthModal({
                   onClick={() => setAuth({ ...auth, type: type.value as any })}
                   className={`px-3 py-1.5 text-sm rounded ${
                     auth.type === type.value
-                      ? 'bg-aki-accent text-white'
-                      : 'bg-aki-border text-aki-text-muted hover:text-aki-text'
+                      ? 'bg-fetchy-accent text-white'
+                      : 'bg-fetchy-border text-fetchy-text-muted hover:text-fetchy-text'
                   }`}
                 >
                   {type.label}
@@ -103,16 +103,16 @@ export default function CollectionAuthModal({
             </div>
           </div>
 
-          <div className="bg-aki-bg rounded-lg p-4 border border-aki-border">
+          <div className="bg-fetchy-bg rounded-lg p-4 border border-fetchy-border">
             {auth.type === 'inherit' && (
-              <div className="flex items-center gap-2 text-aki-text-muted">
-                <Link size={16} className="text-aki-accent" />
+              <div className="flex items-center gap-2 text-fetchy-text-muted">
+                <Link size={16} className="text-fetchy-accent" />
                 <span className="text-sm">Auth will be inherited from parent collection</span>
               </div>
             )}
 
             {auth.type === 'none' && (
-              <p className="text-aki-text-muted text-sm text-center">
+              <p className="text-fetchy-text-muted text-sm text-center">
                 No authentication required. Child requests can override this.
               </p>
             )}
@@ -120,7 +120,7 @@ export default function CollectionAuthModal({
             {auth.type === 'basic' && (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm text-aki-text-muted mb-1">Username</label>
+                  <label className="block text-sm text-fetchy-text-muted mb-1">Username</label>
                   <VariableInput
                     value={auth.basic?.username || ''}
                     onChange={(value) => setAuth({
@@ -132,7 +132,7 @@ export default function CollectionAuthModal({
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-aki-text-muted mb-1">Password</label>
+                  <label className="block text-sm text-fetchy-text-muted mb-1">Password</label>
                   <VariableInput
                     value={auth.basic?.password || ''}
                     onChange={(value) => setAuth({
@@ -148,7 +148,7 @@ export default function CollectionAuthModal({
 
             {auth.type === 'bearer' && (
               <div>
-                <label className="block text-sm text-aki-text-muted mb-1">Token</label>
+                <label className="block text-sm text-fetchy-text-muted mb-1">Token</label>
                 <VariableInput
                   value={auth.bearer?.token || ''}
                   onChange={(value) => setAuth({ ...auth, bearer: { token: value } })}
@@ -161,7 +161,7 @@ export default function CollectionAuthModal({
             {auth.type === 'api-key' && (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm text-aki-text-muted mb-1">Key</label>
+                  <label className="block text-sm text-fetchy-text-muted mb-1">Key</label>
                   <VariableInput
                     value={auth.apiKey?.key || ''}
                     onChange={(value) => setAuth({
@@ -177,7 +177,7 @@ export default function CollectionAuthModal({
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-aki-text-muted mb-1">Value</label>
+                  <label className="block text-sm text-fetchy-text-muted mb-1">Value</label>
                   <VariableInput
                     value={auth.apiKey?.value || ''}
                     onChange={(value) => setAuth({
@@ -193,7 +193,7 @@ export default function CollectionAuthModal({
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-aki-text-muted mb-1">Add to</label>
+                  <label className="block text-sm text-fetchy-text-muted mb-1">Add to</label>
                   <select
                     value={auth.apiKey?.addTo || 'header'}
                     onChange={(e) => setAuth({
@@ -214,12 +214,12 @@ export default function CollectionAuthModal({
             )}
           </div>
 
-          <p className="text-xs text-aki-text-muted mt-4">
+          <p className="text-xs text-fetchy-text-muted mt-4">
             Requests in this {folderId ? 'folder' : 'collection'} can inherit this auth by selecting "Inherit" in their Auth settings.
           </p>
         </div>
 
-        <div className="flex items-center justify-end gap-2 p-4 border-t border-aki-border">
+        <div className="flex items-center justify-end gap-2 p-4 border-t border-fetchy-border">
           <button onClick={onClose} className="btn btn-secondary">
             Cancel
           </button>

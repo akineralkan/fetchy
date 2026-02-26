@@ -316,9 +316,9 @@ export default function RunCollectionModal({ isOpen, onClose, collectionId }: Ru
   const getStatusIcon = (status: RequestResult['status']) => {
     switch (status) {
       case 'pending':
-        return <Clock size={16} className="text-aki-text-muted" />;
+        return <Clock size={16} className="text-fetchy-text-muted" />;
       case 'running':
-        return <Loader2 size={16} className="text-aki-accent animate-spin" />;
+        return <Loader2 size={16} className="text-fetchy-accent animate-spin" />;
       case 'success':
         return <CheckCircle2 size={16} className="text-green-400" />;
       case 'failed':
@@ -360,16 +360,16 @@ export default function RunCollectionModal({ isOpen, onClose, collectionId }: Ru
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-aki-card border border-aki-border rounded-lg w-full max-w-3xl max-h-[85vh] flex flex-col shadow-xl">
+      <div className="bg-fetchy-modal border border-fetchy-border rounded-lg w-full max-w-3xl max-h-[85vh] flex flex-col shadow-xl">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-aki-border">
+        <div className="flex items-center justify-between p-4 border-b border-fetchy-border">
           <div>
-            <h2 className="text-lg font-semibold text-aki-text">Run Collection</h2>
-            <p className="text-sm text-aki-text-muted">{collection.name}</p>
+            <h2 className="text-lg font-semibold text-fetchy-text">Run Collection</h2>
+            <p className="text-sm text-fetchy-text-muted">{collection.name}</p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-aki-border rounded"
+            className="p-2 hover:bg-fetchy-border rounded"
             disabled={isRunning}
           >
             <X size={20} />
@@ -378,22 +378,22 @@ export default function RunCollectionModal({ isOpen, onClose, collectionId }: Ru
 
         {/* Configuration Section */}
         {showConfig && !isRunning && (
-          <div className="p-4 border-b border-aki-border">
+          <div className="p-4 border-b border-fetchy-border">
             <div className="grid grid-cols-2 gap-4">
               {/* Run Mode */}
               <div>
-                <label className="block text-sm font-medium text-aki-text mb-2">
+                <label className="block text-sm font-medium text-fetchy-text mb-2">
                   Run Mode
                 </label>
                 <select
                   value={config.mode}
                   onChange={(e) => setConfig(prev => ({ ...prev, mode: e.target.value as RunMode }))}
-                  className="w-full px-3 py-2 bg-aki-bg border border-aki-border rounded text-sm focus:outline-none focus:border-aki-accent"
+                  className="w-full px-3 py-2 bg-fetchy-bg border border-fetchy-border rounded text-sm focus:outline-none focus:border-fetchy-accent"
                 >
                   <option value="sequential">Sequential</option>
                   <option value="parallel">Parallel</option>
                 </select>
-                <p className="text-xs text-aki-text-muted mt-1">
+                <p className="text-xs text-fetchy-text-muted mt-1">
                   {config.mode === 'sequential'
                     ? 'Requests run one after another in order'
                     : 'All requests run simultaneously'}
@@ -402,7 +402,7 @@ export default function RunCollectionModal({ isOpen, onClose, collectionId }: Ru
 
               {/* Delay Between Requests */}
               <div>
-                <label className="block text-sm font-medium text-aki-text mb-2">
+                <label className="block text-sm font-medium text-fetchy-text mb-2">
                   Delay Between Requests
                 </label>
                 <div className="flex items-center gap-2">
@@ -412,16 +412,16 @@ export default function RunCollectionModal({ isOpen, onClose, collectionId }: Ru
                     step="100"
                     value={config.delayBetweenRequests}
                     onChange={(e) => setConfig(prev => ({ ...prev, delayBetweenRequests: parseInt(e.target.value) || 0 }))}
-                    className="flex-1 px-3 py-2 bg-aki-bg border border-aki-border rounded text-sm focus:outline-none focus:border-aki-accent"
+                    className="flex-1 px-3 py-2 bg-fetchy-bg border border-fetchy-border rounded text-sm focus:outline-none focus:border-fetchy-accent"
                     disabled={config.mode === 'parallel'}
                   />
-                  <span className="text-sm text-aki-text-muted">ms</span>
+                  <span className="text-sm text-fetchy-text-muted">ms</span>
                 </div>
               </div>
 
               {/* Iterations */}
               <div>
-                <label className="block text-sm font-medium text-aki-text mb-2">
+                <label className="block text-sm font-medium text-fetchy-text mb-2">
                   Iterations
                 </label>
                 <input
@@ -430,16 +430,16 @@ export default function RunCollectionModal({ isOpen, onClose, collectionId }: Ru
                   max="100"
                   value={config.iterations}
                   onChange={(e) => setConfig(prev => ({ ...prev, iterations: Math.max(1, parseInt(e.target.value) || 1) }))}
-                  className="w-full px-3 py-2 bg-aki-bg border border-aki-border rounded text-sm focus:outline-none focus:border-aki-accent"
+                  className="w-full px-3 py-2 bg-fetchy-bg border border-fetchy-border rounded text-sm focus:outline-none focus:border-fetchy-accent"
                 />
-                <p className="text-xs text-aki-text-muted mt-1">
+                <p className="text-xs text-fetchy-text-muted mt-1">
                   Number of times to run all requests
                 </p>
               </div>
 
               {/* Stop on Error */}
               <div>
-                <label className="block text-sm font-medium text-aki-text mb-2">
+                <label className="block text-sm font-medium text-fetchy-text mb-2">
                   Error Handling
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
@@ -447,11 +447,11 @@ export default function RunCollectionModal({ isOpen, onClose, collectionId }: Ru
                     type="checkbox"
                     checked={config.stopOnError}
                     onChange={(e) => setConfig(prev => ({ ...prev, stopOnError: e.target.checked }))}
-                    className="w-4 h-4 rounded border-aki-border bg-aki-bg text-aki-accent focus:ring-aki-accent"
+                    className="w-4 h-4 rounded border-fetchy-border bg-fetchy-bg text-fetchy-accent focus:ring-fetchy-accent"
                   />
-                  <span className="text-sm text-aki-text">Stop on first error</span>
+                  <span className="text-sm text-fetchy-text">Stop on first error</span>
                 </label>
-                <p className="text-xs text-aki-text-muted mt-1">
+                <p className="text-xs text-fetchy-text-muted mt-1">
                   {config.stopOnError
                     ? 'Stop execution when a request fails'
                     : 'Continue even if requests fail'}
@@ -460,11 +460,11 @@ export default function RunCollectionModal({ isOpen, onClose, collectionId }: Ru
             </div>
 
             {/* Request count info */}
-            <div className="mt-4 p-3 bg-aki-bg rounded border border-aki-border">
-              <p className="text-sm text-aki-text">
+            <div className="mt-4 p-3 bg-fetchy-bg rounded border border-fetchy-border">
+              <p className="text-sm text-fetchy-text">
                 <span className="font-medium">{allRequests.length}</span> request{allRequests.length !== 1 ? 's' : ''} will be executed
                 {config.iterations > 1 && (
-                  <span className="text-aki-text-muted"> ({allRequests.length * config.iterations} total)</span>
+                  <span className="text-fetchy-text-muted"> ({allRequests.length * config.iterations} total)</span>
                 )}
               </p>
             </div>
@@ -475,11 +475,11 @@ export default function RunCollectionModal({ isOpen, onClose, collectionId }: Ru
         <div className="flex-1 overflow-y-auto p-4">
           {/* Summary Bar */}
           {(isRunning || !showConfig) && (
-            <div className="mb-4 p-3 bg-aki-bg rounded border border-aki-border">
+            <div className="mb-4 p-3 bg-fetchy-bg rounded border border-fetchy-border">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4 text-sm">
                   {config.iterations > 1 && (
-                    <span className="text-aki-text">
+                    <span className="text-fetchy-text">
                       Iteration: {currentIteration}/{config.iterations}
                     </span>
                   )}
@@ -489,21 +489,21 @@ export default function RunCollectionModal({ isOpen, onClose, collectionId }: Ru
                     <span className="text-yellow-400">⊘ {summary.skipped}</span>
                   )}
                   {(summary.pending > 0 || summary.running > 0) && (
-                    <span className="text-aki-text-muted">
+                    <span className="text-fetchy-text-muted">
                       ◷ {summary.pending + summary.running}
                     </span>
                   )}
                 </div>
-                <div className="text-sm text-aki-text-muted">
+                <div className="text-sm text-fetchy-text-muted">
                   Total: {formatDuration(summary.totalDuration)}
                 </div>
               </div>
 
               {/* Progress bar */}
               {isRunning && (
-                <div className="mt-2 h-1 bg-aki-border rounded-full overflow-hidden">
+                <div className="mt-2 h-1 bg-fetchy-border rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-aki-accent transition-all duration-300"
+                    className="h-full bg-fetchy-accent transition-all duration-300"
                     style={{ width: `${((summary.success + summary.failed) / summary.total) * 100}%` }}
                   />
                 </div>
@@ -514,16 +514,16 @@ export default function RunCollectionModal({ isOpen, onClose, collectionId }: Ru
           {/* Results List */}
           <div className="space-y-2">
             {results.map((result) => (
-              <div key={result.requestId} className="border border-aki-border rounded overflow-hidden">
+              <div key={result.requestId} className="border border-fetchy-border rounded overflow-hidden">
                 <div
-                  className="flex items-center gap-3 p-3 hover:bg-aki-border/50 cursor-pointer"
+                  className="flex items-center gap-3 p-3 hover:bg-fetchy-border/50 cursor-pointer"
                   onClick={() => result.response && toggleResultExpanded(result.requestId)}
                 >
                   {getStatusIcon(result.status)}
                   <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded w-[52px] text-center ${getMethodBgColor(result.method)}`}>
                     {result.method}
                   </span>
-                  <span className="flex-1 text-sm text-aki-text truncate">
+                  <span className="flex-1 text-sm text-fetchy-text truncate">
                     {result.requestName}
                   </span>
                   {result.response && (
@@ -538,26 +538,26 @@ export default function RunCollectionModal({ isOpen, onClose, collectionId }: Ru
                     </span>
                   )}
                   {result.duration !== undefined && (
-                    <span className="text-xs text-aki-text-muted">
+                    <span className="text-xs text-fetchy-text-muted">
                       {formatDuration(result.duration)}
                     </span>
                   )}
                   {result.response && (
                     expandedResults.has(result.requestId)
-                      ? <ChevronDown size={16} className="text-aki-text-muted" />
-                      : <ChevronRight size={16} className="text-aki-text-muted" />
+                      ? <ChevronDown size={16} className="text-fetchy-text-muted" />
+                      : <ChevronRight size={16} className="text-fetchy-text-muted" />
                   )}
                 </div>
 
                 {/* Expanded Response Details */}
                 {expandedResults.has(result.requestId) && result.response && (
-                  <div className="border-t border-aki-border bg-aki-bg p-3">
+                  <div className="border-t border-fetchy-border bg-fetchy-bg p-3">
                     <div className="mb-2">
-                      <span className="text-xs font-medium text-aki-text-muted uppercase">
+                      <span className="text-xs font-medium text-fetchy-text-muted uppercase">
                         Response ({result.response.size} bytes)
                       </span>
                     </div>
-                    <pre className="text-xs text-aki-text bg-aki-card p-2 rounded max-h-48 overflow-auto">
+                    <pre className="text-xs text-fetchy-text bg-fetchy-card p-2 rounded max-h-48 overflow-auto">
                       {formatResponseBody(result.response.body)}
                     </pre>
                   </div>
@@ -565,7 +565,7 @@ export default function RunCollectionModal({ isOpen, onClose, collectionId }: Ru
 
                 {/* Error Message */}
                 {result.error && (
-                  <div className="border-t border-aki-border bg-red-500/10 p-3">
+                  <div className="border-t border-fetchy-border bg-red-500/10 p-3">
                     <span className="text-sm text-red-400">{result.error}</span>
                   </div>
                 )}
@@ -575,7 +575,7 @@ export default function RunCollectionModal({ isOpen, onClose, collectionId }: Ru
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between p-4 border-t border-aki-border">
+        <div className="flex items-center justify-between p-4 border-t border-fetchy-border">
           <div className="flex items-center gap-2">
             {!isRunning && showConfig && (
               <button

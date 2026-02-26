@@ -42,13 +42,13 @@ export default function ExportModal({ onClose, collectionId }: ExportModalProps)
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
-      <div className="bg-aki-card border border-aki-border rounded-lg shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
+      <div className="bg-fetchy-modal border border-fetchy-border rounded-lg shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-aki-border">
-          <h2 className="text-xl font-semibold text-aki-text">Export Collection</h2>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-fetchy-border">
+          <h2 className="text-xl font-semibold text-fetchy-text">Export Collection</h2>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-aki-border rounded text-aki-text-muted hover:text-aki-text"
+            className="p-1 hover:bg-fetchy-border rounded text-fetchy-text-muted hover:text-fetchy-text"
           >
             <X size={20} />
           </button>
@@ -57,7 +57,7 @@ export default function ExportModal({ onClose, collectionId }: ExportModalProps)
         {/* Content */}
         <div className="p-6">
           {collections.length === 0 ? (
-            <div className="text-center py-8 text-aki-text-muted">
+            <div className="text-center py-8 text-fetchy-text-muted">
               <p>No collections to export</p>
               <p className="text-sm mt-2">Create a collection first</p>
             </div>
@@ -65,7 +65,7 @@ export default function ExportModal({ onClose, collectionId }: ExportModalProps)
             <>
               {/* Collection selection */}
               <div className="mb-6">
-                <label className="block text-sm text-aki-text-muted mb-2">Select Collection</label>
+                <label className="block text-sm text-fetchy-text-muted mb-2">Select Collection</label>
                 <select
                   value={selectedCollectionId}
                   onChange={(e) => setSelectedCollectionId(e.target.value)}
@@ -81,12 +81,12 @@ export default function ExportModal({ onClose, collectionId }: ExportModalProps)
 
               {/* Export format info */}
               <div className="mb-6">
-                <label className="block text-sm text-aki-text-muted mb-2">Export Format</label>
-                <div className="p-4 border rounded-lg border-aki-accent bg-aki-accent/10 flex items-center gap-3">
-                  <FileJson className="w-6 h-6 text-aki-accent" />
+                <label className="block text-sm text-fetchy-text-muted mb-2">Export Format</label>
+                <div className="p-4 border rounded-lg border-fetchy-accent bg-fetchy-accent/10 flex items-center gap-3">
+                  <FileJson className="w-6 h-6 text-fetchy-accent" />
                   <div className="text-left">
-                    <div className="font-medium text-aki-text">Postman</div>
-                    <div className="text-xs text-aki-text-muted">v2.1 compatible</div>
+                    <div className="font-medium text-fetchy-text">Postman</div>
+                    <div className="text-xs text-fetchy-text-muted">v2.1 compatible</div>
                   </div>
                 </div>
               </div>
@@ -103,7 +103,7 @@ export default function ExportModal({ onClose, collectionId }: ExportModalProps)
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-aki-border bg-aki-sidebar">
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-fetchy-border bg-fetchy-sidebar">
           <button onClick={onClose} className="btn btn-secondary">
             Cancel
           </button>

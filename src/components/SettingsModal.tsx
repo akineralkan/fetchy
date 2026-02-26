@@ -17,7 +17,7 @@ export default function SettingsModal({ isOpen, onClose, onOpenWorkspaces }: Set
   if (!isOpen) return null;
   return (
     <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50'>
-      <div className='bg-[#1a1a2e] rounded-lg shadow-xl w-[560px] max-h-[80vh] overflow-hidden border border-[#2d2d44]'>
+      <div className='bg-fetchy-modal rounded-lg shadow-xl w-[560px] max-h-[80vh] overflow-hidden border border-fetchy-border'>
         <div className='flex items-center justify-between p-4 border-b border-[#2d2d44]'>
           <h2 className='text-lg font-semibold text-white'>Settings</h2>
           <button onClick={onClose} className='p-1 text-gray-400 hover:text-white hover:bg-[#2d2d44] rounded'><X size={18} /></button>

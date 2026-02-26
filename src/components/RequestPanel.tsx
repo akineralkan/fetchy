@@ -329,7 +329,7 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
 
   if (!request) {
     return (
-      <div className="h-full flex items-center justify-center text-aki-text-muted">
+      <div className="h-full flex items-center justify-center text-fetchy-text-muted">
         <p>Select a request to edit</p>
       </div>
     );
@@ -340,17 +340,17 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
 
     return (
       <div className="h-full flex flex-col">
-        <div className="flex items-center justify-between gap-2 p-2 border-b border-aki-border">
+        <div className="flex items-center justify-between gap-2 p-2 border-b border-fetchy-border">
           <button
             onClick={() => addKeyValue(field)}
-            className="flex items-center gap-1 px-2 py-1 text-xs text-aki-text-muted hover:text-aki-text hover:bg-aki-border rounded"
+            className="flex items-center gap-1 px-2 py-1 text-xs text-fetchy-text-muted hover:text-fetchy-text hover:bg-fetchy-border rounded"
           >
             <Plus size={14} /> Add {field === 'headers' ? 'Header' : 'Parameter'}
           </button>
           <Tooltip content="Bulk Edit">
             <button
               onClick={() => openBatchEdit(field)}
-              className="flex items-center gap-1 px-2 py-1 text-xs text-aki-text-muted hover:text-aki-text hover:bg-aki-border rounded"
+              className="flex items-center gap-1 px-2 py-1 text-xs text-fetchy-text-muted hover:text-fetchy-text hover:bg-fetchy-border rounded"
             >
               <FileText size={14} /> Bulk Edit
             </button>
@@ -358,8 +358,8 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
         </div>
         <div className="flex-1 overflow-auto">
           <table className="w-full kv-table">
-            <thead className="sticky top-0 bg-aki-bg">
-              <tr className="text-left text-xs text-aki-text-muted border-b border-aki-border">
+            <thead className="sticky top-0 bg-fetchy-bg">
+              <tr className="text-left text-xs text-fetchy-text-muted border-b border-fetchy-border">
                 <th className="w-8 p-2"></th>
                 <th className="p-2">Key</th>
                 <th className="p-2">Value</th>
@@ -368,13 +368,13 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
             </thead>
             <tbody>
               {items.map((item) => (
-                <tr key={item.id} className="border-b border-aki-border/50">
+                <tr key={item.id} className="border-b border-fetchy-border/50">
                   <td className="p-2">
                     <input
                       type="checkbox"
                       checked={item.enabled}
                       onChange={(e) => updateKeyValue(field, item.id, { enabled: e.target.checked })}
-                      className="w-4 h-4 accent-aki-accent"
+                      className="w-4 h-4 accent-fetchy-accent"
                     />
                   </td>
                   <td className="p-0">
@@ -383,7 +383,7 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
                       value={item.key}
                       onChange={(e) => updateKeyValue(field, item.id, { key: e.target.value })}
                       placeholder="Key"
-                      className="w-full bg-transparent p-2 text-sm outline-none focus:bg-aki-card"
+                      className="w-full bg-transparent p-2 text-sm outline-none focus:bg-fetchy-card"
                     />
                   </td>
                   <td className="p-0">
@@ -391,13 +391,13 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
                       value={item.value}
                       onChange={(value) => updateKeyValue(field, item.id, { value })}
                       placeholder="Value"
-                      className="w-full bg-transparent p-2 text-sm outline-none focus:bg-aki-card"
+                      className="w-full bg-transparent p-2 text-sm outline-none focus:bg-fetchy-card"
                     />
                   </td>
                   <td className="p-2">
                     <button
                       onClick={() => removeKeyValue(field, item.id)}
-                      className="p-1 hover:bg-aki-border rounded text-aki-text-muted hover:text-red-400"
+                      className="p-1 hover:bg-fetchy-border rounded text-fetchy-text-muted hover:text-red-400"
                     >
                       <Trash2 size={14} />
                     </button>
@@ -422,15 +422,15 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
 
     return (
       <div className="h-full flex flex-col">
-        <div className="flex items-center gap-2 p-2 border-b border-aki-border">
+        <div className="flex items-center gap-2 p-2 border-b border-fetchy-border">
           {bodyTypes.map((type) => (
             <button
               key={type.value}
               onClick={() => handleChange({ body: { ...request.body, type: type.value as any } })}
               className={`px-3 py-1 text-sm rounded ${
                 request.body.type === type.value
-                  ? 'bg-aki-accent text-white'
-                  : 'text-aki-text-muted hover:text-aki-text hover:bg-aki-border'
+                  ? 'bg-fetchy-accent text-white'
+                  : 'text-fetchy-text-muted hover:text-fetchy-text hover:bg-fetchy-border'
               }`}
             >
               {type.label}
@@ -440,7 +440,7 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
 
         <div className="flex-1 overflow-hidden">
           {request.body.type === 'none' && (
-            <div className="h-full flex items-center justify-center text-aki-text-muted">
+            <div className="h-full flex items-center justify-center text-fetchy-text-muted">
               <p>This request does not have a body</p>
             </div>
           )}
@@ -457,7 +457,7 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
             <div className="p-2">
               <table className="w-full kv-table">
                 <thead>
-                  <tr className="text-left text-xs text-aki-text-muted border-b border-aki-border">
+                  <tr className="text-left text-xs text-fetchy-text-muted border-b border-fetchy-border">
                     <th className="w-8 p-2"></th>
                     <th className="p-2">Key</th>
                     <th className="p-2">Value</th>
@@ -466,7 +466,7 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
                 </thead>
                 <tbody>
                   {(request.body.urlencoded || []).map((item) => (
-                    <tr key={item.id} className="border-b border-aki-border/50">
+                    <tr key={item.id} className="border-b border-fetchy-border/50">
                       <td className="p-2">
                         <input
                           type="checkbox"
@@ -477,7 +477,7 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
                             );
                             handleChange({ body: { ...request.body, urlencoded: updated } });
                           }}
-                          className="w-4 h-4 accent-aki-accent"
+                          className="w-4 h-4 accent-fetchy-accent"
                         />
                       </td>
                       <td className="p-0">
@@ -491,7 +491,7 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
                             handleChange({ body: { ...request.body, urlencoded: updated } });
                           }}
                           placeholder="Key"
-                          className="w-full bg-transparent p-2 text-sm outline-none focus:bg-aki-card"
+                          className="w-full bg-transparent p-2 text-sm outline-none focus:bg-fetchy-card"
                         />
                       </td>
                       <td className="p-0">
@@ -504,7 +504,7 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
                             handleChange({ body: { ...request.body, urlencoded: updated } });
                           }}
                           placeholder="Value"
-                          className="w-full bg-transparent p-2 text-sm outline-none focus:bg-aki-card"
+                          className="w-full bg-transparent p-2 text-sm outline-none focus:bg-fetchy-card"
                         />
                       </td>
                       <td className="p-2">
@@ -513,7 +513,7 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
                             const updated = (request.body.urlencoded || []).filter(u => u.id !== item.id);
                             handleChange({ body: { ...request.body, urlencoded: updated } });
                           }}
-                          className="p-1 hover:bg-aki-border rounded text-aki-text-muted hover:text-red-400"
+                          className="p-1 hover:bg-fetchy-border rounded text-fetchy-text-muted hover:text-red-400"
                         >
                           <Trash2 size={14} />
                         </button>
@@ -527,7 +527,7 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
                   const newItem: KeyValue = { id: uuidv4(), key: '', value: '', enabled: true };
                   handleChange({ body: { ...request.body, urlencoded: [...(request.body.urlencoded || []), newItem] } });
                 }}
-                className="flex items-center gap-1 px-3 py-2 text-sm text-aki-text-muted hover:text-aki-text"
+                className="flex items-center gap-1 px-3 py-2 text-sm text-fetchy-text-muted hover:text-fetchy-text"
               >
                 <Plus size={14} /> Add Field
               </button>
@@ -538,7 +538,7 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
             <div className="p-2">
               <table className="w-full kv-table">
                 <thead>
-                  <tr className="text-left text-xs text-aki-text-muted border-b border-aki-border">
+                  <tr className="text-left text-xs text-fetchy-text-muted border-b border-fetchy-border">
                     <th className="w-8 p-2"></th>
                     <th className="p-2">Key</th>
                     <th className="p-2">Value</th>
@@ -547,7 +547,7 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
                 </thead>
                 <tbody>
                   {(request.body.formData || []).map((item) => (
-                    <tr key={item.id} className="border-b border-aki-border/50">
+                    <tr key={item.id} className="border-b border-fetchy-border/50">
                       <td className="p-2">
                         <input
                           type="checkbox"
@@ -558,7 +558,7 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
                             );
                             handleChange({ body: { ...request.body, formData: updated } });
                           }}
-                          className="w-4 h-4 accent-aki-accent"
+                          className="w-4 h-4 accent-fetchy-accent"
                         />
                       </td>
                       <td className="p-0">
@@ -572,7 +572,7 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
                             handleChange({ body: { ...request.body, formData: updated } });
                           }}
                           placeholder="Key"
-                          className="w-full bg-transparent p-2 text-sm outline-none focus:bg-aki-card"
+                          className="w-full bg-transparent p-2 text-sm outline-none focus:bg-fetchy-card"
                         />
                       </td>
                       <td className="p-0">
@@ -585,7 +585,7 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
                             handleChange({ body: { ...request.body, formData: updated } });
                           }}
                           placeholder="Value"
-                          className="w-full bg-transparent p-2 text-sm outline-none focus:bg-aki-card"
+                          className="w-full bg-transparent p-2 text-sm outline-none focus:bg-fetchy-card"
                         />
                       </td>
                       <td className="p-2">
@@ -594,7 +594,7 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
                             const updated = (request.body.formData || []).filter(f => f.id !== item.id);
                             handleChange({ body: { ...request.body, formData: updated } });
                           }}
-                          className="p-1 hover:bg-aki-border rounded text-aki-text-muted hover:text-red-400"
+                          className="p-1 hover:bg-fetchy-border rounded text-fetchy-text-muted hover:text-red-400"
                         >
                           <Trash2 size={14} />
                         </button>
@@ -608,7 +608,7 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
                   const newItem: KeyValue = { id: uuidv4(), key: '', value: '', enabled: true };
                   handleChange({ body: { ...request.body, formData: [...(request.body.formData || []), newItem] } });
                 }}
-                className="flex items-center gap-1 px-3 py-2 text-sm text-aki-text-muted hover:text-aki-text"
+                className="flex items-center gap-1 px-3 py-2 text-sm text-fetchy-text-muted hover:text-fetchy-text"
               >
                 <Plus size={14} /> Add Field
               </button>
@@ -636,15 +636,15 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
 
     return (
       <div className="h-full flex flex-col">
-        <div className="flex items-center gap-2 p-2 border-b border-aki-border">
+        <div className="flex items-center gap-2 p-2 border-b border-fetchy-border">
           {authTypes.map((type) => (
             <button
               key={type.value}
               onClick={() => handleChange({ auth: { ...request.auth, type: type.value as any } })}
               className={`px-3 py-1 text-sm rounded ${
                 request.auth.type === type.value
-                  ? 'bg-aki-accent text-white'
-                  : 'text-aki-text-muted hover:text-aki-text hover:bg-aki-border'
+                  ? 'bg-fetchy-accent text-white'
+                  : 'text-fetchy-text-muted hover:text-fetchy-text hover:bg-fetchy-border'
               }`}
             >
               {type.label}
@@ -656,12 +656,12 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
           {request.auth.type === 'inherit' && (
             <div className="space-y-4">
               {inheritedAuth ? (
-                <div className="p-4 bg-aki-card rounded-lg border border-aki-border">
-                  <div className="flex items-center gap-2 text-aki-text mb-2">
-                    <Link size={16} className="text-aki-accent" />
+                <div className="p-4 bg-fetchy-card rounded-lg border border-fetchy-border">
+                  <div className="flex items-center gap-2 text-fetchy-text mb-2">
+                    <Link size={16} className="text-fetchy-accent" />
                     <span className="font-medium">Inheriting auth from parent</span>
                   </div>
-                  <div className="text-sm text-aki-text-muted space-y-1">
+                  <div className="text-sm text-fetchy-text-muted space-y-1">
                     <p><span className="font-medium">Type:</span> {getAuthTypeLabel(inheritedAuth.type)}</p>
                     {inheritedAuth.type === 'basic' && (
                       <p><span className="font-medium">Username:</span> {inheritedAuth.basic?.username || '(not set)'}</p>
@@ -678,7 +678,7 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
                   </div>
                 </div>
               ) : (
-                <div className="text-aki-text-muted text-center py-8">
+                <div className="text-fetchy-text-muted text-center py-8">
                   <p>No auth configured in parent collection or folder</p>
                   <p className="text-xs mt-2">Configure auth at the collection or folder level to inherit it here</p>
                 </div>
@@ -687,7 +687,7 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
           )}
 
           {request.auth.type === 'none' && (
-            <div className="text-aki-text-muted text-center py-8">
+            <div className="text-fetchy-text-muted text-center py-8">
               <p>This request does not require authentication</p>
             </div>
           )}
@@ -695,7 +695,7 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
           {request.auth.type === 'basic' && (
             <div className="space-y-4 max-w-md">
               <div>
-                <label className="block text-sm text-aki-text-muted mb-1">Username</label>
+                <label className="block text-sm text-fetchy-text-muted mb-1">Username</label>
                 <VariableInput
                   value={request.auth.basic?.username || ''}
                   onChange={(value) => handleChange({
@@ -706,7 +706,7 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
                 />
               </div>
               <div>
-                <label className="block text-sm text-aki-text-muted mb-1">Password</label>
+                <label className="block text-sm text-fetchy-text-muted mb-1">Password</label>
                 <VariableInput
                   value={request.auth.basic?.password || ''}
                   onChange={(value) => handleChange({
@@ -722,7 +722,7 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
           {request.auth.type === 'bearer' && (
             <div className="space-y-4 max-w-md">
               <div>
-                <label className="block text-sm text-aki-text-muted mb-1">Token</label>
+                <label className="block text-sm text-fetchy-text-muted mb-1">Token</label>
                 <VariableInput
                   value={request.auth.bearer?.token || ''}
                   onChange={(value) => handleChange({
@@ -738,7 +738,7 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
           {request.auth.type === 'api-key' && (
             <div className="space-y-4 max-w-md">
               <div>
-                <label className="block text-sm text-aki-text-muted mb-1">Key</label>
+                <label className="block text-sm text-fetchy-text-muted mb-1">Key</label>
                 <VariableInput
                   value={request.auth.apiKey?.key || ''}
                   onChange={(value) => handleChange({
@@ -749,7 +749,7 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
                 />
               </div>
               <div>
-                <label className="block text-sm text-aki-text-muted mb-1">Value</label>
+                <label className="block text-sm text-fetchy-text-muted mb-1">Value</label>
                 <VariableInput
                   value={request.auth.apiKey?.value || ''}
                   onChange={(value) => handleChange({
@@ -760,7 +760,7 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
                 />
               </div>
               <div>
-                <label className="block text-sm text-aki-text-muted mb-1">Add to</label>
+                <label className="block text-sm text-fetchy-text-muted mb-1">Add to</label>
                 <select
                   value={request.auth.apiKey?.addTo || 'header'}
                   onChange={(e) => handleChange({
@@ -780,9 +780,9 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
   };
 
   return (
-    <div className="h-full flex flex-col bg-aki-bg">
+    <div className="h-full flex flex-col bg-fetchy-bg">
       {/* URL bar */}
-      <div className="px-4 py-3 border-b border-aki-border flex items-center gap-2">
+      <div className="px-4 py-3 border-b border-fetchy-border flex items-center gap-2">
 
         <select
           value={request.method}
@@ -847,7 +847,7 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
             >
               <Code size={16} className="text-purple-400" />
               <span className="font-medium">Code</span>
-              <ChevronDown size={14} className="text-aki-text-muted" />
+              <ChevronDown size={14} className="text-fetchy-text-muted" />
             </button>
           </Tooltip>
 
@@ -857,7 +857,7 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
                 className="fixed inset-0 z-40"
                 onClick={() => setShowCodeDropdown(false)}
               />
-              <div className="absolute top-full right-0 mt-1 w-48 bg-aki-bg border border-aki-border rounded-lg shadow-xl z-50 py-1 max-h-[400px] overflow-y-auto">
+              <div className="absolute top-full right-0 mt-1 w-48 bg-fetchy-bg border border-fetchy-border rounded-lg shadow-xl z-50 py-1 max-h-[400px] overflow-y-auto">
                 {[
                   { id: 'curl', label: 'cURL', icon: '⚡' },
                   { id: 'javascript', label: 'JavaScript', icon: '🟨' },
@@ -871,7 +871,7 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
                   <button
                     key={lang.id}
                     onClick={() => handleShowCode(lang.id)}
-                    className="w-full px-4 py-2 text-left text-sm text-aki-text hover:bg-aki-border transition-colors flex items-center gap-2"
+                    className="w-full px-4 py-2 text-left text-sm text-fetchy-text hover:bg-fetchy-border transition-colors flex items-center gap-2"
                   >
                     <span className="text-base">{lang.icon}</span>
                     <span>{lang.label}</span>
@@ -884,7 +884,7 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
       </div>
 
       {/* Section tabs with Save button */}
-      <div className="flex items-center border-b border-aki-border shrink-0">
+      <div className="flex items-center border-b border-fetchy-border shrink-0">
         <div className="flex flex-1">
           {([
             { id: 'params', label: 'Params', count: request.params.filter(p => p.enabled).length },
@@ -899,13 +899,13 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
               onClick={() => setActiveSection(section.id as any)}
               className={`relative px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
                 activeSection === section.id
-                  ? 'border-aki-accent text-aki-accent'
-                  : 'border-transparent text-aki-text-muted hover:text-aki-text'
+                  ? 'border-fetchy-accent text-fetchy-accent'
+                  : 'border-transparent text-fetchy-text-muted hover:text-fetchy-text'
               }`}
             >
               {section.label}
               {section.count !== undefined && section.count > 0 && (
-                <span className="ml-1 px-1.5 py-0.5 text-xs bg-aki-accent/20 text-aki-accent rounded">
+                <span className="ml-1 px-1.5 py-0.5 text-xs bg-fetchy-accent/20 text-fetchy-accent rounded">
                   {section.count}
                 </span>
               )}
@@ -920,7 +920,7 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
         <Tooltip content={activeTab?.isHistoryItem ? "Save to Request History Rollback" : "Save Request"}>
           <button
             onClick={handleSave}
-            className="px-4 py-2 text-sm font-medium text-aki-text-muted hover:text-aki-text hover:bg-aki-border transition-colors flex items-center gap-1"
+            className="px-4 py-2 text-sm font-medium text-fetchy-text-muted hover:text-fetchy-text hover:bg-fetchy-border transition-colors flex items-center gap-1"
           >
             <Save size={16} />
             {activeTab?.isHistoryItem ? 'Save to Rollback' : 'Save'}
@@ -965,31 +965,31 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
       {/* Batch Edit Modal */}
       {batchEditModal.open && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-aki-card border border-aki-border rounded-lg shadow-xl w-[600px] max-h-[80vh] flex flex-col">
-            <div className="flex items-center justify-between p-4 border-b border-aki-border">
+          <div className="bg-fetchy-modal border border-fetchy-border rounded-lg shadow-xl w-[600px] max-h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b border-fetchy-border">
               <h2 className="text-lg font-semibold">
                 Bulk Edit {batchEditModal.field === 'headers' ? 'Headers' : 'Parameters'}
               </h2>
               <button
                 onClick={() => setBatchEditModal({ open: false, field: null })}
-                className="p-1 hover:bg-aki-border rounded"
+                className="p-1 hover:bg-fetchy-border rounded"
               >
                 <X size={18} />
               </button>
             </div>
             <div className="p-4 flex-1 overflow-hidden flex flex-col">
-              <p className="text-sm text-aki-text-muted mb-3">
-                Edit {batchEditModal.field} in bulk. One per line in <code className="bg-aki-border px-1 rounded">key: value</code> format.
-                Prefix with <code className="bg-aki-border px-1 rounded"># </code> to disable.
+              <p className="text-sm text-fetchy-text-muted mb-3">
+                Edit {batchEditModal.field} in bulk. One per line in <code className="bg-fetchy-border px-1 rounded">key: value</code> format.
+                Prefix with <code className="bg-fetchy-border px-1 rounded"># </code> to disable.
               </p>
               <textarea
                 value={batchEditText}
                 onChange={(e) => setBatchEditText(e.target.value)}
-                className="flex-1 w-full min-h-[300px] bg-aki-bg border border-aki-border rounded p-3 font-mono text-sm resize-none focus:outline-none focus:ring-1 focus:ring-aki-accent"
+                className="flex-1 w-full min-h-[300px] bg-fetchy-bg border border-fetchy-border rounded p-3 font-mono text-sm resize-none focus:outline-none focus:ring-1 focus:ring-fetchy-accent"
                 placeholder={`Content-Type: application/json\nAuthorization: Bearer token\n# X-Disabled-Header: value`}
               />
             </div>
-            <div className="flex items-center justify-end gap-2 p-4 border-t border-aki-border">
+            <div className="flex items-center justify-end gap-2 p-4 border-t border-fetchy-border">
               <button
                 onClick={() => setBatchEditModal({ open: false, field: null })}
                 className="btn btn-secondary"
@@ -1010,22 +1010,22 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
       {/* Code Generation Modal */}
       {codeModal.open && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-aki-bg border border-aki-border rounded-lg shadow-xl max-w-4xl w-full max-h-[85vh] flex flex-col">
-            <div className="flex items-center justify-between p-4 border-b border-aki-border">
-              <h2 className="text-lg font-semibold text-aki-text flex items-center gap-2">
-                <Terminal size={20} className="text-aki-accent" />
+          <div className="bg-fetchy-bg border border-fetchy-border rounded-lg shadow-xl max-w-4xl w-full max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b border-fetchy-border">
+              <h2 className="text-lg font-semibold text-fetchy-text flex items-center gap-2">
+                <Terminal size={20} className="text-fetchy-accent" />
                 Code Generation
               </h2>
               <button
                 onClick={() => setCodeModal({ open: false, activeLanguage: 'curl', copied: false })}
-                className="text-aki-text-muted hover:text-aki-text transition-colors"
+                className="text-fetchy-text-muted hover:text-fetchy-text transition-colors"
               >
                 <X size={18} />
               </button>
             </div>
 
             {/* Language Tabs */}
-            <div className="flex border-b border-aki-border overflow-x-auto">
+            <div className="flex border-b border-fetchy-border overflow-x-auto">
               {[
                 { id: 'curl', label: 'cURL' },
                 { id: 'javascript', label: 'JavaScript' },
@@ -1041,8 +1041,8 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
                   onClick={() => setCodeModal({ ...codeModal, activeLanguage: lang.id, copied: false })}
                   className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                     codeModal.activeLanguage === lang.id
-                      ? 'border-aki-accent text-aki-accent'
-                      : 'border-transparent text-aki-text-muted hover:text-aki-text'
+                      ? 'border-fetchy-accent text-fetchy-accent'
+                      : 'border-transparent text-fetchy-text-muted hover:text-fetchy-text'
                   }`}
                 >
                   {lang.label}
@@ -1051,7 +1051,7 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
             </div>
 
             <div className="p-4 flex-1 overflow-hidden flex flex-col">
-              <p className="text-sm text-aki-text-muted mb-3">
+              <p className="text-sm text-fetchy-text-muted mb-3">
                 {codeModal.activeLanguage === 'curl' && 'Copy and paste this cURL command into your terminal'}
                 {codeModal.activeLanguage === 'javascript' && 'JavaScript code using native fetch API'}
                 {codeModal.activeLanguage === 'python' && 'Python code using requests library (pip install requests)'}
@@ -1061,13 +1061,13 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
                 {codeModal.activeLanguage === 'rust' && 'Rust code using reqwest crate (cargo add reqwest tokio)'}
                 {codeModal.activeLanguage === 'cpp' && 'C++ code using libcurl (requires libcurl library)'}
               </p>
-              <div className="flex-1 bg-[#282c34] border border-aki-border rounded p-4 overflow-auto">
-                <pre className="text-sm text-gray-300 font-mono whitespace-pre-wrap break-all">
+              <div className="flex-1 bg-[var(--input-bg)] border border-fetchy-border rounded p-4 overflow-auto">
+                <pre className="text-sm text-fetchy-text font-mono whitespace-pre-wrap break-all">
                   {getCodeForLanguage(codeModal.activeLanguage)}
                 </pre>
               </div>
             </div>
-            <div className="flex items-center justify-end gap-2 p-4 border-t border-aki-border">
+            <div className="flex items-center justify-end gap-2 p-4 border-t border-fetchy-border">
               <button
                 onClick={() => setCodeModal({ open: false, activeLanguage: 'curl', copied: false })}
                 className="btn btn-secondary"
@@ -1206,20 +1206,20 @@ function ScriptSnippetsPanel({ type, onInsert }: ScriptSnippetsPanelProps) {
 
   return (
     <div
-      className={`h-full border-l border-aki-border bg-aki-card flex flex-col transition-all duration-200 ${
+      className={`h-full border-l border-fetchy-border bg-fetchy-card flex flex-col transition-all duration-200 ${
         expanded ? 'w-56' : 'w-8'
       }`}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-2 py-2 border-b border-aki-border shrink-0">
+      <div className="flex items-center justify-between px-2 py-2 border-b border-fetchy-border shrink-0">
         {expanded && (
-          <span className="text-xs font-semibold text-aki-text-muted uppercase tracking-wide truncate">
+          <span className="text-xs font-semibold text-fetchy-text-muted uppercase tracking-wide truncate">
             Snippets
           </span>
         )}
         <button
           onClick={() => setExpanded(!expanded)}
-          className="ml-auto p-0.5 rounded hover:bg-aki-border text-aki-text-muted hover:text-aki-text transition-colors"
+          className="ml-auto p-0.5 rounded hover:bg-fetchy-border text-fetchy-text-muted hover:text-fetchy-text transition-colors"
           title={expanded ? 'Collapse snippets' : 'Expand snippets'}
         >
           <svg
@@ -1241,13 +1241,13 @@ function ScriptSnippetsPanel({ type, onInsert }: ScriptSnippetsPanelProps) {
             <button
               key={snippet.label}
               onClick={() => onInsert(snippet.code)}
-              className="w-full text-left px-2 py-1.5 rounded text-xs hover:bg-aki-border transition-colors group"
+              className="w-full text-left px-2 py-1.5 rounded text-xs hover:bg-fetchy-border transition-colors group"
               title={snippet.description}
             >
-              <span className="block font-medium text-aki-accent group-hover:text-aki-accent truncate">
+              <span className="block font-medium text-fetchy-accent group-hover:text-fetchy-accent truncate">
                 {snippet.label}
               </span>
-              <span className="block text-aki-text-muted truncate mt-0.5 text-[10px]">
+              <span className="block text-fetchy-text-muted truncate mt-0.5 text-[10px]">
                 {snippet.description}
               </span>
             </button>

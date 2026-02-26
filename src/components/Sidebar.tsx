@@ -775,7 +775,7 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
   const renderHistoryItem = (item: RequestHistoryItem) => (
     <div
       key={item.id}
-      className="tree-item px-2 py-2 cursor-pointer group rounded hover:bg-aki-border mb-1 border border-transparent hover:border-aki-border"
+      className="tree-item px-2 py-2 cursor-pointer group rounded hover:bg-fetchy-border mb-1 border border-transparent hover:border-fetchy-border"
       title={`${item.request.method} ${item.request.url}\nClick to load this request and response`}
       onClick={() => onHistoryItemClick?.(item)}
     >
@@ -783,12 +783,12 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
         <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded w-[52px] text-center ${getMethodBgColor(item.request.method)}`}>
           {item.request.method}
         </span>
-        <span className="text-sm text-aki-text truncate flex-1">{item.request.name || item.request.url}</span>
-        <span className="text-xs text-aki-text-muted whitespace-nowrap">
+        <span className="text-sm text-fetchy-text truncate flex-1">{item.request.name || item.request.url}</span>
+        <span className="text-xs text-fetchy-text-muted whitespace-nowrap">
           {formatHistoryTime(item.timestamp)}
         </span>
       </div>
-      <div className="text-xs text-aki-text-muted truncate mt-1 ml-7">
+      <div className="text-xs text-fetchy-text-muted truncate mt-1 ml-7">
         {item.request.url}
       </div>
       {item.response && (
@@ -796,8 +796,8 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
           <span className={`font-medium ${item.response.status >= 200 && item.response.status < 300 ? 'text-green-400' : item.response.status >= 400 ? 'text-red-400' : 'text-yellow-400'}`}>
             {item.response.status} {item.response.statusText}
           </span>
-          <span className="text-aki-text-muted">{item.response.time}ms</span>
-          <span className="text-aki-text-muted">{formatResponseSize(item.response.size)}</span>
+          <span className="text-fetchy-text-muted">{item.response.time}ms</span>
+          <span className="text-fetchy-text-muted">{formatResponseSize(item.response.size)}</span>
         </div>
       )}
     </div>
@@ -842,18 +842,18 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
   const hasActiveFilters = searchQuery || filterMethod !== 'all' || sortOption !== 'created';
 
   return (
-    <div ref={sidebarRef} className="h-full bg-aki-sidebar flex flex-col border-r border-aki-border">
+    <div ref={sidebarRef} className="h-full bg-fetchy-sidebar flex flex-col border-r border-fetchy-border">
       {/* Header */}
-      <div className="p-3 border-b border-aki-border">
-        <div className="bg-aki-card border border-aki-border rounded-lg p-1 flex gap-1">
+      <div className="p-3 border-b border-fetchy-border">
+        <div className="bg-fetchy-card border border-fetchy-border rounded-lg p-1 flex gap-1">
           <button
             onClick={() => setActiveTab('api')}
             className={`${
               activeTab === 'api' ? 'flex-1' : ''
             } px-3 py-2.5 text-sm font-medium rounded-md transition-all flex items-center justify-center gap-1.5 ${
               activeTab === 'api'
-                ? 'bg-aki-accent text-white shadow-sm'
-                : 'text-aki-text-muted hover:bg-aki-border hover:text-aki-text'
+                ? 'bg-fetchy-accent text-white shadow-sm'
+                : 'text-fetchy-text-muted hover:bg-fetchy-border hover:text-fetchy-text'
             }`}
           >
             <FileCode size={14} />
@@ -871,8 +871,8 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
               activeTab === 'collections' ? 'flex-1' : ''
             } px-3 py-2.5 text-sm font-medium rounded-md transition-all flex items-center justify-center gap-1.5 ${
               activeTab === 'collections'
-                ? 'bg-aki-accent text-white shadow-sm'
-                : 'text-aki-text-muted hover:bg-aki-border hover:text-aki-text'
+                ? 'bg-fetchy-accent text-white shadow-sm'
+                : 'text-fetchy-text-muted hover:bg-fetchy-border hover:text-fetchy-text'
             }`}
           >
             <Folder size={14} />
@@ -884,8 +884,8 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
               activeTab === 'history' ? 'flex-1' : ''
             } px-3 py-2.5 text-sm font-medium rounded-md transition-all flex items-center justify-center gap-1.5 ${
               activeTab === 'history'
-                ? 'bg-aki-accent text-white shadow-sm'
-                : 'text-aki-text-muted hover:bg-aki-border hover:text-aki-text'
+                ? 'bg-fetchy-accent text-white shadow-sm'
+                : 'text-fetchy-text-muted hover:bg-fetchy-border hover:text-fetchy-text'
             }`}
           >
             <Clock size={14} />
@@ -896,7 +896,7 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
 
       {/* Filter/Search Bar - Only for collections and API tabs */}
       {(activeTab === 'collections' && collections.length > 0) || (activeTab === 'api' && openApiDocuments.length > 0) ? (
-        <div className={`p-2 border-b border-aki-border transition-colors duration-150 ${isFocused ? 'sidebar-focused' : ''}`}>
+        <div className={`p-2 border-b border-fetchy-border transition-colors duration-150 ${isFocused ? 'sidebar-focused' : ''}`}>
           <div className="flex items-center gap-2">
             <div className="flex-1 relative">
               <input
@@ -911,7 +911,7 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
                     setApiSearchQuery(e.target.value);
                   }
                 }}
-                className="w-full pl-3 pr-7 py-1.5 text-sm bg-aki-bg border border-aki-border rounded focus:outline-none focus:border-aki-accent"
+                className="w-full pl-3 pr-7 py-1.5 text-sm bg-fetchy-bg border border-fetchy-border rounded focus:outline-none focus:border-fetchy-accent"
               />
               {((activeTab === 'collections' && searchQuery) || (activeTab === 'api' && apiSearchQuery)) && (
                 <button
@@ -922,7 +922,7 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
                       setApiSearchQuery('');
                     }
                   }}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-aki-text-muted hover:text-aki-text"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-fetchy-text-muted hover:text-fetchy-text"
                 >
                   <X size={14} />
                 </button>
@@ -933,7 +933,7 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
                 <Tooltip content="Expand All">
                   <button
                     onClick={handleExpandAll}
-                    className="p-1.5 rounded border border-aki-border text-aki-text-muted hover:text-aki-text hover:bg-aki-border"
+                    className="p-1.5 rounded border border-fetchy-border text-fetchy-text-muted hover:text-fetchy-text hover:bg-fetchy-border"
                   >
                     <ChevronDown size={14} />
                   </button>
@@ -941,7 +941,7 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
                 <Tooltip content="Collapse All">
                   <button
                     onClick={handleCollapseAll}
-                    className="p-1.5 rounded border border-aki-border text-aki-text-muted hover:text-aki-text hover:bg-aki-border"
+                    className="p-1.5 rounded border border-fetchy-border text-fetchy-text-muted hover:text-fetchy-text hover:bg-fetchy-border"
                   >
                     <ChevronUp size={14} />
                   </button>
@@ -949,7 +949,7 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
                 <Tooltip content="Import Collection">
                   <button
                     onClick={onImport}
-                    className="p-1.5 rounded border border-aki-border text-aki-text-muted hover:text-aki-text hover:bg-aki-border"
+                    className="p-1.5 rounded border border-fetchy-border text-fetchy-text-muted hover:text-fetchy-text hover:bg-fetchy-border"
                   >
                     <Upload size={14} />
                   </button>
@@ -969,8 +969,8 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
                   className={`p-1.5 rounded border ${
                     (activeTab === 'collections' && hasActiveFilters) ||
                     (activeTab === 'api' && (apiSearchQuery || apiFilterFormat !== 'all' || apiSortOption !== 'created'))
-                      ? 'bg-aki-accent/20 border-aki-accent text-aki-accent'
-                      : 'border-aki-border text-aki-text-muted hover:text-aki-text hover:bg-aki-border'
+                      ? 'bg-fetchy-accent/20 border-fetchy-accent text-fetchy-accent'
+                      : 'border-fetchy-border text-fetchy-text-muted hover:text-fetchy-text hover:bg-fetchy-border'
                   }`}
                 >
                   <Filter size={14} />
@@ -979,12 +979,12 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
               {activeTab === 'collections' && showFilterMenu && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setShowFilterMenu(false)} />
-                  <div className="absolute right-0 top-full mt-1 z-50 bg-aki-card border border-aki-border rounded-lg shadow-xl py-2 min-w-[180px]">
-                    <div className="px-3 py-1 text-xs font-medium text-aki-text-muted uppercase">Filter by Method</div>
+                  <div className="absolute right-0 top-full mt-1 z-50 bg-fetchy-dropdown border border-fetchy-border rounded-lg shadow-xl py-2 min-w-[180px]">
+                    <div className="px-3 py-1 text-xs font-medium text-fetchy-text-muted uppercase">Filter by Method</div>
                     {(['all', 'GET', 'POST', 'PUT', 'PATCH', 'DELETE'] as const).map((method) => (
                       <button
                         key={method}
-                        className={`w-full px-3 py-1.5 text-left text-sm hover:bg-aki-border flex items-center gap-2 ${filterMethod === method ? 'text-aki-accent' : ''}`}
+                        className={`w-full px-3 py-1.5 text-left text-sm hover:bg-fetchy-border flex items-center gap-2 ${filterMethod === method ? 'text-fetchy-accent' : ''}`}
                         onClick={() => {
                           setFilterMethod(method);
                         }}
@@ -993,8 +993,8 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
                         {filterMethod === method && <span className="ml-auto">✓</span>}
                       </button>
                     ))}
-                    <hr className="my-2 border-aki-border" />
-                    <div className="px-3 py-1 text-xs font-medium text-aki-text-muted uppercase flex items-center gap-1">
+                    <hr className="my-2 border-fetchy-border" />
+                    <div className="px-3 py-1 text-xs font-medium text-fetchy-text-muted uppercase flex items-center gap-1">
                       <ArrowUpDown size={12} /> Sort by
                     </div>
                     {([
@@ -1005,7 +1005,7 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
                     ] as const).map((option) => (
                       <button
                         key={option.value}
-                        className={`w-full px-3 py-1.5 text-left text-sm hover:bg-aki-border flex items-center gap-2 ${sortOption === option.value ? 'text-aki-accent' : ''}`}
+                        className={`w-full px-3 py-1.5 text-left text-sm hover:bg-fetchy-border flex items-center gap-2 ${sortOption === option.value ? 'text-fetchy-accent' : ''}`}
                         onClick={() => {
                           setSortOption(option.value);
                         }}
@@ -1016,9 +1016,9 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
                     ))}
                     {hasActiveFilters && (
                       <>
-                        <hr className="my-2 border-aki-border" />
+                        <hr className="my-2 border-fetchy-border" />
                         <button
-                          className="w-full px-3 py-1.5 text-left text-sm hover:bg-aki-border text-red-400"
+                          className="w-full px-3 py-1.5 text-left text-sm hover:bg-fetchy-border text-red-400"
                           onClick={() => {
                             setSearchQuery('');
                             setFilterMethod('all');
@@ -1036,12 +1036,12 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
               {activeTab === 'api' && showApiFilterMenu && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setShowApiFilterMenu(false)} />
-                  <div className="absolute right-0 top-full mt-1 z-50 bg-aki-card border border-aki-border rounded-lg shadow-xl py-2 min-w-[180px]">
-                    <div className="px-3 py-1 text-xs font-medium text-aki-text-muted uppercase">Filter by Format</div>
+                  <div className="absolute right-0 top-full mt-1 z-50 bg-fetchy-dropdown border border-fetchy-border rounded-lg shadow-xl py-2 min-w-[180px]">
+                    <div className="px-3 py-1 text-xs font-medium text-fetchy-text-muted uppercase">Filter by Format</div>
                     {(['all', 'yaml', 'json'] as const).map((format) => (
                       <button
                         key={format}
-                        className={`w-full px-3 py-1.5 text-left text-sm hover:bg-aki-border flex items-center gap-2 ${apiFilterFormat === format ? 'text-aki-accent' : ''}`}
+                        className={`w-full px-3 py-1.5 text-left text-sm hover:bg-fetchy-border flex items-center gap-2 ${apiFilterFormat === format ? 'text-fetchy-accent' : ''}`}
                         onClick={() => {
                           setApiFilterFormat(format);
                         }}
@@ -1050,8 +1050,8 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
                         {apiFilterFormat === format && <span className="ml-auto">✓</span>}
                       </button>
                     ))}
-                    <hr className="my-2 border-aki-border" />
-                    <div className="px-3 py-1 text-xs font-medium text-aki-text-muted uppercase flex items-center gap-1">
+                    <hr className="my-2 border-fetchy-border" />
+                    <div className="px-3 py-1 text-xs font-medium text-fetchy-text-muted uppercase flex items-center gap-1">
                       <ArrowUpDown size={12} /> Sort by
                     </div>
                     {([
@@ -1062,7 +1062,7 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
                     ] as const).map((option) => (
                       <button
                         key={option.value}
-                        className={`w-full px-3 py-1.5 text-left text-sm hover:bg-aki-border flex items-center gap-2 ${apiSortOption === option.value ? 'text-aki-accent' : ''}`}
+                        className={`w-full px-3 py-1.5 text-left text-sm hover:bg-fetchy-border flex items-center gap-2 ${apiSortOption === option.value ? 'text-fetchy-accent' : ''}`}
                         onClick={() => {
                           setApiSortOption(option.value);
                         }}
@@ -1073,9 +1073,9 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
                     ))}
                     {(apiSearchQuery || apiFilterFormat !== 'all' || apiSortOption !== 'created') && (
                       <>
-                        <hr className="my-2 border-aki-border" />
+                        <hr className="my-2 border-fetchy-border" />
                         <button
-                          className="w-full px-3 py-1.5 text-left text-sm hover:bg-aki-border text-red-400"
+                          className="w-full px-3 py-1.5 text-left text-sm hover:bg-fetchy-border text-red-400"
                           onClick={() => {
                             setApiSearchQuery('');
                             setApiFilterFormat('all');
@@ -1098,7 +1098,7 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
       {/* Content list */}
       <div className={`flex-1 overflow-y-auto p-2 transition-colors duration-150 ${isFocused ? 'sidebar-focused' : ''}`}>
         {activeTab === 'collections' && collections.length === 0 ? (
-          <div className="text-center py-8 text-aki-text-muted">
+          <div className="text-center py-8 text-fetchy-text-muted">
             <p className="text-sm mb-4">No collections yet</p>
             <button
               onClick={handleAddCollection}
@@ -1109,7 +1109,7 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
             <p className="text-xs mt-3">or</p>
             <button
               onClick={onImport}
-              className="text-aki-accent hover:underline text-sm mt-2"
+              className="text-fetchy-accent hover:underline text-sm mt-2"
             >
               Import from file
             </button>
@@ -1118,15 +1118,15 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
           <div>
             {/* Collections Section Header */}
             <div className="flex items-center justify-between mb-3 px-1">
-              <span className="text-xs text-aki-text-muted">
+              <span className="text-xs text-fetchy-text-muted">
                 {filteredCollections.length} collection{filteredCollections.length !== 1 ? 's' : ''}
                 {filteredCollections.length !== collections.length && (
-                  <span className="text-aki-text-muted"> ({collections.length} total)</span>
+                  <span className="text-fetchy-text-muted"> ({collections.length} total)</span>
                 )}
               </span>
               <button
                 onClick={handleAddCollection}
-                className="text-xs text-aki-accent hover:text-aki-accent/80 flex items-center gap-1"
+                className="text-xs text-fetchy-accent hover:text-fetchy-accent/80 flex items-center gap-1"
               >
                 <Plus size={12} /> New Collection
               </button>
@@ -1144,8 +1144,8 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
               </SortableContext>
               <DragOverlay>
                 {activeId && activeDragData && (
-                  <div className="bg-aki-card border border-aki-accent rounded px-3 py-2 shadow-lg opacity-90">
-                    <span className="text-sm text-aki-text">
+                  <div className="bg-fetchy-card border border-fetchy-accent rounded px-3 py-2 shadow-lg opacity-90">
+                    <span className="text-sm text-fetchy-text">
                       {activeDragData.type === 'collection' && collections.find(c => c.id === activeDragData.id)?.name}
                       {activeDragData.type === 'request' && 'Moving request...'}
                       {activeDragData.type === 'folder' && 'Moving folder...'}
@@ -1159,10 +1159,10 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
           <div>
             {/* API Section Header */}
             <div className="flex items-center justify-between mb-3 px-1">
-              <span className="text-xs text-aki-text-muted">
+              <span className="text-xs text-fetchy-text-muted">
                 {filteredApiDocuments.length} spec{filteredApiDocuments.length !== 1 ? 's' : ''}
                 {filteredApiDocuments.length !== openApiDocuments.length && (
-                  <span className="text-aki-text-muted"> ({openApiDocuments.length} total)</span>
+                  <span className="text-fetchy-text-muted"> ({openApiDocuments.length} total)</span>
                 )}
               </span>
               <button
@@ -1174,14 +1174,14 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
                     openApiDocId: doc.id,
                   });
                 }}
-                className="text-xs text-aki-accent hover:text-aki-accent/80 flex items-center gap-1"
+                className="text-xs text-fetchy-accent hover:text-fetchy-accent/80 flex items-center gap-1"
               >
                 <Plus size={12} /> New Spec
               </button>
             </div>
 
             {openApiDocuments.length === 0 ? (
-              <div className="text-center py-8 text-aki-text-muted">
+              <div className="text-center py-8 text-fetchy-text-muted">
                 <FileCode size={32} className="mx-auto mb-4 opacity-50" />
                 <p className="text-sm mb-2">No OpenAPI specs yet</p>
                 <p className="text-xs mb-4">Create a new spec to get started</p>
@@ -1200,7 +1200,7 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
                 </button>
               </div>
             ) : filteredApiDocuments.length === 0 ? (
-              <div className="text-center py-8 text-aki-text-muted">
+              <div className="text-center py-8 text-fetchy-text-muted">
                 <FileCode size={32} className="mx-auto mb-4 opacity-50" />
                 <p className="text-sm mb-2">No matching specs found</p>
                 <p className="text-xs">Try adjusting your search or filters</p>
@@ -1326,8 +1326,8 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
                 </SortableContext>
                 <DragOverlay>
                   {activeId && activeDragData && activeDragData.type === 'api-doc' && (
-                    <div className="bg-aki-card border border-aki-accent rounded px-3 py-2 shadow-lg opacity-90">
-                      <span className="text-sm text-aki-text">
+                    <div className="bg-fetchy-card border border-fetchy-accent rounded px-3 py-2 shadow-lg opacity-90">
+                      <span className="text-sm text-fetchy-text">
                         {filteredApiDocuments.find(doc => doc.id === activeDragData.id)?.name || 'Moving spec...'}
                       </span>
                     </div>
@@ -1337,7 +1337,7 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
             )}
           </div>
         ) : activeTab === 'history' && history.length === 0 ? (
-          <div className="text-center py-8 text-aki-text-muted">
+          <div className="text-center py-8 text-fetchy-text-muted">
             <Clock size={32} className="mx-auto mb-4 opacity-50" />
             <p className="text-sm mb-2">No request history yet</p>
             <p className="text-xs">Your past requests will appear here</p>
@@ -1345,7 +1345,7 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
         ) : activeTab === 'history' ? (
           <div>
             <div className="flex items-center justify-between mb-2 px-1">
-              <span className="text-xs text-aki-text-muted">{history.length} request{history.length !== 1 ? 's' : ''}</span>
+              <span className="text-xs text-fetchy-text-muted">{history.length} request{history.length !== 1 ? 's' : ''}</span>
               <button
                 onClick={clearHistory}
                 className="text-xs text-red-400 hover:text-red-300"
@@ -1363,13 +1363,13 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
         <>
           <div className="fixed inset-0 z-40" onClick={closeContextMenu} />
           <div
-            className="context-menu fixed z-50 bg-aki-card border border-aki-border rounded-lg shadow-xl py-1 min-w-[160px]"
+            className="context-menu fixed z-50 bg-fetchy-dropdown border border-fetchy-border rounded-lg shadow-xl py-1 min-w-[160px]"
             style={{ left: contextMenu.x, top: contextMenu.y }}
           >
             {contextMenu.type === 'collection' && (
               <>
                 <button
-                  className="w-full px-3 py-2 text-left text-sm hover:bg-aki-border flex items-center gap-2"
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-fetchy-border flex items-center gap-2"
                   onClick={() => {
                     setRunCollectionModal({ open: true, collectionId: contextMenu.collectionId });
                     closeContextMenu();
@@ -1377,9 +1377,9 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
                 >
                   <Play size={14} /> Run Collection
                 </button>
-                <hr className="my-1 border-aki-border" />
+                <hr className="my-1 border-fetchy-border" />
                 <button
-                  className="w-full px-3 py-2 text-left text-sm hover:bg-aki-border flex items-center gap-2"
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-fetchy-border flex items-center gap-2"
                   onClick={() => {
                     addRequest(contextMenu.collectionId, null);
                     closeContextMenu();
@@ -1388,7 +1388,7 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
                   <FilePlus size={14} /> Add Request
                 </button>
                 <button
-                  className="w-full px-3 py-2 text-left text-sm hover:bg-aki-border flex items-center gap-2"
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-fetchy-border flex items-center gap-2"
                   onClick={() => {
                     addFolder(contextMenu.collectionId, null, 'New Folder');
                     closeContextMenu();
@@ -1397,7 +1397,7 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
                   <FolderPlus size={14} /> Add Folder
                 </button>
                 <button
-                  className="w-full px-3 py-2 text-left text-sm hover:bg-aki-border flex items-center gap-2"
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-fetchy-border flex items-center gap-2"
                   onClick={() => {
                     const collection = collections.find(c => c.id === contextMenu.collectionId);
                     if (collection) {
@@ -1411,7 +1411,7 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
                   <Edit2 size={14} /> Rename
                 </button>
                 <button
-                  className="w-full px-3 py-2 text-left text-sm hover:bg-aki-border flex items-center gap-2"
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-fetchy-border flex items-center gap-2"
                   onClick={() => {
                     handleExportCollection(contextMenu.collectionId);
                     closeContextMenu();
@@ -1420,7 +1420,7 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
                   <Download size={14} /> Export to Postman
                 </button>
                 <button
-                  className="w-full px-3 py-2 text-left text-sm hover:bg-aki-border flex items-center gap-2"
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-fetchy-border flex items-center gap-2"
                   onClick={() => {
                     setAuthModal({ open: true, collectionId: contextMenu.collectionId });
                     closeContextMenu();
@@ -1428,9 +1428,9 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
                 >
                   <Key size={14} /> Auth Settings
                 </button>
-                <hr className="my-1 border-aki-border" />
+                <hr className="my-1 border-fetchy-border" />
                 <button
-                  className="w-full px-3 py-2 text-left text-sm hover:bg-aki-border flex items-center gap-2 text-red-400"
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-fetchy-border flex items-center gap-2 text-red-400"
                   onClick={() => {
                     deleteCollection(contextMenu.collectionId);
                     closeContextMenu();
@@ -1443,7 +1443,7 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
             {contextMenu.type === 'folder' && (
               <>
                 <button
-                  className="w-full px-3 py-2 text-left text-sm hover:bg-aki-border flex items-center gap-2"
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-fetchy-border flex items-center gap-2"
                   onClick={() => {
                     addRequest(contextMenu.collectionId, contextMenu.folderId!);
                     closeContextMenu();
@@ -1452,7 +1452,7 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
                   <FilePlus size={14} /> Add Request
                 </button>
                 <button
-                  className="w-full px-3 py-2 text-left text-sm hover:bg-aki-border flex items-center gap-2"
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-fetchy-border flex items-center gap-2"
                   onClick={() => {
                     addFolder(contextMenu.collectionId, contextMenu.folderId!, 'New Folder');
                     closeContextMenu();
@@ -1461,7 +1461,7 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
                   <FolderPlus size={14} /> Add Subfolder
                 </button>
                 <button
-                  className="w-full px-3 py-2 text-left text-sm hover:bg-aki-border flex items-center gap-2"
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-fetchy-border flex items-center gap-2"
                   onClick={() => {
                     // Find the folder to edit
                     const collection = collections.find(c => c.id === contextMenu.collectionId);
@@ -1479,7 +1479,7 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
                   <Edit2 size={14} /> Rename
                 </button>
                 <button
-                  className="w-full px-3 py-2 text-left text-sm hover:bg-aki-border flex items-center gap-2"
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-fetchy-border flex items-center gap-2"
                   onClick={() => {
                     setAuthModal({ open: true, collectionId: contextMenu.collectionId, folderId: contextMenu.folderId });
                     closeContextMenu();
@@ -1490,7 +1490,7 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
                 {collections.length > 1 && (
                   <div className="relative">
                     <button
-                      className="w-full px-3 py-2 text-left text-sm hover:bg-aki-border flex items-center gap-2 justify-between"
+                      className="w-full px-3 py-2 text-left text-sm hover:bg-fetchy-border flex items-center gap-2 justify-between"
                       onClick={() => setShowMoveToMenu(!showMoveToMenu)}
                     >
                       <span className="flex items-center gap-2">
@@ -1499,13 +1499,13 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
                       <ChevronRight size={14} />
                     </button>
                     {showMoveToMenu && (
-                      <div className="absolute left-full top-0 ml-1 bg-aki-card border border-aki-border rounded-lg shadow-xl py-1 min-w-[160px] z-50">
+                      <div className="absolute left-full top-0 ml-1 bg-fetchy-dropdown border border-fetchy-border rounded-lg shadow-xl py-1 min-w-[160px] z-50">
                         {collections
                           .filter(c => c.id !== contextMenu.collectionId)
                           .map(targetCollection => (
                             <button
                               key={targetCollection.id}
-                              className="w-full px-3 py-2 text-left text-sm hover:bg-aki-border flex items-center gap-2"
+                              className="w-full px-3 py-2 text-left text-sm hover:bg-fetchy-border flex items-center gap-2"
                               onClick={() => {
                                 moveFolder(
                                   contextMenu.collectionId,
@@ -1523,9 +1523,9 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
                     )}
                   </div>
                 )}
-                <hr className="my-1 border-aki-border" />
+                <hr className="my-1 border-fetchy-border" />
                 <button
-                  className="w-full px-3 py-2 text-left text-sm hover:bg-aki-border flex items-center gap-2 text-red-400"
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-fetchy-border flex items-center gap-2 text-red-400"
                   onClick={() => {
                     deleteFolder(contextMenu.collectionId, contextMenu.folderId!);
                     closeContextMenu();
@@ -1565,7 +1565,7 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
                 <>
                   {canMoveUp && (
                     <button
-                      className="w-full px-3 py-2 text-left text-sm hover:bg-aki-border flex items-center gap-2"
+                      className="w-full px-3 py-2 text-left text-sm hover:bg-fetchy-border flex items-center gap-2"
                       onClick={() => {
                         setSortOption('created');
                         reorderRequests(contextMenu.collectionId, contextMenu.folderId || null, requestIndex, requestIndex - 1);
@@ -1577,7 +1577,7 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
                   )}
                   {canMoveDown && (
                     <button
-                      className="w-full px-3 py-2 text-left text-sm hover:bg-aki-border flex items-center gap-2"
+                      className="w-full px-3 py-2 text-left text-sm hover:bg-fetchy-border flex items-center gap-2"
                       onClick={() => {
                         setSortOption('created');
                         reorderRequests(contextMenu.collectionId, contextMenu.folderId || null, requestIndex, requestIndex + 1);
@@ -1587,9 +1587,9 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
                       <ChevronDown size={14} /> Move Down
                     </button>
                   )}
-                  {(canMoveUp || canMoveDown) && <hr className="my-1 border-aki-border" />}
+                  {(canMoveUp || canMoveDown) && <hr className="my-1 border-fetchy-border" />}
                   <button
-                    className="w-full px-3 py-2 text-left text-sm hover:bg-aki-border flex items-center gap-2"
+                    className="w-full px-3 py-2 text-left text-sm hover:bg-fetchy-border flex items-center gap-2"
                     onClick={() => {
                       duplicateRequest(contextMenu.collectionId, contextMenu.requestId!);
                       closeContextMenu();
@@ -1598,7 +1598,7 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
                     <Copy size={14} /> Duplicate
                   </button>
                   <button
-                    className="w-full px-3 py-2 text-left text-sm hover:bg-aki-border flex items-center gap-2"
+                    className="w-full px-3 py-2 text-left text-sm hover:bg-fetchy-border flex items-center gap-2"
                     onClick={() => {
                       // Find the request to edit
                       const collection = collections.find(c => c.id === contextMenu.collectionId);
@@ -1631,7 +1631,7 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
                   {collections.length > 1 && (
                     <div className="relative">
                       <button
-                        className="w-full px-3 py-2 text-left text-sm hover:bg-aki-border flex items-center gap-2 justify-between"
+                        className="w-full px-3 py-2 text-left text-sm hover:bg-fetchy-border flex items-center gap-2 justify-between"
                         onClick={() => setShowMoveToMenu(!showMoveToMenu)}
                       >
                         <span className="flex items-center gap-2">
@@ -1640,13 +1640,13 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
                         <ChevronRight size={14} />
                       </button>
                       {showMoveToMenu && (
-                        <div className="absolute left-full top-0 ml-1 bg-aki-card border border-aki-border rounded-lg shadow-xl py-1 min-w-[160px] z-50">
+                        <div className="absolute left-full top-0 ml-1 bg-fetchy-dropdown border border-fetchy-border rounded-lg shadow-xl py-1 min-w-[160px] z-50">
                           {collections
                             .filter(c => c.id !== contextMenu.collectionId)
                             .map(targetCollection => (
                               <button
                                 key={targetCollection.id}
-                                className="w-full px-3 py-2 text-left text-sm hover:bg-aki-border flex items-center gap-2"
+                                className="w-full px-3 py-2 text-left text-sm hover:bg-fetchy-border flex items-center gap-2"
                                 onClick={() => {
                                   moveRequest(
                                     contextMenu.collectionId,
@@ -1666,9 +1666,9 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
                       )}
                     </div>
                   )}
-                  <hr className="my-1 border-aki-border" />
+                  <hr className="my-1 border-fetchy-border" />
                   <button
-                    className="w-full px-3 py-2 text-left text-sm hover:bg-aki-border flex items-center gap-2 text-red-400"
+                    className="w-full px-3 py-2 text-left text-sm hover:bg-fetchy-border flex items-center gap-2 text-red-400"
                     onClick={() => {
                       deleteRequest(contextMenu.collectionId, contextMenu.requestId!);
                       closeContextMenu();

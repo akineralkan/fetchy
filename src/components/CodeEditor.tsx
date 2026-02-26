@@ -1,6 +1,6 @@
 import { useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import { EditorView, basicSetup } from 'codemirror';
-import { EditorState } from '@codemirror/state';
+import { EditorState, Prec } from '@codemirror/state';
 import { json } from '@codemirror/lang-json';
 import { javascript } from '@codemirror/lang-javascript';
 import { oneDark } from '@codemirror/theme-one-dark';
@@ -36,6 +36,12 @@ const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(
         '.cm-scroller': { overflow: 'auto' },
         '.cm-content': { minHeight: '100%' },
       }),
+      Prec.highest(EditorView.theme({
+        '&': { backgroundColor: 'var(--input-bg)' },
+        '.cm-gutters': { backgroundColor: 'var(--input-bg)', borderRight: '1px solid var(--border-color)' },
+        '.cm-activeLine': { backgroundColor: 'color-mix(in srgb, var(--input-bg) 80%, var(--text-color) 20%)' },
+        '.cm-activeLineGutter': { backgroundColor: 'color-mix(in srgb, var(--input-bg) 80%, var(--text-color) 20%)' },
+      })),
       EditorView.updateListener.of((update) => {
         if (update.docChanged && !readOnly) {
           onChange(update.state.doc.toString());

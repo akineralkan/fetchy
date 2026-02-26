@@ -100,13 +100,13 @@ export default function ImportModal({ onClose, initialImportType = 'postman' }: 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
-      <div className="bg-aki-card border border-aki-border rounded-lg shadow-2xl w-full max-w-2xl mx-4 overflow-hidden">
+      <div className="bg-fetchy-modal border border-fetchy-border rounded-lg shadow-2xl w-full max-w-2xl mx-4 overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-aki-border">
-          <h2 className="text-xl font-semibold text-aki-text">Import Collection</h2>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-fetchy-border">
+          <h2 className="text-xl font-semibold text-fetchy-text">Import Collection</h2>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-aki-border rounded text-aki-text-muted hover:text-aki-text"
+            className="p-1 hover:bg-fetchy-border rounded text-fetchy-text-muted hover:text-fetchy-text"
           >
             <X size={20} />
           </button>
@@ -116,48 +116,48 @@ export default function ImportModal({ onClose, initialImportType = 'postman' }: 
         <div className="p-6">
           {/* Import type selection */}
           <div className="mb-6">
-            <label className="block text-sm text-aki-text-muted mb-2">Import Type</label>
+            <label className="block text-sm text-fetchy-text-muted mb-2">Import Type</label>
             <div className="grid grid-cols-3 gap-3">
               <button
                 onClick={() => setImportType('postman')}
                 className={`p-3 border rounded-lg flex flex-col items-center gap-2 transition-colors ${
                   importType === 'postman'
-                    ? 'border-aki-accent bg-aki-accent/10'
-                    : 'border-aki-border hover:border-aki-accent/50'
+                    ? 'border-fetchy-accent bg-fetchy-accent/10'
+                    : 'border-fetchy-border hover:border-fetchy-accent/50'
                 }`}
               >
-                <FileJson className={`w-6 h-6 ${importType === 'postman' ? 'text-aki-accent' : 'text-orange-400'}`} />
+                <FileJson className={`w-6 h-6 ${importType === 'postman' ? 'text-fetchy-accent' : 'text-orange-400'}`} />
                 <div className="text-center">
-                  <div className="font-medium text-aki-text text-sm">Postman</div>
-                  <div className="text-xs text-aki-text-muted">v2.1 JSON</div>
+                  <div className="font-medium text-fetchy-text text-sm">Postman</div>
+                  <div className="text-xs text-fetchy-text-muted">v2.1 JSON</div>
                 </div>
               </button>
               <button
                 onClick={() => setImportType('openapi')}
                 className={`p-3 border rounded-lg flex flex-col items-center gap-2 transition-colors ${
                   importType === 'openapi'
-                    ? 'border-aki-accent bg-aki-accent/10'
-                    : 'border-aki-border hover:border-aki-accent/50'
+                    ? 'border-fetchy-accent bg-fetchy-accent/10'
+                    : 'border-fetchy-border hover:border-fetchy-accent/50'
                 }`}
               >
-                <FileJson className={`w-6 h-6 ${importType === 'openapi' ? 'text-aki-accent' : 'text-green-400'}`} />
+                <FileJson className={`w-6 h-6 ${importType === 'openapi' ? 'text-fetchy-accent' : 'text-green-400'}`} />
                 <div className="text-center">
-                  <div className="font-medium text-aki-text text-sm">OpenAPI</div>
-                  <div className="text-xs text-aki-text-muted">JSON/YAML</div>
+                  <div className="font-medium text-fetchy-text text-sm">OpenAPI</div>
+                  <div className="text-xs text-fetchy-text-muted">JSON/YAML</div>
                 </div>
               </button>
               <button
                 onClick={() => setImportType('curl')}
                 className={`p-3 border rounded-lg flex flex-col items-center gap-2 transition-colors ${
                   importType === 'curl'
-                    ? 'border-aki-accent bg-aki-accent/10'
-                    : 'border-aki-border hover:border-aki-accent/50'
+                    ? 'border-fetchy-accent bg-fetchy-accent/10'
+                    : 'border-fetchy-border hover:border-fetchy-accent/50'
                 }`}
               >
-                <Terminal className={`w-6 h-6 ${importType === 'curl' ? 'text-aki-accent' : 'text-purple-400'}`} />
+                <Terminal className={`w-6 h-6 ${importType === 'curl' ? 'text-fetchy-accent' : 'text-purple-400'}`} />
                 <div className="text-center">
-                  <div className="font-medium text-aki-text text-sm">cURL</div>
-                  <div className="text-xs text-aki-text-muted">Command</div>
+                  <div className="font-medium text-fetchy-text text-sm">cURL</div>
+                  <div className="text-xs text-fetchy-text-muted">Command</div>
                 </div>
               </button>
             </div>
@@ -166,9 +166,9 @@ export default function ImportModal({ onClose, initialImportType = 'postman' }: 
           {/* File upload - hide for cURL */}
           {importType !== 'curl' && (
             <div className="mb-6">
-              <label className="block text-sm text-aki-text-muted mb-2">Select File</label>
+              <label className="block text-sm text-fetchy-text-muted mb-2">Select File</label>
               <div
-                className="border-2 border-dashed border-aki-border rounded-lg p-8 text-center hover:border-aki-accent/50 cursor-pointer transition-colors"
+                className="border-2 border-dashed border-fetchy-border rounded-lg p-8 text-center hover:border-fetchy-accent/50 cursor-pointer transition-colors"
                 onClick={() => fileInputRef.current?.click()}
               >
                 <input
@@ -178,13 +178,13 @@ export default function ImportModal({ onClose, initialImportType = 'postman' }: 
                   onChange={handleFileSelect}
                   className="hidden"
                 />
-                <Upload className="w-10 h-10 text-aki-text-muted mx-auto mb-3" />
+                <Upload className="w-10 h-10 text-fetchy-text-muted mx-auto mb-3" />
                 {fileName ? (
-                  <p className="text-aki-text font-medium">{fileName}</p>
+                  <p className="text-fetchy-text font-medium">{fileName}</p>
                 ) : (
                   <>
-                    <p className="text-aki-text mb-1">Click to upload or drag and drop</p>
-                    <p className="text-sm text-aki-text-muted">
+                    <p className="text-fetchy-text mb-1">Click to upload or drag and drop</p>
+                    <p className="text-sm text-fetchy-text-muted">
                       {importType === 'postman' ? 'JSON file' : 'JSON or YAML file'}
                     </p>
                   </>
@@ -195,7 +195,7 @@ export default function ImportModal({ onClose, initialImportType = 'postman' }: 
 
           {/* Paste content */}
           <div className="mb-6">
-            <label className="block text-sm text-aki-text-muted mb-2">
+            <label className="block text-sm text-fetchy-text-muted mb-2">
               {importType === 'curl' ? 'Paste cURL command' : 'Or paste content directly'}
             </label>
             <textarea
@@ -232,7 +232,7 @@ export default function ImportModal({ onClose, initialImportType = 'postman' }: 
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-aki-border bg-aki-sidebar">
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-fetchy-border bg-fetchy-sidebar">
           <button
             onClick={onClose}
             className="btn btn-secondary"
