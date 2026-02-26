@@ -65,6 +65,7 @@ function App() {
 
   const mainPanelRef = useRef<HTMLDivElement>(null);
   const prevTabIdsRef = useRef<Set<string>>(new Set());
+  const [urlBarContainer, setUrlBarContainer] = useState<HTMLDivElement | null>(null);
 
   // Derive per-tab response data for the active tab
   const currentTabData = activeTabId ? tabResponses[activeTabId] : undefined;
@@ -322,6 +323,11 @@ function App() {
           {/* Tab bar */}
           <TabBar />
 
+          {/* URL bar portal target – spans full width above the split */}
+          {hasActiveRequest && (
+            <div ref={setUrlBarContainer} className="shrink-0" />
+          )}
+
           {/* Request/Response area */}
           {hasActiveRequest ? (
             <div className={`flex-1 flex overflow-hidden ${panelLayout === 'vertical' ? 'flex-col' : ''}`}>
@@ -338,6 +344,7 @@ function App() {
                   setSentRequest={setSentRequest}
                   setIsLoading={setIsLoading}
                   isLoading={isLoading}
+                  urlBarContainer={urlBarContainer}
                 />
               </div>
 

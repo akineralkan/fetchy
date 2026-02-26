@@ -26,6 +26,8 @@ import {
   RequestAuth,
   RequestBody,
 } from '../types';
+import { convertMustacheVarsDeep } from './helpers';
+import { convertHoppscotchScript } from './scriptConverter';
 
 // ---------------------------------------------------------------------------
 // Types for the Hoppscotch JSON structures
@@ -251,8 +253,8 @@ const convertHoppRequest = (req: HoppRESTRequest): ApiRequest => {
     params,
     body: convertHoppBody(req.body),
     auth: convertHoppAuth(req.auth),
-    preScript: req.preRequestScript || undefined,
-    script: req.testScript || undefined,
+    preScript: req.preRequestScript ? convertHoppscotchScript(req.preRequestScript) : undefined,
+    script: req.testScript ? convertHoppscotchScript(req.testScript) : undefined,
   };
 };
 
@@ -341,7 +343,7 @@ export const importHoppscotchCollection = (content: string): Collection[] => {
     }
   }
 
-  return collections.map(convertHoppCollection);
+  return collections.map((c) => convertMustacheVarsDeep(convertHoppCollection(c)));
 };
 
 // ---------------------------------------------------------------------------
@@ -391,10 +393,10 @@ export const importHoppscotchEnvironment = (content: string): Environment[] => {
       isSecret: v.secret || false,
     }));
 
-    return {
+    return convertMustacheVarsDeep({
       id: uuidv4(),
       name: env.name || 'Imported Environment',
       variables,
-    };
+    });
   });
 };

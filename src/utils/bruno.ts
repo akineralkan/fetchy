@@ -33,6 +33,8 @@ import {
   RequestAuth,
   RequestBody,
 } from '../types';
+import { convertMustacheVarsDeep } from './helpers';
+import { convertBrunoScript } from './scriptConverter';
 
 // ---------------------------------------------------------------------------
 // .bru file parser — lightweight regex-based parser
@@ -480,8 +482,8 @@ const convertBrunoJsonRequest = (item: BrunoJsonItem): ApiRequest | null => {
     params,
     body: convertBrunoJsonBody(req.body),
     auth: convertBrunoJsonAuth(req.auth),
-    preScript: req.script?.req || undefined,
-    script: req.script?.res || undefined,
+    preScript: req.script?.req ? convertBrunoScript(req.script.req) : undefined,
+    script: req.script?.res ? convertBrunoScript(req.script.res) : undefined,
   };
 };
 
@@ -554,8 +556,8 @@ const convertBruFileToRequest = (content: string, name?: string): ApiRequest => 
     params: allParams,
     body: parsed.body,
     auth: parsed.auth,
-    preScript: parsed.preScript || undefined,
-    script: parsed.postScript || undefined,
+    preScript: parsed.preScript ? convertBrunoScript(parsed.preScript) : undefined,
+    script: parsed.postScript ? convertBrunoScript(parsed.postScript) : undefined,
   };
 };
 
@@ -598,7 +600,7 @@ export const importBrunoCollection = (content: string): Collection => {
   // Handle .bru file format
   if (isBruMarkup(trimmed)) {
     const request = convertBruFileToRequest(trimmed);
-    return {
+    return convertMustacheVarsDeep({
       id: uuidv4(),
       name: request.name !== 'Imported Request' ? `${request.name} (Bruno Import)` : 'Bruno Import',
       description: 'Imported from Bruno .bru file',
@@ -606,7 +608,7 @@ export const importBrunoCollection = (content: string): Collection => {
       requests: [request],
       variables: [],
       expanded: true,
-    };
+    });
   }
 
   // Handle JSON format
@@ -643,7 +645,7 @@ export const importBrunoCollection = (content: string): Collection => {
     };
   });
 
-  return {
+  return convertMustacheVarsDeep({
     id: uuidv4(),
     name: data.name || 'Bruno Import',
     description: 'Imported from Bruno collection',
@@ -651,7 +653,7 @@ export const importBrunoCollection = (content: string): Collection => {
     requests,
     variables: [],
     expanded: true,
-  };
+  });
 };
 
 // ---------------------------------------------------------------------------
@@ -716,11 +718,11 @@ export const importBrunoEnvironment = (content: string): Environment[] => {
   if (isBruEnvironment(trimmed)) {
     const parsed = parseBruEnvironmentFile(trimmed);
     return [
-      {
+      convertMustacheVarsDeep({
         id: uuidv4(),
         name: 'Bruno Environment',
         variables: parsed.variables,
-      },
+      }),
     ];
   }
 
@@ -759,10 +761,10 @@ export const importBrunoEnvironment = (content: string): Environment[] => {
       isSecret: v.secret || false,
     }));
 
-    return {
+    return convertMustacheVarsDeep({
       id: uuidv4(),
       name: env.name || 'Bruno Environment',
       variables,
-    };
+    });
   });
 };

@@ -219,8 +219,17 @@ export default function ImportModal({ onClose, initialImportType = 'postman' }: 
       }
 
       // ── Environment imports ─────────────────────────────────────────────
+
+      // Derive a friendly name from the source filename (strip extension)
+      const envNameFromFile = fileName
+        ? fileName.replace(/\.[^/.]+$/, '').trim()
+        : '';
+
       if (source === 'postman-env') {
         const envs: Environment[] = importPostmanEnvironment(fileContent);
+        if (envNameFromFile && envs.length === 1) {
+          envs[0] = { ...envs[0], name: envNameFromFile };
+        }
         for (const env of envs) importEnvironment(env);
         const names = envs.map(e => e.name).join(', ');
         setSuccess(`Successfully imported ${envs.length} environment(s): ${names}`);
@@ -230,6 +239,9 @@ export default function ImportModal({ onClose, initialImportType = 'postman' }: 
 
       if (source === 'hoppscotch-env') {
         const envs: Environment[] = importHoppscotchEnvironment(fileContent);
+        if (envNameFromFile && envs.length === 1) {
+          envs[0] = { ...envs[0], name: envNameFromFile };
+        }
         for (const env of envs) importEnvironment(env);
         const names = envs.map(e => e.name).join(', ');
         setSuccess(`Successfully imported ${envs.length} environment(s): ${names}`);
@@ -239,6 +251,9 @@ export default function ImportModal({ onClose, initialImportType = 'postman' }: 
 
       if (source === 'bruno-env') {
         const envs: Environment[] = importBrunoEnvironment(fileContent);
+        if (envNameFromFile && envs.length === 1) {
+          envs[0] = { ...envs[0], name: envNameFromFile };
+        }
         for (const env of envs) importEnvironment(env);
         const names = envs.map(e => e.name).join(', ');
         setSuccess(`Successfully imported ${envs.length} environment(s): ${names}`);

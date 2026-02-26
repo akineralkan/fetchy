@@ -22,3 +22,35 @@ export * from './postman';
 export * from './openapi';
 export * from './hoppscotch';
 export * from './bruno';
+export * from './scriptConverter';
+
+// ---------------------------------------------------------------------------
+// Variable syntax conversion: {{var}} → <<var>>
+// ---------------------------------------------------------------------------
+
+/**
+ * Replace all occurrences of {{variableName}} with <<variableName>> in a string.
+ */
+export const convertMustacheToAngleBrackets = (text: string): string =>
+  text.replace(/\{\{([^}]+)\}\}/g, '<<$1>>');
+
+/**
+ * Deep-walk any value (object, array, string) and convert every
+ * {{var}} reference to <<var>>. Non-string leaves are returned as-is.
+ */
+export const convertMustacheVarsDeep = <T>(value: T): T => {
+  if (typeof value === 'string') {
+    return convertMustacheToAngleBrackets(value) as unknown as T;
+  }
+  if (Array.isArray(value)) {
+    return value.map(convertMustacheVarsDeep) as unknown as T;
+  }
+  if (value !== null && typeof value === 'object') {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value)) {
+      out[k] = convertMustacheVarsDeep(v);
+    }
+    return out as T;
+  }
+  return value;
+};

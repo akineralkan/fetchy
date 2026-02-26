@@ -197,11 +197,20 @@ export interface PostmanCollection {
   variable?: PostmanVariable[];
 }
 
+export interface PostmanEvent {
+  listen: string;
+  script?: {
+    type?: string;
+    exec?: string[] | string;
+  };
+}
+
 export interface PostmanItem {
   name: string;
   request?: PostmanRequest;
   item?: PostmanItem[];
   description?: string;
+  event?: PostmanEvent[];
 }
 
 export interface PostmanRequest {

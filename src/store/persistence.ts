@@ -161,6 +161,25 @@ export const createCustomStorage = (): StateStorage => {
         try {
           const stateWrapper = JSON.parse(value);
 
+          // Trim large response bodies from history to prevent oversized storage
+          if (stateWrapper?.state?.history) {
+            const MAX_BODY_SIZE = 5_000;
+            stateWrapper.state.history = stateWrapper.state.history.map(
+              (item: any) => {
+                if (item?.response?.body && item.response.body.length > MAX_BODY_SIZE) {
+                  return {
+                    ...item,
+                    response: {
+                      ...item.response,
+                      body: item.response.body.slice(0, MAX_BODY_SIZE) + '\n... [truncated for storage]',
+                    },
+                  };
+                }
+                return item;
+              }
+            );
+          }
+
           // 1. Extract secrets
           const { cleanState, secretsMap } = extractSecrets(stateWrapper);
 
@@ -220,12 +239,32 @@ export const createCustomStorage = (): StateStorage => {
     setItem: (name: string, value: string): void => {
       try {
         const stateWrapper = JSON.parse(value);
+
+        // Trim large response bodies from history to prevent quota overflow
+        if (stateWrapper?.state?.history) {
+          const MAX_BODY_SIZE = 5_000;
+          stateWrapper.state.history = stateWrapper.state.history.map(
+            (item: any) => {
+              if (item?.response?.body && item.response.body.length > MAX_BODY_SIZE) {
+                return {
+                  ...item,
+                  response: {
+                    ...item.response,
+                    body: item.response.body.slice(0, MAX_BODY_SIZE) + '\n... [truncated for storage]',
+                  },
+                };
+              }
+              return item;
+            }
+          );
+        }
+
         const { cleanState, secretsMap } = extractSecrets(stateWrapper);
         localStorage.setItem(name, JSON.stringify(cleanState));
         const secretsStorage: SecretsStorage = { version: '1.0', secrets: secretsMap };
         localStorage.setItem(`${name}-secrets`, JSON.stringify(secretsStorage));
-      } catch {
-        localStorage.setItem(name, value);
+      } catch (error) {
+        console.error('Error persisting to localStorage:', error);
       }
     },
 

@@ -1,9 +1,64 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import { ChevronRight, ChevronDown } from 'lucide-react';
 import { isJWT, decodeJWT } from '../utils/helpers';
 import JWTTooltip from './JWTTooltip';
 
 interface JSONViewerProps {
   data: string;
+}
+
+/** Inline fold toggle arrow */
+function FoldArrow({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
+  return (
+    <button
+      onClick={onToggle}
+      className="inline-flex items-center justify-center w-4 h-4 mr-1 text-fetchy-text-muted hover:text-fetchy-text transition-colors flex-shrink-0 align-middle"
+      style={{ verticalAlign: 'middle' }}
+    >
+      {collapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
+    </button>
+  );
+}
+
+/** Collapsible wrapper for objects and arrays */
+function CollapsibleNode({
+  openBracket,
+  closeBracket,
+  summary,
+  defaultCollapsed = false,
+  children,
+}: {
+  openBracket: string;
+  closeBracket: string;
+  summary: string;
+  defaultCollapsed?: boolean;
+  children: React.ReactNode;
+}) {
+  const [collapsed, setCollapsed] = useState(defaultCollapsed);
+
+  if (collapsed) {
+    return (
+      <div className="inline-block w-full">
+        <FoldArrow collapsed onToggle={() => setCollapsed(false)} />
+        <span className="text-fetchy-text">{openBracket}</span>
+        <span className="text-fetchy-text-muted italic cursor-pointer" onClick={() => setCollapsed(false)}>
+          {' '}{summary}{' '}
+        </span>
+        <span className="text-fetchy-text">{closeBracket}</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="inline-block w-full">
+      <FoldArrow collapsed={false} onToggle={() => setCollapsed(true)} />
+      <span className="text-fetchy-text">{openBracket}</span>
+      <div className="ml-8">
+        {children}
+      </div>
+      <span className="text-fetchy-text" style={{ marginLeft: '1.25rem' }}>{closeBracket}</span>
+    </div>
+  );
 }
 
 export default function JSONViewer({ data }: JSONViewerProps) {
@@ -52,18 +107,19 @@ export default function JSONViewer({ data }: JSONViewerProps) {
       }
 
       return (
-        <div className="inline-block w-full">
-          <span className="text-fetchy-text">[</span>
-          <div className="ml-4">
-            {value.map((item, index) => (
-              <div key={index} className="mb-1 break-words">
-                {renderValue(item, depth + 1)}
-                {index < value.length - 1 && <span className="text-fetchy-text-muted">,</span>}
-              </div>
-            ))}
-          </div>
-          <span className="text-fetchy-text">]</span>
-        </div>
+        <CollapsibleNode
+          openBracket="["
+          closeBracket="]"
+          summary={`${value.length} item${value.length !== 1 ? 's' : ''}`}
+          defaultCollapsed={depth >= 3}
+        >
+          {value.map((item, index) => (
+            <div key={index} className="mb-1 break-words">
+              {renderValue(item, depth + 1)}
+              {index < value.length - 1 && <span className="text-fetchy-text-muted">,</span>}
+            </div>
+          ))}
+        </CollapsibleNode>
       );
     }
 
@@ -76,22 +132,21 @@ export default function JSONViewer({ data }: JSONViewerProps) {
       }
 
       return (
-        <div className="inline-block w-full">
-          <span className="text-fetchy-text">{'{'}</span>
-          <div className="ml-4">
-            {entries.map(([k, v], index) => (
-              <div key={k} className="flex flex-wrap items-start gap-2 mb-1">
-                <span className="json-key flex-shrink-0">"{k}"</span>
-                <span className="text-fetchy-text-muted flex-shrink-0">:</span>
-                <div className="flex-1 min-w-0 break-words">
-                  {renderValue(v, depth + 1)}
-                  {index < entries.length - 1 && <span className="text-fetchy-text-muted">,</span>}
-                </div>
-              </div>
-            ))}
-          </div>
-          <span className="text-fetchy-text">{'}'}</span>
-        </div>
+        <CollapsibleNode
+          openBracket="{"
+          closeBracket="}"
+          summary={`${entries.length} key${entries.length !== 1 ? 's' : ''}`}
+          defaultCollapsed={depth >= 3}
+        >
+          {entries.map(([k, v], index) => (
+            <div key={k} className="mb-1 break-words">
+              <span className="json-key">"{k}"</span>
+              <span className="text-fetchy-text-muted">: </span>
+              {renderValue(v, depth + 1)}
+              {index < entries.length - 1 && <span className="text-fetchy-text-muted">,</span>}
+            </div>
+          ))}
+        </CollapsibleNode>
       );
     }
 

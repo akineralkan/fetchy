@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Send, Save, Plus, Trash2, FileText, X, Link, Terminal, Check, Code, ChevronDown } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 import { ApiRequest, ApiResponse, HttpMethod, KeyValue } from '../types';
@@ -15,11 +16,12 @@ interface RequestPanelProps {
   setSentRequest?: (request: ApiRequest | null) => void;
   setIsLoading: (loading: boolean) => void;
   isLoading: boolean;
+  urlBarContainer?: HTMLDivElement | null;
 }
 
 const HTTP_METHODS: HttpMethod[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
 
-export default function RequestPanel({ setResponse, setSentRequest, setIsLoading, isLoading }: RequestPanelProps) {
+export default function RequestPanel({ setResponse, setSentRequest, setIsLoading, isLoading, urlBarContainer }: RequestPanelProps) {
   const {
     tabs,
     activeTabId,
@@ -779,10 +781,8 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
     );
   };
 
-  return (
-    <div className="h-full flex flex-col bg-fetchy-bg">
-      {/* URL bar */}
-      <div className="px-4 py-3 border-b border-fetchy-border flex items-center gap-2">
+  const urlBar = (
+      <div className="px-4 py-3 border-b border-fetchy-border flex items-center gap-2 bg-fetchy-bg">
 
         <select
           value={request.method}
@@ -817,7 +817,7 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
               handleChange({ url });
             }
           }}
-          className="flex-1"
+          className="flex-1 text-sm"
           placeholder="Enter request URL (e.g., https://api.example.com/users)"
         />
 
@@ -882,6 +882,12 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
           )}
         </div>
       </div>
+  );
+
+  return (
+    <div className="h-full flex flex-col bg-fetchy-bg">
+      {/* URL bar – portaled above both panels when container is available */}
+      {urlBarContainer ? createPortal(urlBar, urlBarContainer) : urlBar}
 
       {/* Section tabs with Save button */}
       <div className="flex items-center border-b border-fetchy-border shrink-0">

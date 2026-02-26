@@ -11,6 +11,8 @@ import {
   PostmanRequest,
   PostmanUrl,
 } from '../types';
+import { convertMustacheVarsDeep } from './helpers';
+import { convertPostmanScript } from './scriptConverter';
 
 // Helper to parse Postman URL
 const parsePostmanUrl = (url: PostmanUrl | string): { url: string; params: KeyValue[] } => {
@@ -127,6 +129,25 @@ const convertPostmanRequest = (item: PostmanItem): ApiRequest | null => {
     }
   }
 
+  // Extract pre-request and test scripts from Postman event array
+  let preScript: string | undefined;
+  let script: string | undefined;
+
+  if (item.event) {
+    for (const evt of item.event) {
+      const exec = evt.script?.exec;
+      if (!exec) continue;
+      const raw = Array.isArray(exec) ? exec.join('\n') : exec;
+      if (!raw.trim()) continue;
+
+      if (evt.listen === 'prerequest') {
+        preScript = convertPostmanScript(raw);
+      } else if (evt.listen === 'test') {
+        script = convertPostmanScript(raw);
+      }
+    }
+  }
+
   return {
     id: uuidv4(),
     name: item.name,
@@ -136,6 +157,8 @@ const convertPostmanRequest = (item: PostmanItem): ApiRequest | null => {
     params,
     body,
     auth: convertPostmanAuth(request.auth),
+    preScript,
+    script,
   };
 };
 
@@ -203,7 +226,7 @@ export const importPostmanCollection = (content: string): Collection | null => {
       enabled: !v.disabled,
     }));
 
-    return {
+    return convertMustacheVarsDeep({
       id: uuidv4(),
       name: postman.info.name,
       description: postman.info.description,
@@ -211,7 +234,7 @@ export const importPostmanCollection = (content: string): Collection | null => {
       requests,
       variables,
       expanded: true,
-    };
+    });
   } catch (error) {
     console.error('Error importing Postman collection:', error);
     throw error; // Re-throw to provide better error messages to the user
@@ -390,10 +413,10 @@ export const importPostmanEnvironment = (content: string): Environment[] => {
       isSecret: v.type === 'secret',
     }));
 
-    return {
+    return convertMustacheVarsDeep({
       id: uuidv4(),
       name: env.name || 'Imported Postman Environment',
       variables,
-    };
+    });
   });
 };
