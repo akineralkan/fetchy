@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Send, ArrowDown } from 'lucide-react';
+import { Send, ArrowDown, Copy, Check } from 'lucide-react';
 import { ApiResponse, ApiRequest } from '../types';
 import { formatBytes, formatTime, getStatusColor, prettyPrintJson, getMethodBgColor } from '../utils/helpers';
 import CodeEditor from './CodeEditor';
@@ -13,6 +13,17 @@ interface ResponsePanelProps {
 
 export default function ResponsePanel({ response, sentRequest, isLoading }: ResponsePanelProps) {
   const [activeTab, setActiveTab] = useState<'response-body' | 'response-headers' | 'request-headers' | 'request-body' | 'console'>('response-body');
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyBody = () => {
+    if (!response) return;
+    const text = response.headers['content-type']?.includes('application/json')
+      ? prettyPrintJson(response.body)
+      : response.body;
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   if (isLoading) {
     return (
@@ -162,7 +173,14 @@ export default function ResponsePanel({ response, sentRequest, isLoading }: Resp
       {/* Content */}
       <div className="flex-1 overflow-hidden">
         {activeTab === 'response-body' && (
-          <>
+          <div className="relative h-full">
+            <button
+              onClick={handleCopyBody}
+              className="absolute top-2 right-4 z-10 p-1.5 rounded bg-fetchy-card/80 hover:bg-fetchy-border text-fetchy-text-muted hover:text-fetchy-text transition-colors"
+              title="Copy to clipboard"
+            >
+              {copied ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
+            </button>
             {response.headers['content-type']?.includes('application/json') ? (
               <JSONViewer data={response.body} />
             ) : (
@@ -173,7 +191,7 @@ export default function ResponsePanel({ response, sentRequest, isLoading }: Resp
                 readOnly
               />
             )}
-          </>
+          </div>
         )}
 
         {activeTab === 'console' && (
