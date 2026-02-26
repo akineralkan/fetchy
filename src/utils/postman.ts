@@ -1,6 +1,7 @@
 ﻿import { v4 as uuidv4 } from 'uuid';
 import {
   Collection,
+  Environment,
   ApiRequest,
   RequestFolder,
   KeyValue,
@@ -307,4 +308,92 @@ export const exportToPostman = (collection: Collection): string => {
   };
 
   return JSON.stringify(postmanCollection, null, 2);
+};
+// ---------------------------------------------------------------------------
+// Postman Environment Import
+// ---------------------------------------------------------------------------
+
+/**
+ * Postman environment export format:
+ * {
+ *   "id": "uuid",
+ *   "name": "Environment Name",
+ *   "values": [
+ *     { "key": "varName", "value": "varValue", "type": "default"|"secret", "enabled": true }
+ *   ],
+ *   "_postman_variable_scope": "environment",
+ *   "_postman_exported_at": "...",
+ *   "_postman_exported_using": "..."
+ * }
+ */
+
+interface PostmanEnvironment {
+  id?: string;
+  name: string;
+  values: Array<{
+    key: string;
+    value: string;
+    type?: string;
+    enabled?: boolean;
+    description?: string;
+  }>;
+  _postman_variable_scope?: string;
+}
+
+/**
+ * Import a Postman environment from JSON string content.
+ * Handles both single environment and arrays of environments.
+ * Also handles Postman global variables (same format with _postman_variable_scope: "globals").
+ */
+export const importPostmanEnvironment = (content: string): Environment[] => {
+  const trimmed = content.trim();
+  if (!trimmed) {
+    throw new Error('Empty content provided');
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(trimmed);
+  } catch {
+    throw new Error('Invalid JSON: Could not parse the Postman environment file');
+  }
+
+  // Handle array of environments
+  const envList: PostmanEnvironment[] = Array.isArray(parsed)
+    ? parsed
+    : [parsed as PostmanEnvironment];
+
+  if (envList.length === 0) {
+    throw new Error('No environments found in the file');
+  }
+
+  return envList.map((env) => {
+    if (!env || typeof env !== 'object') {
+      throw new Error('Invalid Postman environment: item is not an object');
+    }
+
+    // Validate it looks like a Postman environment
+    if (!env.name && !env.values) {
+      throw new Error(
+        'Invalid Postman environment format: expected "name" and "values" fields'
+      );
+    }
+
+    const variables: KeyValue[] = (env.values || []).map((v) => ({
+      id: uuidv4(),
+      key: v.key || '',
+      value: v.value || '',
+      initialValue: v.value || '',
+      currentValue: v.value || '',
+      enabled: v.enabled !== false,
+      description: v.description,
+      isSecret: v.type === 'secret',
+    }));
+
+    return {
+      id: uuidv4(),
+      name: env.name || 'Imported Postman Environment',
+      variables,
+    };
+  });
 };

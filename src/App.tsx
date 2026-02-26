@@ -5,7 +5,8 @@ import TabBar from './components/TabBar';
 import RequestPanel from './components/RequestPanel';
 import ResponsePanel from './components/ResponsePanel';
 import WelcomeScreen from './components/WelcomeScreen';
-import ImportModal from './components/ImportModal';
+import ImportModal, { type ImportSource } from './components/ImportModal';
+import ImportRequestModal from './components/ImportRequestModal';
 import ExportModal from './components/ExportModal';
 import EnvironmentModal from './components/EnvironmentModal';
 import EnvironmentDropdown from './components/EnvironmentDropdown';
@@ -24,8 +25,6 @@ import { usePreferencesStore } from './store/preferencesStore';
 import { useWorkspacesStore } from './store/workspacesStore';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { ApiResponse, RequestHistoryItem, ApiRequest } from './types';
-
-type ImportType = 'postman' | 'openapi' | 'curl';
 
 interface TabResponseData {
   response: ApiResponse | null;
@@ -55,7 +54,8 @@ function App() {
   const activeWorkspace = workspaces.find((w) => w.id === activeWorkspaceId) ?? null;
   const [tabResponses, setTabResponses] = useState<Record<string, TabResponseData>>({});
   const [showImportModal, setShowImportModal] = useState(false);
-  const [importType, setImportType] = useState<ImportType>('postman');
+  const [importType, setImportType] = useState<ImportSource>('postman');
+  const [showImportRequestModal, setShowImportRequestModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showEnvironmentModal, setShowEnvironmentModal] = useState(false);
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
@@ -184,10 +184,24 @@ function App() {
     }
   }, [collections, addCollection, addRequest, openTab]);
 
-  const handleImport = useCallback((type?: ImportType) => {
+  const handleImport = useCallback((type?: ImportSource) => {
     if (type) {
       setImportType(type);
     }
+    setShowImportModal(true);
+  }, []);
+
+  const handleImportRequest = useCallback(() => {
+    setShowImportRequestModal(true);
+  }, []);
+
+  const handleImportCollection = useCallback(() => {
+    setImportType('postman');
+    setShowImportModal(true);
+  }, []);
+
+  const handleImportEnvironment = useCallback(() => {
+    setImportType('postman-env');
     setShowImportModal(true);
   }, []);
 
@@ -347,7 +361,11 @@ function App() {
               <OpenApiEditor documentId={activeTab?.openApiDocId} />
             </div>
           ) : (
-            <WelcomeScreen onImport={handleImport} />
+            <WelcomeScreen
+              onImportRequest={handleImportRequest}
+              onImportCollection={handleImportCollection}
+              onImportEnvironment={handleImportEnvironment}
+            />
           )}
         </div>
       </div>
@@ -402,6 +420,12 @@ function App() {
         <ImportModal
           onClose={() => setShowImportModal(false)}
           initialImportType={importType}
+        />
+      )}
+
+      {showImportRequestModal && (
+        <ImportRequestModal
+          onClose={() => setShowImportRequestModal(false)}
         />
       )}
 

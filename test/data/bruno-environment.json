@@ -1,0 +1,9 @@
+{
+  "name": "Bruno Test Environment",
+  "variables": [
+    { "name": "baseUrl", "value": "https://api.example.com", "enabled": true, "secret": false },
+    { "name": "apiKey", "value": "test-key-123", "enabled": true, "secret": true },
+    { "name": "debugMode", "value": "false", "enabled": false, "secret": false },
+    { "name": "timeout", "value": "3000", "enabled": true, "secret": false }
+  ]
+}

@@ -1,14 +1,14 @@
-import { Zap, FolderOpen, FileJson, Terminal } from 'lucide-react';
+import { Zap, Terminal, FolderOpen, Globe } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 import Confetti from './Confetti';
 
-type ImportType = 'postman' | 'openapi' | 'curl';
-
 interface WelcomeScreenProps {
-  onImport: (type?: ImportType) => void;
+  onImportRequest: () => void;
+  onImportCollection: () => void;
+  onImportEnvironment: () => void;
 }
 
-export default function WelcomeScreen({ onImport }: WelcomeScreenProps) {
+export default function WelcomeScreen({ onImportRequest, onImportCollection, onImportEnvironment }: WelcomeScreenProps) {
   const { addCollection, addRequest, openTab } = useAppStore();
 
   const handleQuickStart = () => {
@@ -59,35 +59,35 @@ export default function WelcomeScreen({ onImport }: WelcomeScreenProps) {
           </button>
 
           <button
-            onClick={() => onImport('postman')}
-            className="p-6 bg-fetchy-card border border-fetchy-border rounded-lg hover:border-fetchy-accent transition-colors group"
-          >
-            <FolderOpen className="w-8 h-8 text-yellow-400 mx-auto mb-3 group-hover:scale-110 transition-transform" />
-            <h3 className="font-medium text-fetchy-text mb-2">Import Postman</h3>
-            <p className="text-sm text-fetchy-text-muted">
-              Import your existing Postman collections
-            </p>
-          </button>
-
-          <button
-            onClick={() => onImport('openapi')}
-            className="p-6 bg-fetchy-card border border-fetchy-border rounded-lg hover:border-fetchy-accent transition-colors group"
-          >
-            <FileJson className="w-8 h-8 text-green-400 mx-auto mb-3 group-hover:scale-110 transition-transform" />
-            <h3 className="font-medium text-fetchy-text mb-2">Import OpenAPI</h3>
-            <p className="text-sm text-fetchy-text-muted">
-              Generate requests from OpenAPI/Swagger specs
-            </p>
-          </button>
-
-          <button
-            onClick={() => onImport('curl')}
+            onClick={onImportRequest}
             className="p-6 bg-fetchy-card border border-fetchy-border rounded-lg hover:border-fetchy-accent transition-colors group"
           >
             <Terminal className="w-8 h-8 text-purple-400 mx-auto mb-3 group-hover:scale-110 transition-transform" />
-            <h3 className="font-medium text-fetchy-text mb-2">Import cURL</h3>
+            <h3 className="font-medium text-fetchy-text mb-2">Import Request</h3>
             <p className="text-sm text-fetchy-text-muted">
-              Convert cURL commands to requests
+              Import a request from a cURL command
+            </p>
+          </button>
+
+          <button
+            onClick={onImportCollection}
+            className="p-6 bg-fetchy-card border border-fetchy-border rounded-lg hover:border-fetchy-accent transition-colors group"
+          >
+            <FolderOpen className="w-8 h-8 text-yellow-400 mx-auto mb-3 group-hover:scale-110 transition-transform" />
+            <h3 className="font-medium text-fetchy-text mb-2">Import Collection</h3>
+            <p className="text-sm text-fetchy-text-muted">
+              Import from Postman, Hoppscotch, Bruno, or OpenAPI
+            </p>
+          </button>
+
+          <button
+            onClick={onImportEnvironment}
+            className="p-6 bg-fetchy-card border border-fetchy-border rounded-lg hover:border-fetchy-accent transition-colors group"
+          >
+            <Globe className="w-8 h-8 text-green-400 mx-auto mb-3 group-hover:scale-110 transition-transform" />
+            <h3 className="font-medium text-fetchy-text mb-2">Import Environment</h3>
+            <p className="text-sm text-fetchy-text-muted">
+              Import environments from Postman, Hoppscotch, or Bruno
             </p>
           </button>
         </div>

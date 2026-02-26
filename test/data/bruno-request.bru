@@ -1,0 +1,35 @@
+meta {
+  name: Get Users
+  type: http
+  seq: 1
+}
+
+get {
+  url: https://api.example.com/users
+}
+
+headers {
+  Accept: application/json
+  Authorization: Bearer {{token}}
+  ~X-Debug: true
+}
+
+query {
+  page: 1
+  limit: 20
+  ~verbose: true
+}
+
+auth:bearer {
+  token: my-bearer-token
+}
+
+script:pre-request {
+  const token = bru.getEnvVar("token");
+  console.log("Token:", token);
+}
+
+script:post-response {
+  const data = res.getBody();
+  bru.setVar("userId", data.users[0].id);
+}

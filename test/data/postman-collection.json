@@ -1,0 +1,62 @@
+{
+  "info": {
+    "name": "Test Postman Collection",
+    "description": "A test collection exported from Postman",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get Users",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "https://api.example.com/users?page=1",
+          "protocol": "https",
+          "host": ["api", "example", "com"],
+          "path": ["users"],
+          "query": [
+            { "key": "page", "value": "1" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Auth Folder",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"username\": \"admin\", \"password\": \"secret\"}"
+            },
+            "url": {
+              "raw": "https://api.example.com/auth/login",
+              "protocol": "https",
+              "host": ["api", "example", "com"],
+              "path": ["auth", "login"]
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "admin" },
+                { "key": "password", "value": "secret" }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "https://api.example.com" },
+    { "key": "apiVersion", "value": "v1", "disabled": true }
+  ]
+}

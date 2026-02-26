@@ -1,0 +1,74 @@
+[
+  {
+    "v": 2,
+    "name": "Test API Collection",
+    "folders": [
+      {
+        "v": 2,
+        "name": "Users",
+        "folders": [],
+        "requests": [
+          {
+            "v": "4",
+            "name": "List Users",
+            "method": "GET",
+            "endpoint": "https://api.example.com/users",
+            "params": [
+              { "key": "page", "value": "1", "active": true },
+              { "key": "limit", "value": "10", "active": false }
+            ],
+            "headers": [
+              { "key": "Accept", "value": "application/json", "active": true }
+            ],
+            "body": { "contentType": null, "body": null },
+            "auth": { "authType": "bearer", "authActive": true, "token": "my-token" },
+            "preRequestScript": "console.log('pre');",
+            "testScript": "console.log('test');",
+            "requestVariables": []
+          }
+        ],
+        "auth": { "authType": "inherit" },
+        "headers": []
+      }
+    ],
+    "requests": [
+      {
+        "v": "4",
+        "name": "Health Check",
+        "method": "GET",
+        "endpoint": "https://api.example.com/health",
+        "params": [],
+        "headers": [],
+        "body": { "contentType": null, "body": null },
+        "auth": { "authType": "none" },
+        "preRequestScript": "",
+        "testScript": "",
+        "requestVariables": []
+      },
+      {
+        "v": "4",
+        "name": "Create User",
+        "method": "POST",
+        "endpoint": "https://api.example.com/users",
+        "params": [],
+        "headers": [
+          { "key": "Content-Type", "value": "application/json", "active": true }
+        ],
+        "body": {
+          "contentType": "application/json",
+          "body": "{\"name\": \"John\", \"email\": \"john@example.com\"}"
+        },
+        "auth": { "authType": "basic", "authActive": true, "username": "admin", "password": "pass123" },
+        "preRequestScript": "",
+        "testScript": "",
+        "requestVariables": []
+      }
+    ],
+    "auth": { "authType": "none" },
+    "headers": [],
+    "variables": [
+      { "key": "baseUrl", "initialValue": "https://api.example.com", "currentValue": "https://api.example.com" }
+    ],
+    "description": "A test Hoppscotch collection"
+  }
+]

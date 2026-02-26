@@ -1,0 +1,21 @@
+[
+  {
+    "v": 2,
+    "id": "env-001",
+    "name": "Development",
+    "variables": [
+      { "key": "baseUrl", "initialValue": "http://localhost:3000", "currentValue": "http://localhost:3000", "secret": false },
+      { "key": "apiKey", "initialValue": "", "currentValue": "dev-key-123", "secret": true },
+      { "key": "timeout", "initialValue": "5000", "currentValue": "5000", "secret": false }
+    ]
+  },
+  {
+    "v": 2,
+    "id": "env-002",
+    "name": "Production",
+    "variables": [
+      { "key": "baseUrl", "initialValue": "https://api.example.com", "currentValue": "https://api.example.com", "secret": false },
+      { "key": "apiKey", "initialValue": "", "currentValue": "prod-key-456", "secret": true }
+    ]
+  }
+]

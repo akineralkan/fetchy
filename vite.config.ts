@@ -4,6 +4,8 @@ import path from 'path'
 import type { Plugin } from 'vite'
 import { version } from './package.json'
 
+/// <reference types="vitest" />
+
 // CORS proxy plugin for browser dev mode
 function corsProxyPlugin(): Plugin {
   return {
@@ -102,6 +104,11 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+  },
+  test: {
+    globals: true,
+    environment: 'node',
+    include: ['test/**/*.test.ts'],
   },
 })
 

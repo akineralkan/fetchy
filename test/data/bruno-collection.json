@@ -1,0 +1,63 @@
+{
+  "name": "Bruno Test Collection",
+  "version": "1",
+  "items": [
+    {
+      "type": "http-request",
+      "name": "Get Users",
+      "request": {
+        "method": "GET",
+        "url": "https://api.example.com/users",
+        "headers": [
+          { "name": "Accept", "value": "application/json", "enabled": true }
+        ],
+        "params": [
+          { "name": "page", "value": "1", "enabled": true, "type": "query" },
+          { "name": "limit", "value": "20", "enabled": false, "type": "query" }
+        ],
+        "body": {},
+        "auth": {
+          "mode": "bearer",
+          "bearer": { "token": "my-bearer-token" }
+        }
+      }
+    },
+    {
+      "type": "folder",
+      "name": "Auth",
+      "items": [
+        {
+          "type": "http-request",
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "url": "https://api.example.com/auth/login",
+            "headers": [
+              { "name": "Content-Type", "value": "application/json", "enabled": true }
+            ],
+            "body": {
+              "mode": "json",
+              "json": "{\"username\": \"admin\", \"password\": \"secret\"}"
+            },
+            "auth": {
+              "mode": "basic",
+              "basic": { "username": "admin", "password": "secret" }
+            }
+          }
+        },
+        {
+          "type": "http-request",
+          "name": "Check API Key",
+          "request": {
+            "method": "GET",
+            "url": "https://api.example.com/auth/verify",
+            "auth": {
+              "mode": "apikey",
+              "apikey": { "key": "X-API-Key", "value": "test-key", "placement": "header" }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
