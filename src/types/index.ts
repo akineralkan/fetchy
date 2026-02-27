@@ -47,6 +47,8 @@ export interface ApiRequest {
   auth: RequestAuth;
   preScript?: string;
   script?: string;
+  /** When false, TLS certificate verification is skipped for this request. Default: true */
+  sslVerification?: boolean;
 }
 
 export interface ApiResponse {
@@ -418,6 +420,7 @@ export interface ElectronAPI {
     method: string;
     headers: Record<string, string>;
     body?: string;
+    sslVerification?: boolean;
   }) => Promise<ApiResponse>;
   aiRequest: (data: {
     provider: AIProvider;

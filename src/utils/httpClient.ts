@@ -140,24 +140,9 @@ export const executeRequest = async ({
   // Run pre-script if present. If it errors, abort the request.
   let preScriptOutput: string | undefined;
   if (request.preScript) {
-    try {
-      const preScriptResult = runPreScript(request.preScript, environmentVariables);
-      // Return early with error response if pre-script failed
-      if (preScriptResult.error) {
-        return {
-          status: 0,
-          statusText: 'Pre-Script Error',
-          headers: {},
-          body: '',
-          time: 0,
-          size: 0,
-          preScriptError: preScriptResult.error,
-          preScriptOutput: preScriptResult.output || undefined,
-        };
-      }
-      // Pre-script succeeded — store output for Console
-      preScriptOutput = preScriptResult.output;
-    } catch (e: any) {
+    const preScriptResult = await runScriptInWorker(request.preScript, 'pre', environmentVariables);
+    applyEnvUpdates(preScriptResult.envUpdates);
+    if (preScriptResult.error) {
       return {
         status: 0,
         statusText: 'Pre-Script Error',
@@ -165,9 +150,11 @@ export const executeRequest = async ({
         body: '',
         time: 0,
         size: 0,
-        preScriptError: e.message,
+        preScriptError: preScriptResult.error,
+        preScriptOutput: preScriptResult.output || undefined,
       };
     }
+    preScriptOutput = preScriptResult.output;
   }
 
   try {
@@ -178,18 +165,21 @@ export const executeRequest = async ({
         method: request.method,
         headers,
         body: typeof body === 'string' ? body : undefined,
+        sslVerification: request.sslVerification !== false, // default true
       });
 
       if (request.script) {
-        try {
-          await runScript(request.script, response, environmentVariables);
-          if (useAppStore.getState().activeTabId) {
-            useAppStore.getState().updateTab(useAppStore.getState().activeTabId!, { scriptExecutionStatus: 'success' });
-          }
-        } catch (e: any) {
-          response.scriptError = e.message;
+        const scriptResult = await runScriptInWorker(request.script, 'post', environmentVariables, response);
+        applyEnvUpdates(scriptResult.envUpdates);
+        if (scriptResult.output) response.scriptOutput = scriptResult.output;
+        if (scriptResult.error) {
+          response.scriptError = scriptResult.error;
           if (useAppStore.getState().activeTabId) {
             useAppStore.getState().updateTab(useAppStore.getState().activeTabId!, { scriptExecutionStatus: 'error' });
+          }
+        } else {
+          if (useAppStore.getState().activeTabId) {
+            useAppStore.getState().updateTab(useAppStore.getState().activeTabId!, { scriptExecutionStatus: 'success' });
           }
         }
       }
@@ -214,15 +204,17 @@ export const executeRequest = async ({
 
     // Run post-script if present
     if (request.script) {
-      try {
-        await runScript(request.script, apiResponse, environmentVariables);
-        if (useAppStore.getState().activeTabId) {
-          useAppStore.getState().updateTab(useAppStore.getState().activeTabId!, { scriptExecutionStatus: 'success' });
-        }
-      } catch (e: any) {
-        apiResponse.scriptError = e.message;
+      const scriptResult = await runScriptInWorker(request.script, 'post', environmentVariables, apiResponse);
+      applyEnvUpdates(scriptResult.envUpdates);
+      if (scriptResult.output) apiResponse.scriptOutput = scriptResult.output;
+      if (scriptResult.error) {
+        apiResponse.scriptError = scriptResult.error;
         if (useAppStore.getState().activeTabId) {
           useAppStore.getState().updateTab(useAppStore.getState().activeTabId!, { scriptExecutionStatus: 'error' });
+        }
+      } else {
+        if (useAppStore.getState().activeTabId) {
+          useAppStore.getState().updateTab(useAppStore.getState().activeTabId!, { scriptExecutionStatus: 'success' });
         }
       }
     }
@@ -247,91 +239,177 @@ export const executeRequest = async ({
   }
 };
 
-const runScript = async (script: string, response: ApiResponse, environment: KeyValue[]) => {
-  const fetchy = {
-    response: {
-      data: JSON.parse(response.body),
-      headers: response.headers,
-      status: response.status,
-      statusText: response.statusText,
-    },
+// ---------------------------------------------------------------------------
+// Sandboxed script execution via Web Worker
+// ---------------------------------------------------------------------------
+// User scripts run inside a dedicated Worker thread that has NO access to
+// `window`, `document`, `electronAPI`, the DOM, or Node.js globals.
+// Communication happens exclusively via structured-clone postMessage.
+// A hard timeout (default 10 s) protects against infinite loops (#6).
+// ---------------------------------------------------------------------------
+
+const SCRIPT_TIMEOUT_MS = 10_000;
+
+const WORKER_SOURCE = `
+'use strict';
+self.onmessage = function (e) {
+  var data = e.data;
+  var script = data.script;
+  var fetchyData = data.fetchyData;
+  var scriptType = data.scriptType;
+
+  var logs = [];
+  var envUpdates = [];
+
+  // Local copy of environment so set() is visible to subsequent get()
+  var envCopy = (fetchyData.environment || []).map(function (v) {
+    return { key: v.key, value: v.value, enabled: v.enabled };
+  });
+
+  var fetchy = {
     environment: {
-      get: (key: string) => {
-        const variable = environment.find(v => v.key === key);
-        return variable ? variable.value : undefined;
-      },
-      set: (key: string, value: any) => {
-        const { updateEnvironment, getActiveEnvironment } = useAppStore.getState();
-        const activeEnvironment = getActiveEnvironment();
-        if (activeEnvironment) {
-          const existingVarIndex = activeEnvironment.variables.findIndex(v => v.key === key);
-          if (existingVarIndex > -1) {
-            const newVariables = [...activeEnvironment.variables];
-            newVariables[existingVarIndex] = { ...newVariables[existingVarIndex], value: String(value) };
-            updateEnvironment(activeEnvironment.id, { variables: newVariables });
-          } else {
-            const newVar: KeyValue = { id: '', key, value: String(value), enabled: true };
-            updateEnvironment(activeEnvironment.id, { variables: [...activeEnvironment.variables, newVar] });
-          }
+      get: function (key) {
+        for (var i = 0; i < envCopy.length; i++) {
+          if (envCopy[i].key === key) return envCopy[i].value;
         }
+        return undefined;
       },
-      all: () => environment,
+      set: function (key, value) {
+        var strVal = String(value);
+        var found = false;
+        for (var i = 0; i < envCopy.length; i++) {
+          if (envCopy[i].key === key) { envCopy[i].value = strVal; found = true; break; }
+        }
+        if (!found) envCopy.push({ key: key, value: strVal, enabled: true });
+        envUpdates.push({ key: key, value: strVal });
+      },
+      all: function () { return envCopy; },
     },
   };
 
-  // Capture console.log output
-  const logs: string[] = [];
-  const fetchy_with_console = {
-    ...fetchy,
-    console: {
-      log: (...args: any[]) => logs.push(args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' ')),
-    },
-  };
-
-  const fn = new Function('fetchy', 'console', script);
-  fn(fetchy_with_console, fetchy_with_console.console);
-
-  if (logs.length > 0) {
-    response.scriptOutput = logs.join('\n');
+  // Attach response data for post-request scripts
+  if (scriptType === 'post' && fetchyData.response) {
+    fetchy.response = fetchyData.response;
   }
-};
 
-const runPreScript = (script: string, environment: KeyValue[]): { error?: string; output?: string } => {
-  const logs: string[] = [];
-  const fetchy = {
-    environment: {
-      get: (key: string) => {
-        const variable = environment.find(v => v.key === key);
-        return variable ? variable.value : undefined;
-      },
-      set: (key: string, value: any) => {
-        const { updateEnvironment, getActiveEnvironment } = useAppStore.getState();
-        const activeEnvironment = getActiveEnvironment();
-        if (activeEnvironment) {
-          const existingVarIndex = activeEnvironment.variables.findIndex(v => v.key === key);
-          if (existingVarIndex > -1) {
-            const newVariables = [...activeEnvironment.variables];
-            newVariables[existingVarIndex] = { ...newVariables[existingVarIndex], value: String(value) };
-            updateEnvironment(activeEnvironment.id, { variables: newVariables });
-          } else {
-            const newVar: KeyValue = { id: '', key, value: String(value), enabled: true };
-            updateEnvironment(activeEnvironment.id, { variables: [...activeEnvironment.variables, newVar] });
-          }
-        }
-      },
-      all: () => environment,
-    },
-    console: {
-      log: (...args: any[]) => logs.push(args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' ')),
+  var _console = {
+    log: function () {
+      var parts = [];
+      for (var i = 0; i < arguments.length; i++) {
+        var a = arguments[i];
+        parts.push(typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a));
+      }
+      logs.push(parts.join(' '));
     },
   };
 
   try {
-    const fn = new Function('fetchy', 'console', script);
-    fn(fetchy, fetchy.console);
-    return { output: logs.length > 0 ? logs.join('\n') : undefined };
-  } catch (e: any) {
-    return { error: e.message, output: logs.length > 0 ? logs.join('\n') : undefined };
+    var fn = new Function('fetchy', 'console', script);
+    fn(fetchy, _console);
+    self.postMessage({ type: 'done', logs: logs, envUpdates: envUpdates });
+  } catch (err) {
+    self.postMessage({ type: 'error', message: err.message, logs: logs, envUpdates: envUpdates });
   }
+};
+`;
+
+interface ScriptResult {
+  error?: string;
+  output?: string;
+  envUpdates?: Array<{ key: string; value: string }>;
+}
+
+/**
+ * Execute a user script inside an isolated Web Worker.
+ *
+ * @param script     The user-authored script source code
+ * @param scriptType 'pre' for pre-request scripts, 'post' for post-request / test scripts
+ * @param environment Current environment variables (read-only snapshot sent to worker)
+ * @param response   The API response (only used for post-request scripts)
+ */
+const runScriptInWorker = (
+  script: string,
+  scriptType: 'pre' | 'post',
+  environment: KeyValue[],
+  response?: ApiResponse,
+): Promise<ScriptResult> => {
+  return new Promise((resolve) => {
+    const blob = new Blob([WORKER_SOURCE], { type: 'application/javascript' });
+    const url = URL.createObjectURL(blob);
+    const worker = new Worker(url);
+
+    const timeoutId = setTimeout(() => {
+      worker.terminate();
+      URL.revokeObjectURL(url);
+      resolve({ error: `Script timed out after ${SCRIPT_TIMEOUT_MS / 1000}s` });
+    }, SCRIPT_TIMEOUT_MS);
+
+    worker.onmessage = (e) => {
+      clearTimeout(timeoutId);
+      worker.terminate();
+      URL.revokeObjectURL(url);
+
+      const { type: msgType, logs, envUpdates, message } = e.data;
+      const output = logs && logs.length > 0 ? logs.join('\n') : undefined;
+
+      if (msgType === 'error') {
+        resolve({ error: message, output, envUpdates });
+      } else {
+        resolve({ output, envUpdates });
+      }
+    };
+
+    worker.onerror = (err) => {
+      clearTimeout(timeoutId);
+      worker.terminate();
+      URL.revokeObjectURL(url);
+      resolve({ error: err.message || 'Script execution failed' });
+    };
+
+    // Build the serialisable payload for the worker
+    const fetchyData: Record<string, unknown> = {
+      environment: environment.map(v => ({ key: v.key, value: v.value, enabled: v.enabled })),
+    };
+
+    if (scriptType === 'post' && response) {
+      try {
+        fetchyData.response = {
+          data: JSON.parse(response.body),
+          headers: response.headers,
+          status: response.status,
+          statusText: response.statusText,
+        };
+      } catch {
+        fetchyData.response = {
+          data: response.body,
+          headers: response.headers,
+          status: response.status,
+          statusText: response.statusText,
+        };
+      }
+    }
+
+    worker.postMessage({ script, fetchyData, scriptType });
+  });
+};
+
+/** Apply environment variable mutations reported by the worker back to the store. */
+const applyEnvUpdates = (envUpdates?: Array<{ key: string; value: string }>) => {
+  if (!envUpdates || envUpdates.length === 0) return;
+
+  const { updateEnvironment, getActiveEnvironment } = useAppStore.getState();
+  const activeEnvironment = getActiveEnvironment();
+  if (!activeEnvironment) return;
+
+  const variables = [...activeEnvironment.variables];
+  for (const { key, value } of envUpdates) {
+    const idx = variables.findIndex(v => v.key === key);
+    if (idx > -1) {
+      variables[idx] = { ...variables[idx], value };
+    } else {
+      variables.push({ id: '', key, value, enabled: true } as KeyValue);
+    }
+  }
+  updateEnvironment(activeEnvironment.id, { variables });
 };
 

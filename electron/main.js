@@ -1,10 +1,30 @@
 ﻿const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 const https = require('https');
 const http = require('http');
 const crypto = require('crypto');
 const { execFile } = require('child_process');
+
+/**
+ * Atomic file write: writes content to a temporary file in the same directory,
+ * then renames it to the target path. `fs.renameSync` is atomic on NTFS, ext4,
+ * and APFS as long as source and destination are on the same filesystem (same
+ * directory guarantees this). If the rename fails, the temp file is cleaned up.
+ */
+function safeWriteFileSync(filePath, content, encoding = 'utf-8') {
+  const dir = path.dirname(filePath);
+  const tmpPath = path.join(dir, `.${path.basename(filePath)}.${process.pid}.tmp`);
+  try {
+    fs.writeFileSync(tmpPath, content, encoding);
+    fs.renameSync(tmpPath, filePath);
+  } catch (err) {
+    // Clean up temp file if rename (or write) failed
+    try { fs.unlinkSync(tmpPath); } catch { /* ignore */ }
+    throw err;
+  }
+}
 
 let mainWindow;
 let customHomeDirectory = null;
@@ -71,7 +91,7 @@ function loadPreferences() {
 function savePreferences(preferences) {
   try {
     const prefsPath = getPreferencesFilePath();
-    fs.writeFileSync(prefsPath, JSON.stringify(preferences, null, 2), 'utf-8');
+    safeWriteFileSync(prefsPath, JSON.stringify(preferences, null, 2), 'utf-8');
     return true;
   } catch (error) {
     console.error('Error saving preferences:', error);
@@ -99,7 +119,7 @@ function loadWorkspacesConfig() {
 
 function saveWorkspacesConfig(config) {
   try {
-    fs.writeFileSync(getWorkspacesFilePath(), JSON.stringify(config, null, 2), 'utf-8');
+    safeWriteFileSync(getWorkspacesFilePath(), JSON.stringify(config, null, 2), 'utf-8');
     return true;
   } catch (error) {
     console.error('Error saving workspaces config:', error);
@@ -239,9 +259,28 @@ ipcMain.handle('get-data-path', () => {
   return dataPath;
 });
 
+/**
+ * Resolve a caller-supplied filename against a trusted base directory.
+ * Returns the resolved absolute path, or throws if the result would escape
+ * the base directory (e.g. via `../../` traversal or absolute paths).
+ */
+function safePath(baseDir, filename) {
+  if (typeof filename !== 'string' || filename.length === 0) {
+    throw new Error('Invalid filename');
+  }
+  const resolved = path.resolve(baseDir, filename);
+  // Ensure the resolved path is strictly inside baseDir (+ path.sep to avoid
+  // prefix-matching a sibling directory, e.g. "data" vs "data-backup").
+  const base = baseDir.endsWith(path.sep) ? baseDir : baseDir + path.sep;
+  if (!resolved.startsWith(base) && resolved !== baseDir) {
+    throw new Error(`Path traversal blocked: ${filename}`);
+  }
+  return resolved;
+}
+
 ipcMain.handle('read-data', async (event, filename) => {
   try {
-    const dataPath = path.join(getEffectiveDataDirectory(), filename);
+    const dataPath = safePath(getEffectiveDataDirectory(), filename);
     if (fs.existsSync(dataPath)) return fs.readFileSync(dataPath, 'utf-8');
     return null;
   } catch (error) {
@@ -254,8 +293,9 @@ ipcMain.handle('write-data', async (event, { filename, content }) => {
   try {
     const dataDir = getEffectiveDataDirectory();
     if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+    const filePath = safePath(dataDir, filename);
     lastWriteTimestamp = Date.now(); // track our own writes to suppress watcher events
-    fs.writeFileSync(path.join(dataDir, filename), content, 'utf-8');
+    safeWriteFileSync(filePath, content, 'utf-8');
     return true;
   } catch (error) {
     console.error('Error writing data:', error);
@@ -281,7 +321,7 @@ ipcMain.handle('write-secrets', async (event, { content }) => {
   try {
     const secretsDir = getEffectiveSecretsDirectory();
     if (!fs.existsSync(secretsDir)) fs.mkdirSync(secretsDir, { recursive: true });
-    fs.writeFileSync(path.join(secretsDir, 'fetchy-secrets.json'), content, 'utf-8');
+    safeWriteFileSync(path.join(secretsDir, 'fetchy-secrets.json'), content, 'utf-8');
     return true;
   } catch (error) {
     console.error('Error writing secrets:', error);
@@ -307,7 +347,7 @@ ipcMain.handle('write-ai-secrets', async (event, { content }) => {
   try {
     const secretsDir = getEffectiveSecretsDirectory();
     if (!fs.existsSync(secretsDir)) fs.mkdirSync(secretsDir, { recursive: true });
-    fs.writeFileSync(path.join(secretsDir, 'ai-secrets.json'), content, 'utf-8');
+    safeWriteFileSync(path.join(secretsDir, 'ai-secrets.json'), content, 'utf-8');
     return true;
   } catch (error) {
     console.error('Error writing AI secrets:', error);
@@ -459,7 +499,7 @@ ipcMain.handle('import-workspace-from-json', async (event, { name, homeDirectory
     if (!fs.existsSync(secretsDirectory)) fs.mkdirSync(secretsDirectory, { recursive: true });
 
     if (exportData.publicData) {
-      fs.writeFileSync(
+      safeWriteFileSync(
         path.join(homeDirectory, 'fetchy-storage.json'),
         JSON.stringify(exportData.publicData, null, 2),
         'utf-8'
@@ -467,7 +507,7 @@ ipcMain.handle('import-workspace-from-json', async (event, { name, homeDirectory
     }
 
     if (exportData.secretsData) {
-      fs.writeFileSync(
+      safeWriteFileSync(
         path.join(secretsDirectory, 'fetchy-secrets.json'),
         JSON.stringify(exportData.secretsData, null, 2),
         'utf-8'
@@ -495,7 +535,7 @@ ipcMain.handle('import-workspace-from-json', async (event, { name, homeDirectory
 
 // ─── IPC: HTTP REQUEST ────────────────────────────────────────────────────────
 
-ipcMain.handle('http-request', async (event, { url, method, headers, body }) => {
+ipcMain.handle('http-request', async (event, { url, method, headers, body, sslVerification }) => {
   return new Promise((resolve) => {
     const startTime = Date.now();
     try {
@@ -509,7 +549,8 @@ ipcMain.handle('http-request', async (event, { url, method, headers, body }) => 
         path: parsedUrl.pathname + parsedUrl.search,
         method,
         headers: headers || {},
-        rejectUnauthorized: false,
+        // Default to true; only disable when explicitly set to false per-request
+        rejectUnauthorized: sslVerification !== false,
       };
 
       const req = httpModule.request(options, (res) => {
@@ -756,7 +797,8 @@ ipcMain.handle('ai-request', async (event, { provider, apiKey, model, baseUrl, m
         path: parsedUrl.pathname + parsedUrl.search,
         method: 'POST',
         headers,
-        rejectUnauthorized: false,
+        // AI requests always verify TLS — they carry API keys
+        rejectUnauthorized: true,
       };
 
       const req = httpModule.request(options, (res) => {
