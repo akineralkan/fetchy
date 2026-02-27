@@ -29,12 +29,12 @@ function HomepageHeader() {
           <Link
             className="button button--secondary button--lg"
             to="/docs/getting-started/introduction">
-            Get Started →
+            Getting Started
           </Link>
           <Link
             className={clsx('button button--outline button--lg', styles.buttonOutline)}
             to="https://github.com/AkinerAlkan94/fetchy/releases">
-            Download v1.5.4
+            Download
           </Link>
         </div>
 

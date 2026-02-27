@@ -10,7 +10,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
-    "electron:build": "vite build && electron-builder && node scripts/set-icon.js",
+    "electron:build": "node scripts/generate-icons.js && vite build && electron-builder",
     "electron:preview": "vite build && electron ."
   },
   "keywords": [
@@ -40,6 +40,13 @@
       "signAndEditExecutable": false,
       "icon": "build/icons/win/icon.ico"
     },
+    "nsis": {
+      "oneClick": true,
+      "installerIcon": "build/icons/win/icon.ico",
+      "uninstallerIcon": "build/icons/win/icon.ico",
+      "installerHeaderIcon": "build/icons/win/icon.ico"
+    },
+    "afterPack": "./scripts/after-pack.js",
     "mac": {
       "target": "dmg",
       "icon": "build/icons/mac/icon.icns"

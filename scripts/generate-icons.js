@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const SOURCE_IMAGE = path.join(__dirname, '..', 'public', 'logo.jpg');
+const SOURCE_IMAGE = path.join(__dirname, '..', 'build', 'icon.jpg');
 const BUILD_DIR = path.join(__dirname, '..', 'build');
 const ICONS_DIR = path.join(BUILD_DIR, 'icons');
 const PNG_DIR = path.join(ICONS_DIR, 'png');
@@ -33,11 +33,8 @@ async function generatePngIcons() {
     console.log(`  Created: ${size}x${size}.png`);
   }
 
-  // Also create main icon.jpg in build directory
-  const mainIconPath = path.join(BUILD_DIR, 'icon.jpg');
-  const mainIcon = sourceImage.clone().resize({ w: 512, h: 512 });
-  await mainIcon.write(mainIconPath);
-  console.log(`  Created: icon.jpg (512x512)`);
+  // Note: build/icon.jpg is the source image, no need to regenerate it
+  console.log(`  Source icon: build/icon.jpg (already exists)`);
 }
 
 async function generateWindowsIco() {

@@ -2,6 +2,9 @@ const path = require('path');
 const fs = require('fs');
 const { execSync } = require('child_process');
 
+// This script can be run standalone to set the icon on an already-built exe.
+// For build-time icon setting, see after-pack.js (used by electron-builder's afterPack hook).
+
 const logFile = path.join(__dirname, '..', 'set-icon.log');
 const log = (msg) => {
   fs.appendFileSync(logFile, msg + '\n');
