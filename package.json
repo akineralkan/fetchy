@@ -31,7 +31,8 @@
     },
     "files": [
       "dist/**/*",
-      "electron/**/*"
+      "electron/**/*",
+      "build/icons/**/*"
     ],
     "icon": "build/icons/win/icon.ico",
     "win": {
