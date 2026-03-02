@@ -9,9 +9,10 @@ interface VariableInputProps {
   placeholder?: string;
   className?: string;
   type?: string;
+  onPaste?: (e: React.ClipboardEvent<HTMLInputElement>) => void;
 }
 
-export default function VariableInput({ value, onChange, placeholder, className, type = 'text' }: VariableInputProps) {
+export default function VariableInput({ value, onChange, placeholder, className, type = 'text', onPaste }: VariableInputProps) {
   const [tooltip, setTooltip] = useState<{ variableName: string; position: { x: number; y: number } } | null>(null);
   const [scrollLeft, setScrollLeft] = useState(0);
   const [overlayStyle, setOverlayStyle] = useState<React.CSSProperties>({});
@@ -153,6 +154,7 @@ export default function VariableInput({ value, onChange, placeholder, className,
         onClick={handleClick}
         onKeyDown={handleKeyDown}
         onScroll={handleScroll}
+        onPaste={onPaste}
         placeholder={placeholder}
         className={`${className} ${isFlexItem ? 'w-full' : ''}`}
         style={hasVariables ? { color: 'transparent', caretColor: 'white' } : undefined}

@@ -6,6 +6,7 @@ import { ApiRequest, ApiResponse, HttpMethod, KeyValue } from '../types';
 import { executeRequest } from '../utils/httpClient';
 import { resolveRequestVariables, generateCurl, generateJavaScript, generatePython, generateJava, generateDotNet, generateGo, generateRust, generateCpp } from '../utils/helpers';
 import { v4 as uuidv4 } from 'uuid';
+import { parseCurlCommand } from '../utils/curlParser';
 import VariableInput from './VariableInput';
 import VariableTextarea from './VariableTextarea';
 import Tooltip from './Tooltip';
@@ -46,6 +47,7 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
   const [codeModal, setCodeModal] = useState<{ open: boolean; activeLanguage: string; copied: boolean }>({ open: false, activeLanguage: 'curl', copied: false });
   const [showCodeDropdown, setShowCodeDropdown] = useState(false);
   const [showAIGenerateModal, setShowAIGenerateModal] = useState(false);
+  const [curlImportFlash, setCurlImportFlash] = useState(false);
 
   // Load request data when tab changes or when collections update
   // BUG FIX: Added 'collections' to dependency array to prevent stale data issue
@@ -151,6 +153,35 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
       }
     }
   }, [request, activeTab, updateTab]);
+
+  // Detect cURL paste on the URL bar and auto-populate the request
+  const handleUrlPaste = useCallback((e: React.ClipboardEvent<HTMLInputElement>) => {
+    const text = e.clipboardData.getData('text').trim();
+    // Quick check: does it look like a cURL command?
+    if (/^curl\s/i.test(text.replace(/^\s*/, ''))) {
+      try {
+        const parsed = parseCurlCommand(text);
+        if (parsed && parsed.url && request) {
+          e.preventDefault(); // Only prevent default if we successfully parsed
+          // Merge the parsed cURL into the current request, preserving the request id/name
+          handleChange({
+            method: parsed.method,
+            url: parsed.url,
+            headers: parsed.headers,
+            params: parsed.params,
+            body: parsed.body,
+            auth: parsed.auth,
+          });
+          // Flash a brief visual confirmation
+          setCurlImportFlash(true);
+          setTimeout(() => setCurlImportFlash(false), 2000);
+        }
+      } catch {
+        // Parsing failed — do nothing, let normal paste happen
+      }
+    }
+    // For anything else (non-cURL or failed parse), normal paste behavior is preserved
+  }, [request, handleChange]);
 
   // Rebuild URL query string from params array (no encoding for display)
   const rebuildUrlFromParams = useCallback((params: KeyValue[]) => {
@@ -840,7 +871,7 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
   };
 
   const urlBar = (
-      <div className="px-4 py-3 border-b border-fetchy-border flex items-center gap-2 bg-fetchy-bg">
+      <div className="px-4 py-3 border-b border-fetchy-border flex items-center gap-2 bg-fetchy-bg relative">
 
         <select
           value={request.method}
@@ -875,9 +906,19 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
               handleChange({ url });
             }
           }}
+          onPaste={handleUrlPaste}
           className="flex-1 text-sm"
-          placeholder="Enter request URL (e.g., https://api.example.com/users)"
+          placeholder="Enter request URL or paste a cURL command"
         />
+
+        {/* cURL import flash indicator */}
+        {curlImportFlash && (
+          <div className="absolute top-full left-0 right-0 z-50 flex justify-center mt-1 pointer-events-none">
+            <div className="px-3 py-1.5 bg-green-500/90 text-white text-xs font-medium rounded-md shadow-lg flex items-center gap-1.5 animate-fade-in">
+              <Terminal size={12} /> cURL imported successfully
+            </div>
+          </div>
+        )}
 
         <button
           onClick={handleSend}
