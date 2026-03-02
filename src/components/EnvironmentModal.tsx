@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react';
-import { X, Plus, Trash2, Check, Edit2, Lock, Unlock, Download, Upload, Copy, GripVertical } from 'lucide-react';
+import { useState, useRef, useMemo } from 'react';
+import { X, Plus, Trash2, Check, Edit2, Lock, Unlock, Download, Upload, Copy, GripVertical, Zap } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -176,8 +176,8 @@ function SortableVariableRow({
     opacity: isDragging ? 0.5 : 1,
   };
 
-  const initialVal = variable.initialValue ?? variable.value ?? '';
-  const currentVal = variable.currentValue ?? '';
+  const initialVal = variable.initialValue || variable.value || '';
+  const currentVal = variable.currentValue || '';
 
   return (
     <tr ref={setNodeRef} style={style} className="border-b border-fetchy-border/50">
@@ -290,6 +290,16 @@ export default function EnvironmentModal({ onClose }: EnvironmentModalProps) {
   );
 
   const selectedEnv = environments.find(e => e.id === selectedEnvId);
+
+  // Split variables into user-defined and script-created
+  const userVariables = useMemo(
+    () => (selectedEnv?.variables ?? []).filter((v: any) => !v._fromScript),
+    [selectedEnv?.variables]
+  );
+  const scriptVariables = useMemo(
+    () => (selectedEnv?.variables ?? []).filter((v: any) => v._fromScript),
+    [selectedEnv?.variables]
+  );
 
   const handleAddEnvironment = () => {
     const env = addEnvironment('New Environment');
@@ -558,7 +568,10 @@ export default function EnvironmentModal({ onClose }: EnvironmentModalProps) {
                   <div>
                     <h3 className="font-medium text-fetchy-text">{selectedEnv.name}</h3>
                     <p className="text-xs text-fetchy-text-muted">
-                      {selectedEnv.variables.length} variable{selectedEnv.variables.length !== 1 ? 's' : ''}
+                      {userVariables.length} variable{userVariables.length !== 1 ? 's' : ''}
+                      {scriptVariables.length > 0 && (
+                        <span className="text-yellow-400/70"> + {scriptVariables.length} script</span>
+                      )}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -597,7 +610,8 @@ export default function EnvironmentModal({ onClose }: EnvironmentModalProps) {
                   </div>
                 </div>
 
-                <div className="flex-1 overflow-auto p-4">
+                <div className="flex-1 overflow-y-auto p-4">
+                  {/* ── User-defined variables ── */}
                   <DndContext
                     sensors={sensors}
                     collisionDetection={closestCenter}
@@ -617,10 +631,10 @@ export default function EnvironmentModal({ onClose }: EnvironmentModalProps) {
                       </thead>
                       <tbody>
                         <SortableContext
-                          items={selectedEnv.variables.map(v => v.id)}
+                          items={userVariables.map(v => v.id)}
                           strategy={verticalListSortingStrategy}
                         >
-                          {selectedEnv.variables.map((variable) => (
+                          {userVariables.map((variable) => (
                             <SortableVariableRow
                               key={variable.id}
                               variable={variable}
@@ -639,12 +653,67 @@ export default function EnvironmentModal({ onClose }: EnvironmentModalProps) {
                     <Plus size={14} /> Add Variable
                   </button>
 
+                  {/* ── Script-created variables (transient) ── */}
+                  {scriptVariables.length > 0 && (
+                    <div className="mt-6">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Zap size={14} className="text-yellow-400" />
+                        <h4 className="text-sm font-medium text-yellow-400">Script Variables</h4>
+                        <span className="text-xs text-fetchy-text-muted">(transient – cleared on restart)</span>
+                      </div>
+                      <table className="w-full kv-table">
+                        <thead>
+                          <tr className="text-left text-xs text-fetchy-text-muted border-b border-fetchy-border">
+                            <th className="w-8 p-2"></th>
+                            <th className="p-2">Variable</th>
+                            <th className="p-2">Value</th>
+                            <th className="w-8 p-2"></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {scriptVariables.map((variable) => (
+                            <tr key={variable.id} className="border-b border-fetchy-border/50">
+                              <td className="p-2">
+                                <Zap size={12} className="text-yellow-400/60" />
+                              </td>
+                              <td className="p-0">
+                                <input
+                                  type="text"
+                                  value={variable.key}
+                                  readOnly
+                                  className="w-full bg-transparent p-2 text-sm outline-none text-fetchy-text-muted cursor-default"
+                                />
+                              </td>
+                              <td className="p-0">
+                                <input
+                                  type="text"
+                                  value={variable.currentValue ?? variable.value ?? ''}
+                                  readOnly
+                                  className="w-full bg-transparent p-2 text-sm outline-none text-yellow-400/80 cursor-default"
+                                />
+                              </td>
+                              <td className="p-2">
+                                <button
+                                  onClick={() => handleDeleteVariable(variable.id)}
+                                  className="p-1 hover:bg-fetchy-border rounded text-fetchy-text-muted hover:text-red-400"
+                                  title="Remove script variable"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
                   <div className="mt-6 p-4 bg-fetchy-sidebar rounded-lg">
                     <h4 className="text-sm font-medium text-fetchy-text mb-2">Initial vs Current Values</h4>
                     <p className="text-xs text-fetchy-text-muted mb-3">
-                      <strong className="text-fetchy-text">Initial Value:</strong> The preset/default value that can be shared and exported.
+                      <strong className="text-fetchy-text">Initial Value:</strong> The preset/default value. Persisted to disk, shared &amp; exported.
                       <br />
-                      <strong className="text-fetchy-text">Current Value:</strong> Local override value used during execution. Not exported by default.
+                      <strong className="text-fetchy-text">Current Value:</strong> Transient runtime override. <em>Cleared automatically on app restart.</em>
                     </p>
 
                     <h4 className="text-sm font-medium text-fetchy-text mb-2 mt-4">Usage</h4>
@@ -667,6 +736,17 @@ export default function EnvironmentModal({ onClose }: EnvironmentModalProps) {
                         Mark variables as secret to keep their values hidden in request history.
                         Secret values will be replaced during execution but saved as{' '}
                         <code className="text-orange-400">{'<<variableName>>'}</code> in history.
+                      </p>
+                    </div>
+
+                    <div className="mt-4 pt-4 border-t border-fetchy-border">
+                      <h4 className="text-sm font-medium text-yellow-400 mb-2 flex items-center gap-2">
+                        <Zap size={14} /> Script Variables
+                      </h4>
+                      <p className="text-xs text-fetchy-text-muted">
+                        Variables created or updated by pre/post-request scripts via{' '}
+                        <code className="text-yellow-400">fetchy.environment.set()</code>.
+                        These are transient and <em>automatically removed on app restart</em>.
                       </p>
                     </div>
                   </div>

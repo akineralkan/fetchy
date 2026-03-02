@@ -138,9 +138,6 @@ jobs:
             echo "" >> changelog.md
           fi
 
-          echo "---" >> changelog.md
-          echo "Download the installer below to update, or use **Check for Updates** inside Fetchy." >> changelog.md
-
           echo "Changelog generated:"
           cat changelog.md
 

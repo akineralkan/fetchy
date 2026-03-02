@@ -82,7 +82,8 @@ function extractSecrets(stateWrapper: any): {
         for (const variable of env.variables) {
           if (variable.isSecret) {
             const key = `env:${env.id}:${variable.id}`;
-            secretsMap[key] = variable.currentValue ?? variable.value ?? '';
+            // Use || (not ??) so empty strings fall through to the next candidate
+            secretsMap[key] = variable.currentValue || variable.value || variable.initialValue || '';
             variable.value = '';
             variable.currentValue = '';
             variable.initialValue = '';
@@ -99,7 +100,8 @@ function extractSecrets(stateWrapper: any): {
         for (const variable of col.variables) {
           if (variable.isSecret) {
             const key = `col:${col.id}:${variable.id}`;
-            secretsMap[key] = variable.currentValue ?? variable.value ?? '';
+            // Use || (not ??) so empty strings fall through to the next candidate
+            secretsMap[key] = variable.currentValue || variable.value || variable.initialValue || '';
             variable.value = '';
             variable.currentValue = '';
             variable.initialValue = '';
@@ -113,6 +115,42 @@ function extractSecrets(stateWrapper: any): {
     cleanState: { ...stateWrapper, state: cleanStateInner },
     secretsMap,
   };
+}
+
+/**
+ * Strip transient (script-set) environment variable values.
+ *
+ * - Removes variables created entirely by scripts (`_fromScript` flag)
+ * - Clears `currentValue` ONLY on variables where `_scriptOverride` is set
+ *   (i.e. the value was set by a pre/post script, not by the user in the UI)
+ * - User-set `currentValue` is preserved across restarts
+ */
+function stripTransientEnvValues(stateWrapper: any): any {
+  if (!stateWrapper?.state) return stateWrapper;
+  const state = stateWrapper.state;
+
+  if (Array.isArray(state.environments)) {
+    for (const env of state.environments) {
+      if (!Array.isArray(env.variables)) continue;
+      env.variables = env.variables
+        .filter((v: any) => {
+          // Remove variables created entirely by scripts
+          return !v._fromScript;
+        })
+        .map((v: any) => {
+          const { _fromScript, _scriptOverride, ...rest } = v;
+          if (_scriptOverride) {
+            // Script-set currentValue – clear it so it resets on restart
+            const { currentValue, ...clean } = rest;
+            return clean;
+          }
+          // User-set currentValue – keep it
+          return rest;
+        });
+    }
+  }
+
+  return stateWrapper;
 }
 
 /**
@@ -134,6 +172,7 @@ function mergeSecrets(
             const key = `env:${env.id}:${variable.id}`;
             if (secretsMap[key] !== undefined) {
               variable.value = secretsMap[key];
+              variable.initialValue = secretsMap[key];
               variable.currentValue = secretsMap[key];
             }
           }
@@ -150,6 +189,7 @@ function mergeSecrets(
             const key = `col:${col.id}:${variable.id}`;
             if (secretsMap[key] !== undefined) {
               variable.value = secretsMap[key];
+              variable.initialValue = secretsMap[key];
               variable.currentValue = secretsMap[key];
             }
           }
@@ -188,7 +228,8 @@ export const createCustomStorage = (): StateStorage => {
           } catch {
             // secrets file missing or corrupt \u2013 not fatal
           }
-
+          // 3. Strip transient (script-set) env var values
+          stateWrapper = stripTransientEnvValues(stateWrapper);
           return JSON.stringify(stateWrapper);
         } catch (error) {
           console.error('Error reading from file storage:', error);
@@ -219,7 +260,10 @@ export const createCustomStorage = (): StateStorage => {
             );
           }
 
-          // 1. Extract secrets
+          // 1. Strip transient values before writing
+          stripTransientEnvValues(stateWrapper);
+
+          // 2. Extract secrets
           const { cleanState, secretsMap } = extractSecrets(stateWrapper);
 
           // 2. Write public data (no secret values) to home directory
@@ -272,6 +316,8 @@ export const createCustomStorage = (): StateStorage => {
             stateWrapper = mergeSecrets(stateWrapper, secretsStorage.secrets);
           }
         }
+        // Strip transient (script-set) env var values
+        stateWrapper = stripTransientEnvValues(stateWrapper);
         return JSON.stringify(stateWrapper);
       } catch {
         return raw;
@@ -300,6 +346,9 @@ export const createCustomStorage = (): StateStorage => {
             }
           );
         }
+
+        // Strip transient values before writing
+        stripTransientEnvValues(stateWrapper);
 
         const { cleanState, secretsMap } = extractSecrets(stateWrapper);
         localStorage.setItem(name, JSON.stringify(cleanState));
