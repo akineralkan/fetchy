@@ -3,6 +3,7 @@ name: Cleanup Old Releases
 on:
   release:
     types: [published]
+  workflow_dispatch: # allows manual trigger from the GitHub Actions UI
 
 jobs:
   cleanup:
