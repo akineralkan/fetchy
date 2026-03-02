@@ -115,8 +115,10 @@ ipcMain.handle('updater-install', () => {
   if (lastUpdateInfo) {
     savePostUpdateInfo(lastUpdateInfo);
   }
-  // Quit the app and install the downloaded update
-  autoUpdater.quitAndInstall(false, true);
+  // Quit the app and install the update silently (no NSIS installer window)
+  // isSilent = true  → no installer UI shown
+  // isForceRunAfter = true → relaunch the app after install finishes
+  autoUpdater.quitAndInstall(true, true);
 });
 
 ipcMain.handle('get-post-update-info', () => {

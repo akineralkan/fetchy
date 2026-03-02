@@ -67,6 +67,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add package.json README.md
           git commit -m "chore: bump version to ${{ steps.version.outputs.new_version }}"
+          git pull --rebase origin main
           git push
 
       - name: Generate changelog
@@ -136,9 +137,6 @@ jobs:
             done
             echo "" >> changelog.md
           fi
-
-          echo "---" >> changelog.md
-          echo "Download the installer below to update, or use **Check for Updates** inside Fetchy." >> changelog.md
 
           echo "Changelog generated:"
           cat changelog.md

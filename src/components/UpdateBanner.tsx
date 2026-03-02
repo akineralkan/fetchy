@@ -69,11 +69,10 @@ export default function UpdateBanner({ info, onDismiss }: UpdateBannerProps) {
       {/* Expanded changelog area (read-only) */}
       {expanded && notes && (
         <div className="px-4 pb-3">
-          <div className="bg-fetchy-bg/60 border border-fetchy-border rounded-lg p-4 max-h-64 overflow-y-auto">
-            <pre className="text-sm text-fetchy-text whitespace-pre-wrap font-sans leading-relaxed">
-              {notes}
-            </pre>
-          </div>
+          <div
+            className="bg-fetchy-bg/60 border border-fetchy-border rounded-lg p-4 max-h-64 overflow-y-auto text-sm text-fetchy-text release-notes"
+            dangerouslySetInnerHTML={{ __html: notes }}
+          />
         </div>
       )}
     </div>

@@ -767,6 +767,18 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
               />
             ))}
           </SortableContext>
+          {collectionFolders.length === 0 && collectionRequests.length === 0 && (
+            <button
+              className="w-full mt-1 mb-1 px-3 py-2 text-xs text-fetchy-text-muted hover:text-fetchy-accent hover:bg-fetchy-accent/10 border border-dashed border-fetchy-border hover:border-fetchy-accent/50 rounded flex items-center justify-center gap-1.5 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                addRequest(collection.id, null);
+              }}
+            >
+              <FilePlus size={13} />
+              New Request
+            </button>
+          )}
         </div>
       </SortableCollectionItem>
     );

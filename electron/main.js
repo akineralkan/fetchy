@@ -1,4 +1,4 @@
-﻿const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron');
+﻿const { app, BrowserWindow, ipcMain, dialog, Menu, screen } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
@@ -172,14 +172,73 @@ function initializeWorkspace() {
   }
 }
 
+// ─── WINDOW STATE ────────────────────────────────────────────────────────────
+
+function getWindowStatePath() {
+  return path.join(app.getPath('userData'), 'window-state.json');
+}
+
+function loadWindowState() {
+  try {
+    const statePath = getWindowStatePath();
+    if (fs.existsSync(statePath)) {
+      return JSON.parse(fs.readFileSync(statePath, 'utf-8'));
+    }
+  } catch (e) {
+    console.error('Error loading window state:', e);
+  }
+  return null;
+}
+
+function saveWindowState(win) {
+  try {
+    if (!win || win.isMinimized() || win.isDestroyed()) return;
+    const isMaximized = win.isMaximized();
+    // getNormalBounds returns the pre-maximise/minimise bounds so the window
+    // restores to the right size on the right screen even if currently maximised.
+    const bounds = win.getNormalBounds();
+    const state = {
+      isMaximized,
+      x: bounds.x,
+      y: bounds.y,
+      width: bounds.width,
+      height: bounds.height,
+    };
+    safeWriteFileSync(getWindowStatePath(), JSON.stringify(state, null, 2));
+  } catch (e) {
+    console.error('Error saving window state:', e);
+  }
+}
+
+function isWindowStateValid(state) {
+  if (typeof state.x !== 'number' || typeof state.y !== 'number') return false;
+  // Require at least 100x50 pixels of the title bar area to be visible on
+  // one of the currently connected displays so the user can always reach it.
+  const displays = screen.getAllDisplays();
+  return displays.some((display) => {
+    const { x, y, width, height } = display.workArea;
+    return (
+      state.x + (state.width || 0) - 100 >= x &&
+      state.x + 100 <= x + width &&
+      state.y >= y &&
+      state.y + 50 <= y + height
+    );
+  });
+}
+
 // ─── WINDOW ──────────────────────────────────────────────────────────────────
 
 function createWindow() {
   initializeWorkspace();
 
+  const savedState = loadWindowState();
+  const validSaved = savedState && isWindowStateValid(savedState);
+  const windowBounds = validSaved
+    ? { x: savedState.x, y: savedState.y, width: savedState.width, height: savedState.height }
+    : { width: 1400, height: 900 };
+
   mainWindow = new BrowserWindow({
-    width: 1400,
-    height: 900,
+    ...windowBounds,
     minWidth: 1000,
     minHeight: 700,
     icon: path.join(__dirname, '..', 'build', 'icons', 'win', 'icon.ico'),
@@ -193,6 +252,21 @@ function createWindow() {
     backgroundColor: '#1a1a2e',
   });
 
+  if (validSaved && savedState.isMaximized) {
+    mainWindow.maximize();
+  }
+
+  // Persist window state whenever the user moves or resizes the window.
+  let saveStateTimer = null;
+  const scheduleSaveState = () => {
+    clearTimeout(saveStateTimer);
+    saveStateTimer = setTimeout(() => saveWindowState(mainWindow), 500);
+  };
+  mainWindow.on('move', scheduleSaveState);
+  mainWindow.on('resize', scheduleSaveState);
+  mainWindow.on('maximize', () => saveWindowState(mainWindow));
+  mainWindow.on('unmaximize', () => saveWindowState(mainWindow));
+
   const isDev = process.env.NODE_ENV !== 'production' && !app.isPackaged;
   if (isDev) {
     mainWindow.loadURL('http://localhost:5173');
@@ -203,6 +277,12 @@ function createWindow() {
 
   // Initialise auto-updater (silent background check after launch)
   initUpdater(mainWindow, { silentCheck: app.isPackaged });
+
+  mainWindow.on('close', () => {
+    // Save final state synchronously before the window is destroyed.
+    clearTimeout(saveStateTimer);
+    saveWindowState(mainWindow);
+  });
 
   mainWindow.on('closed', () => {
     mainWindow = null;

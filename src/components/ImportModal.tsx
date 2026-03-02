@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { X, Upload, FileJson, AlertCircle, Check, Globe, FolderOpen, Braces, Terminal } from 'lucide-react';
+import { getFirstDroppedFile } from '../utils/fileUtils';
 import { useAppStore } from '../store/appStore';
 import {
   importPostmanCollection,
@@ -90,6 +91,7 @@ export default function ImportModal({ onClose, initialImportType = 'postman' }: 
   const sources = category === 'collection' ? COLLECTION_SOURCES : ENVIRONMENT_SOURCES;
 
   const [curlInput, setCurlInput] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
 
   // Reset state when switching category
   const handleCategoryChange = useCallback((cat: ImportCategory) => {
@@ -114,10 +116,7 @@ export default function ImportModal({ onClose, initialImportType = 'postman' }: 
     setSuccess(null);
   }, []);
 
-  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const readFile = useCallback((file: File) => {
     setFileName(file.name);
     setError(null);
     setSuccess(null);
@@ -132,6 +131,40 @@ export default function ImportModal({ onClose, initialImportType = 'postman' }: 
     };
     reader.readAsText(file);
   }, []);
+
+  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    readFile(file);
+  }, [readFile]);
+
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragEnter = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const file = getFirstDroppedFile(e.dataTransfer);
+    if (!file) return;
+    readFile(file);
+  }, [readFile]);
 
   const handleImport = useCallback(() => {
     // ── Request (cURL) import ───────────────────────────────────────────
@@ -355,8 +388,16 @@ export default function ImportModal({ onClose, initialImportType = 'postman' }: 
                 <div className="mb-5">
                   <label className="block text-sm text-fetchy-text-muted mb-2">Select File</label>
                   <div
-                    className="border-2 border-dashed border-fetchy-border rounded-lg p-6 text-center hover:border-fetchy-accent/50 cursor-pointer transition-colors"
+                    className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
+                      isDragging
+                        ? 'border-fetchy-accent bg-fetchy-accent/10 scale-[1.01]'
+                        : 'border-fetchy-border hover:border-fetchy-accent/50'
+                    }`}
                     onClick={() => fileInputRef.current?.click()}
+                    onDragOver={handleDragOver}
+                    onDragEnter={handleDragEnter}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
                   >
                     <input
                       ref={fileInputRef}

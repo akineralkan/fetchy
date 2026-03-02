@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.5.16-blue.svg" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.5.24-blue.svg" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License">
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg" alt="Platform">
   <img src="https://img.shields.io/badge/electron-powered-9feaf9.svg" alt="Electron">
@@ -33,7 +33,7 @@
 - ✅ **Local File Storage** - All collections, environments, and history stored locally
 - ✅ **Portable** - Move your data wherever you want
 
-**Your API keys, credentials, and request data are YOUR data.** Fetchy ensures complete control over sensitive information.
+**Your API keys, credentials, and request data are YOUR data.** Fetchy ensures complete control over sensitive information
 
 ---
 

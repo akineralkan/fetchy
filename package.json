@@ -1,6 +1,6 @@
 {
   "name": "fetchy",
-  "version": "1.5.16",
+  "version": "1.5.24",
   "description": "Fetchy - Local by design. Reliable by nature.",
   "main": "electron/main.js",
   "scripts": {
@@ -42,6 +42,7 @@
     },
     "nsis": {
       "oneClick": true,
+      "artifactName": "${productName}.Setup.${version}.${ext}",
       "installerIcon": "build/icons/win/icon.ico",
       "uninstallerIcon": "build/icons/win/icon.ico",
       "installerHeaderIcon": "build/icons/win/icon.ico"

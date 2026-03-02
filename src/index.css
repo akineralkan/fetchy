@@ -983,3 +983,46 @@ body.light-theme .openapi-description tr:hover td {
   margin: 0.75rem 0;
 }
 
+/* Release notes HTML styling (from electron-updater / GitHub releases) */
+.release-notes h1,
+.release-notes h2,
+.release-notes h3 {
+  margin: 0.75rem 0 0.4rem 0;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.release-notes h1 { font-size: 1.15em; }
+.release-notes h2 { font-size: 1.05em; }
+.release-notes h3 { font-size: 1em; }
+.release-notes ul,
+.release-notes ol {
+  margin: 0.25rem 0 0.5rem 1.25rem;
+  padding: 0;
+}
+.release-notes ul { list-style-type: disc; }
+.release-notes ol { list-style-type: decimal; }
+.release-notes li {
+  margin: 0.15rem 0;
+}
+.release-notes p {
+  margin: 0.35rem 0;
+}
+.release-notes a {
+  color: var(--fetchy-primary, #6366f1);
+  text-decoration: underline;
+}
+.release-notes hr {
+  border: none;
+  border-top: 1px solid var(--border-color);
+  margin: 0.5rem 0;
+}
+.release-notes code {
+  background: rgba(127, 127, 127, 0.15);
+  padding: 0.1em 0.35em;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+.release-notes strong {
+  font-weight: 600;
+}
+

@@ -393,7 +393,13 @@ const runScriptInWorker = (
   });
 };
 
-/** Apply environment variable mutations reported by the worker back to the store. */
+/**
+ * Apply environment variable mutations reported by the worker back to the store.
+ *
+ * Script-set values are written to `currentValue` so they are **transient** –
+ * they override the initial/shared value at runtime but are automatically
+ * cleared on the next app launch (see persistence.ts → stripTransientEnvValues).
+ */
 const applyEnvUpdates = (envUpdates?: Array<{ key: string; value: string }>) => {
   if (!envUpdates || envUpdates.length === 0) return;
 
@@ -405,9 +411,13 @@ const applyEnvUpdates = (envUpdates?: Array<{ key: string; value: string }>) => 
   for (const { key, value } of envUpdates) {
     const idx = variables.findIndex(v => v.key === key);
     if (idx > -1) {
-      variables[idx] = { ...variables[idx], value };
+      // Write to currentValue so the original initialValue / value are preserved
+      // Mark _scriptOverride so persistence knows to strip it on restart
+      variables[idx] = { ...variables[idx], currentValue: value, _scriptOverride: true } as any;
     } else {
-      variables.push({ id: '', key, value, enabled: true } as KeyValue);
+      // New variable created by script – only currentValue is set.
+      // On next app load it will be removed because it has no initialValue/value.
+      variables.push({ id: '', key, value: '', currentValue: value, enabled: true, _fromScript: true } as any);
     }
   }
   updateEnvironment(activeEnvironment.id, { variables });

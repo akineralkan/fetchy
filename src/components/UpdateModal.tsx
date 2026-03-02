@@ -227,11 +227,10 @@ export default function UpdateModal({ onClose }: UpdateModalProps) {
                       Released on {new Date(updateInfo.releaseDate).toLocaleDateString()}
                     </div>
                   )}
-                  <div className="bg-fetchy-bg border border-fetchy-border rounded p-4 max-h-64 overflow-y-auto">
-                    <pre className="text-sm text-fetchy-text whitespace-pre-wrap font-mono">
-                      {releaseNotes}
-                    </pre>
-                  </div>
+                  <div
+                    className="bg-fetchy-bg border border-fetchy-border rounded p-4 max-h-64 overflow-y-auto text-sm text-fetchy-text release-notes"
+                    dangerouslySetInnerHTML={{ __html: releaseNotes }}
+                  />
                 </div>
               )}
 
