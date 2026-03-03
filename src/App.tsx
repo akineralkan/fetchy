@@ -21,6 +21,7 @@ import ThemeToggle from './components/ThemeToggle';
 import ResizeHandle from './components/ResizeHandle';
 import Tooltip from './components/Tooltip';
 import OpenApiEditor from './components/OpenApiEditor';
+import CollectionConfigPanel from './components/CollectionConfigPanel';
 import { useAppStore } from './store/appStore';
 import { usePreferencesStore } from './store/preferencesStore';
 import { useWorkspacesStore } from './store/workspacesStore';
@@ -223,6 +224,7 @@ function App() {
   const activeTab = tabs.find(t => t.id === activeTabId);
   const hasActiveRequest = activeTab?.type === 'request';
   const hasActiveOpenApi = activeTab?.type === 'openapi';
+  const hasActiveCollection = activeTab?.type === 'collection';
 
   // Load history response/request when switching to a history tab
   useEffect(() => {
@@ -494,6 +496,10 @@ function App() {
           ) : hasActiveOpenApi ? (
             <div className="flex-1 overflow-hidden">
               <OpenApiEditor documentId={activeTab?.openApiDocId} />
+            </div>
+          ) : hasActiveCollection ? (
+            <div className="flex-1 overflow-hidden">
+              <CollectionConfigPanel collectionId={activeTab?.collectionId!} />
             </div>
           ) : (
             <WelcomeScreen

@@ -8,8 +8,8 @@ export const replaceVariables = (
 ): string => {
   let result = text;
 
-  // Combine all variables, env variables take precedence
-  // Build a map where later values (env vars) override earlier ones (collection vars)
+  // Combine all variables, collection variables take precedence over env variables
+  // Build a map where later values (collection vars) override earlier ones (env vars)
   const variableMap = new Map<string, string>();
 
   // Helper to get effective value (currentValue > value > initialValue)
@@ -24,17 +24,17 @@ export const replaceVariables = (
     return variable.initialValue || '';
   };
 
-  // Add collection variables first
-  for (const variable of variables) {
-    if (variable.enabled) {
-      variableMap.set(variable.key, getEffectiveValue(variable));
-    }
-  }
-
-  // Add environment variables (will override collection vars with same key)
+  // Add environment variables first
   for (const envVar of envVariables) {
     if (envVar.enabled) {
       variableMap.set(envVar.key, getEffectiveValue(envVar));
+    }
+  }
+
+  // Add collection variables (will override env vars with same key)
+  for (const variable of variables) {
+    if (variable.enabled) {
+      variableMap.set(variable.key, getEffectiveValue(variable));
     }
   }
 

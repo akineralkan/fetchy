@@ -1,4 +1,4 @@
-import { X, Clock, FileCode } from 'lucide-react';
+import { X, Clock, FileCode, FolderCog } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 import { getMethodBgColor } from '../utils/helpers';
 import { useState, useRef, useEffect } from 'react';
@@ -168,6 +168,15 @@ export default function TabBar() {
                 className="flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium bg-purple-500/20 text-purple-400 rounded border border-purple-500/30 shrink-0"
               >
                 <FileCode size={10} />
+              </span>
+            )}
+
+            {/* Collection Badge */}
+            {tab.type === 'collection' && (
+              <span
+                className="flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium bg-yellow-500/20 text-yellow-400 rounded border border-yellow-500/30 shrink-0"
+              >
+                <FolderCog size={10} />
               </span>
             )}
 

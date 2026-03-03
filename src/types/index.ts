@@ -83,6 +83,8 @@ export interface Collection {
   variables?: KeyValue[];
   expanded?: boolean;
   auth?: RequestAuth;
+  preScript?: string;
+  script?: string;
 }
 
 export interface Environment {

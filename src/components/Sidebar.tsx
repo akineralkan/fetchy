@@ -38,6 +38,7 @@ import {
   MoveRight,
   FileCode,
   Play,
+  Settings,
 } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 import { Collection, RequestFolder, ApiRequest, RequestHistoryItem } from '../types';
@@ -733,6 +734,13 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
         key={collection.id}
         collection={collection}
         onToggle={() => toggleCollectionExpanded(collection.id)}
+        onDoubleClick={() => {
+          openTab({
+            type: 'collection',
+            title: collection.name,
+            collectionId: collection.id,
+          });
+        }}
         onContextMenu={(e) => handleContextMenu(e, 'collection', collection.id)}
         editingId={editingId}
         editingName={editingName}
@@ -1439,6 +1447,19 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
                   }}
                 >
                   <Key size={14} /> Auth Settings
+                </button>
+                <button
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-fetchy-border flex items-center gap-2"
+                  onClick={() => {
+                    openTab({
+                      type: 'collection',
+                      title: collections.find(c => c.id === contextMenu.collectionId)?.name || 'Collection',
+                      collectionId: contextMenu.collectionId,
+                    });
+                    closeContextMenu();
+                  }}
+                >
+                  <Settings size={14} /> Configure
                 </button>
                 <hr className="my-1 border-fetchy-border" />
                 <button

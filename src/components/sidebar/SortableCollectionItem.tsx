@@ -8,6 +8,7 @@ export default function SortableCollectionItem({
   collection,
   children,
   onToggle,
+  onDoubleClick,
   onContextMenu,
   editingId,
   editingName,
@@ -18,6 +19,7 @@ export default function SortableCollectionItem({
   collection: Collection;
   children: React.ReactNode;
   onToggle: () => void;
+  onDoubleClick?: () => void;
   onContextMenu: (e: React.MouseEvent) => void;
   editingId: string | null;
   editingName: string;
@@ -48,6 +50,10 @@ export default function SortableCollectionItem({
       <div
         className="tree-item flex items-center gap-2 px-2 py-2 cursor-pointer group rounded"
         onClick={onToggle}
+        onDoubleClick={(e) => {
+          e.stopPropagation();
+          onDoubleClick?.();
+        }}
         onContextMenu={onContextMenu}
       >
         <button

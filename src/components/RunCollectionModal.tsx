@@ -182,6 +182,8 @@ export default function RunCollectionModal({ isOpen, onClose, collectionId }: Ru
               collectionVariables,
               environmentVariables,
               inheritedAuth,
+              collectionPreScript: collection.preScript,
+              collectionScript: collection.script,
             });
 
             const duration = Math.round(performance.now() - startTime);
@@ -242,6 +244,8 @@ export default function RunCollectionModal({ isOpen, onClose, collectionId }: Ru
               collectionVariables,
               environmentVariables,
               inheritedAuth,
+              collectionPreScript: collection.preScript,
+              collectionScript: collection.script,
             });
 
             const duration = Math.round(performance.now() - startTime);

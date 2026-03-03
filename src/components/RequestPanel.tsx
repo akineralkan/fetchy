@@ -255,6 +255,8 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
         collectionVariables: collection?.variables || [],
         environmentVariables: environment?.variables || [],
         inheritedAuth,
+        collectionPreScript: collection?.preScript,
+        collectionScript: collection?.script,
       });
 
       setResponse(response);

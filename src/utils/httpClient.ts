@@ -14,6 +14,8 @@ interface ExecuteRequestOptions {
   collectionVariables?: KeyValue[];
   environmentVariables?: KeyValue[];
   inheritedAuth?: RequestAuth | null;
+  collectionPreScript?: string;
+  collectionScript?: string;
 }
 
 export const executeRequest = async ({
@@ -21,6 +23,8 @@ export const executeRequest = async ({
   collectionVariables = [],
   environmentVariables = [],
   inheritedAuth = null,
+  collectionPreScript,
+  collectionScript,
 }: ExecuteRequestOptions): Promise<ApiResponse> => {
   const startTime = performance.now();
 
@@ -29,7 +33,7 @@ export const executeRequest = async ({
     ? inheritedAuth
     : request.auth;
 
-  // Process URL with variables (env vars take precedence over collection vars)
+  // Process URL with variables (collection vars take precedence over env vars)
   let url = replaceVariables(request.url, collectionVariables, environmentVariables);
 
   // Strip any inline query params from the URL (they are already synced to request.params)
@@ -137,11 +141,33 @@ export const executeRequest = async ({
     updateTab(activeTabId, { scriptExecutionStatus: 'none' });
   }
 
-  // Run pre-script if present. If it errors, abort the request.
+  // Run collection-level pre-script first, then request-level pre-script.
+  // Collection pre-scripts run before request pre-scripts.
   let preScriptOutput: string | undefined;
+  const allPreScriptOutputs: string[] = [];
+
+  if (collectionPreScript) {
+    const collPreResult = await runScriptInWorker(collectionPreScript, 'pre', environmentVariables);
+    applyEnvUpdates(collPreResult.envUpdates);
+    if (collPreResult.output) allPreScriptOutputs.push('[Collection Pre-Script]\n' + collPreResult.output);
+    if (collPreResult.error) {
+      return {
+        status: 0,
+        statusText: 'Collection Pre-Script Error',
+        headers: {},
+        body: '',
+        time: 0,
+        size: 0,
+        preScriptError: collPreResult.error,
+        preScriptOutput: allPreScriptOutputs.join('\n') || undefined,
+      };
+    }
+  }
+
   if (request.preScript) {
     const preScriptResult = await runScriptInWorker(request.preScript, 'pre', environmentVariables);
     applyEnvUpdates(preScriptResult.envUpdates);
+    if (preScriptResult.output) allPreScriptOutputs.push('[Request Pre-Script]\n' + preScriptResult.output);
     if (preScriptResult.error) {
       return {
         status: 0,
@@ -151,11 +177,11 @@ export const executeRequest = async ({
         time: 0,
         size: 0,
         preScriptError: preScriptResult.error,
-        preScriptOutput: preScriptResult.output || undefined,
+        preScriptOutput: allPreScriptOutputs.join('\n') || undefined,
       };
     }
-    preScriptOutput = preScriptResult.output;
   }
+  preScriptOutput = allPreScriptOutputs.length > 0 ? allPreScriptOutputs.join('\n') : undefined;
 
   try {
     // If in Electron, use the main process for HTTP requests to bypass CORS.
@@ -168,21 +194,8 @@ export const executeRequest = async ({
         sslVerification: request.sslVerification !== false, // default true
       });
 
-      if (request.script) {
-        const scriptResult = await runScriptInWorker(request.script, 'post', environmentVariables, response);
-        applyEnvUpdates(scriptResult.envUpdates);
-        if (scriptResult.output) response.scriptOutput = scriptResult.output;
-        if (scriptResult.error) {
-          response.scriptError = scriptResult.error;
-          if (useAppStore.getState().activeTabId) {
-            useAppStore.getState().updateTab(useAppStore.getState().activeTabId!, { scriptExecutionStatus: 'error' });
-          }
-        } else {
-          if (useAppStore.getState().activeTabId) {
-            useAppStore.getState().updateTab(useAppStore.getState().activeTabId!, { scriptExecutionStatus: 'success' });
-          }
-        }
-      }
+      // Run post-scripts: request script first, then collection script
+      await runPostScripts(response, request.script, collectionScript, environmentVariables);
       // Attach pre-script output if any
       if (preScriptOutput) response.preScriptOutput = preScriptOutput;
       return response;
@@ -202,22 +215,8 @@ export const executeRequest = async ({
 
     const apiResponse: ApiResponse = await proxyResponse.json();
 
-    // Run post-script if present
-    if (request.script) {
-      const scriptResult = await runScriptInWorker(request.script, 'post', environmentVariables, apiResponse);
-      applyEnvUpdates(scriptResult.envUpdates);
-      if (scriptResult.output) apiResponse.scriptOutput = scriptResult.output;
-      if (scriptResult.error) {
-        apiResponse.scriptError = scriptResult.error;
-        if (useAppStore.getState().activeTabId) {
-          useAppStore.getState().updateTab(useAppStore.getState().activeTabId!, { scriptExecutionStatus: 'error' });
-        }
-      } else {
-        if (useAppStore.getState().activeTabId) {
-          useAppStore.getState().updateTab(useAppStore.getState().activeTabId!, { scriptExecutionStatus: 'success' });
-        }
-      }
-    }
+    // Run post-scripts: request script first, then collection script
+    await runPostScripts(apiResponse, request.script, collectionScript, environmentVariables);
     // Attach pre-script output if any
     if (preScriptOutput) apiResponse.preScriptOutput = preScriptOutput;
 
@@ -249,6 +248,54 @@ export const executeRequest = async ({
 // ---------------------------------------------------------------------------
 
 const SCRIPT_TIMEOUT_MS = 10_000;
+
+/**
+ * Run post-response scripts: request-level script first, then collection-level script.
+ * Both outputs are combined into response.scriptOutput / response.scriptError.
+ */
+const runPostScripts = async (
+  response: ApiResponse,
+  requestScript: string | undefined,
+  collectionScript: string | undefined,
+  environmentVariables: KeyValue[],
+): Promise<void> => {
+  const allOutputs: string[] = [];
+  let hasError = false;
+
+  // Run request-level post-script first
+  if (requestScript) {
+    const scriptResult = await runScriptInWorker(requestScript, 'post', environmentVariables, response);
+    applyEnvUpdates(scriptResult.envUpdates);
+    if (scriptResult.output) allOutputs.push('[Request Post-Script]\n' + scriptResult.output);
+    if (scriptResult.error) {
+      hasError = true;
+      response.scriptError = scriptResult.error;
+    }
+  }
+
+  // Run collection-level post-script / tests
+  if (collectionScript) {
+    const collScriptResult = await runScriptInWorker(collectionScript, 'post', environmentVariables, response);
+    applyEnvUpdates(collScriptResult.envUpdates);
+    if (collScriptResult.output) allOutputs.push('[Collection Post-Script]\n' + collScriptResult.output);
+    if (collScriptResult.error) {
+      hasError = true;
+      response.scriptError = (response.scriptError ? response.scriptError + '\n' : '') + collScriptResult.error;
+    }
+  }
+
+  if (allOutputs.length > 0) {
+    response.scriptOutput = allOutputs.join('\n');
+  }
+
+  // Update tab status
+  if (requestScript || collectionScript) {
+    const { updateTab, activeTabId } = useAppStore.getState();
+    if (activeTabId) {
+      updateTab(activeTabId, { scriptExecutionStatus: hasError ? 'error' : 'success' });
+    }
+  }
+};
 
 const WORKER_SOURCE = `
 'use strict';
