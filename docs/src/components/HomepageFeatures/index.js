@@ -90,7 +90,7 @@ const FeatureList = [
     emoji: '🎨',
     description: (
       <>
-        Choose from Dark, Light, Ocean, Forest, Earth, Aurora, Sunset, Candy, and Rainbow themes —
+        Choose from Dark, Light, Ocean, Forest, Earth, Aurora, Flame, Candy, and Rainbow themes —
         or build your own fully custom theme.
       </>
     ),

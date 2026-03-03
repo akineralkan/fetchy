@@ -24,7 +24,7 @@ Fetchy offers extensive visual customization to match your preferences.
 | **Forest** | Muted greens and earth tones |
 | **Earth** | Warm browns and amber hues |
 | **Aurora** | Northern lights inspired pastels |
-| **Sunset** | Warm oranges, pinks, and purples |
+| **Flame** | Warm oranges, pinks, and purples |
 | **Candy** | Bright, playful pastels |
 | **Rainbow** | Vibrant multi-color accents |
 

@@ -68,7 +68,7 @@ export default function SortableRequestItem({
         (itemRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
       }}
       style={style}
-      className={`tree-item flex items-center gap-2 px-2 py-1.5 cursor-pointer group rounded ${isActive && isHighlighted ? 'bg-fetchy-accent/15 ring-2 ring-yellow-500/70' : isActive ? 'bg-fetchy-accent/15 ring-1 ring-fetchy-accent/40' : isHighlighted ? 'bg-yellow-500/10 ring-1 ring-yellow-500/50' : ''}`}
+      className={`tree-item flex items-center gap-2 px-2 py-1.5 cursor-pointer group rounded ${isActive && isHighlighted ? 'bg-fetchy-accent/15 ring-2 ring-fetchy-highlight/70' : isActive ? 'bg-fetchy-accent/15 ring-1 ring-fetchy-accent/40' : isHighlighted ? 'bg-fetchy-highlight/10 ring-1 ring-fetchy-highlight/50' : ''}`}
       onClick={onClick}
       onContextMenu={onContextMenu}
     >

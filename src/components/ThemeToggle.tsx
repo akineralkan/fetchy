@@ -36,7 +36,7 @@ const BUILTIN_THEMES: Array<{ id: BuiltinKey; label: string; dotColor: string; m
   { id: 'indigo', label: 'Indigo', dotColor: '#906070', mode: 'dark' },
   { id: 'black', label: 'Black', dotColor: '#6466f1', mode: 'dark' },
   { id: 'aurora', label: 'Aurora', dotColor: '#7a4880', mode: 'dark' },
-  { id: 'sunset', label: 'Sunset', dotColor: '#9a4840', mode: 'dark' },
+  { id: 'sunset', label: 'Flame', dotColor: '#9a4840', mode: 'dark' },
 ];
 
 const LIGHT_THEMES = BUILTIN_THEMES.filter((t) => t.mode === 'light');
@@ -80,6 +80,7 @@ const COLOR_VAR_MAP: Record<string, string> = {
   warningColor: '--warning',
   errorColor: '--error',
   aiColor: '--ai-color',
+  highlightColor: '--highlight-color',
 };
 
 const ALL_CSS_VARS = Object.values(COLOR_VAR_MAP);

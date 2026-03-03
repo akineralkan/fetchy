@@ -124,6 +124,7 @@ export interface CustomThemeColors {
   warningColor: string;
   errorColor: string;
   aiColor: string;
+  highlightColor: string;
 }
 
 export interface CustomTheme {

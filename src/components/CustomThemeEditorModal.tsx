@@ -33,6 +33,7 @@ const PRESET_STARTERS: Record<string, { label: string; colors: CustomThemeColors
       warningColor: '#a08848',
       errorColor: '#a06060',
       aiColor: '#9070b0',
+      highlightColor: '#c49030',
     },
   },
   light: {
@@ -58,6 +59,7 @@ const PRESET_STARTERS: Record<string, { label: string; colors: CustomThemeColors
       warningColor: '#987028',
       errorColor: '#8a5050',
       aiColor: '#7050a0',
+      highlightColor: '#b87820',
     },
   },
   ocean: {
@@ -83,6 +85,7 @@ const PRESET_STARTERS: Record<string, { label: string; colors: CustomThemeColors
       warningColor: '#906828',
       errorColor: '#8a4040',
       aiColor: '#506890',
+      highlightColor: '#2888b8',
     },
   },
   forest: {
@@ -108,6 +111,7 @@ const PRESET_STARTERS: Record<string, { label: string; colors: CustomThemeColors
       warningColor: '#906828',
       errorColor: '#8a4040',
       aiColor: '#588868',
+      highlightColor: '#78a840',
     },
   },
   earth: {
@@ -133,6 +137,7 @@ const PRESET_STARTERS: Record<string, { label: string; colors: CustomThemeColors
       warningColor: '#906828',
       errorColor: '#8a4040',
       aiColor: '#8a6848',
+      highlightColor: '#b87828',
     },
   },
   aurora: {
@@ -158,10 +163,11 @@ const PRESET_STARTERS: Record<string, { label: string; colors: CustomThemeColors
       warningColor: '#a08848',
       errorColor: '#a06060',
       aiColor: '#8050a0',
+      highlightColor: '#8858b0',
     },
   },
   sunset: {
-    label: 'Sunset',
+    label: 'Flame',
     colors: {
       bgColor: '#2e1a14',
       sidebarColor: '#201410',
@@ -183,6 +189,7 @@ const PRESET_STARTERS: Record<string, { label: string; colors: CustomThemeColors
       warningColor: '#a08848',
       errorColor: '#a06060',
       aiColor: '#b06040',
+      highlightColor: '#c87030',
     },
   },
   candy: {
@@ -208,6 +215,7 @@ const PRESET_STARTERS: Record<string, { label: string; colors: CustomThemeColors
       warningColor: '#906828',
       errorColor: '#8a4040',
       aiColor: '#a05080',
+      highlightColor: '#b04888',
     },
   },
   neutral: {
@@ -233,6 +241,7 @@ const PRESET_STARTERS: Record<string, { label: string; colors: CustomThemeColors
       warningColor: '#908030',
       errorColor: '#a06060',
       aiColor: '#7070b0',
+      highlightColor: '#7878c0',
     },
   },
 };
@@ -258,6 +267,7 @@ const COLOR_FIELDS: Array<{ key: keyof CustomThemeColors; label: string; descrip
   { key: 'warningColor', label: 'Warning', description: 'Warning status indicators' },
   { key: 'errorColor', label: 'Error', description: 'Error status indicators' },
   { key: 'aiColor', label: 'AI Color', description: 'AI feature tags, buttons, and labels' },
+  { key: 'highlightColor', label: 'Search Highlight', description: 'Ring color for search-found requests in the sidebar' },
 ];
 
 export default function CustomThemeEditorModal({
@@ -279,6 +289,8 @@ export default function CustomThemeEditorModal({
       const base = editingTheme?.colors ? { ...editingTheme.colors } : { ...PRESET_STARTERS.dark.colors };
       // Ensure aiColor has a fallback for themes created before this field existed
       if (!base.aiColor) base.aiColor = '#9070b0';
+      // Ensure highlightColor has a fallback for themes created before this field existed
+      if (!base.highlightColor) base.highlightColor = '#c49030';
       setColors(base);
       setNameError('');
     }

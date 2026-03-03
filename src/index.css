@@ -49,6 +49,7 @@ body.light-theme {
   --error: #ff5252;
   --separator-color: #e1e0e0;
   --ai-color: #7050a0;
+  --highlight-color: #b87820;
 }
 
 body {
@@ -72,6 +73,7 @@ body {
   --error: #a06060;
   --separator-color: #303045;
   --ai-color: #9070b0;
+  --highlight-color: #c49030;
 }
 
 /* Ocean theme - muted blue */
@@ -98,6 +100,7 @@ body.ocean-theme {
   --error: #8a4040;
   --separator-color: #6098b8;
   --ai-color: #506890;
+  --highlight-color: #2888b8;
 }
 
 /* Forest theme - muted dark green */
@@ -124,6 +127,7 @@ body.forest-theme {
   --error: #985050;
   --separator-color: #385040;
   --ai-color: #588868;
+  --highlight-color: #78a840;
 }
 
 /* Earth theme - muted warm brown */
@@ -150,6 +154,7 @@ body.earth-theme {
   --error: #8a4040;
   --separator-color: #a07848;
   --ai-color: #8a6848;
+  --highlight-color: #b87828;
 }
 
 /* Aurora theme - muted nordic purples */
@@ -176,6 +181,7 @@ body.aurora-theme {
   --error: #906060;
   --separator-color: #282450;
   --ai-color: #8050a0;
+  --highlight-color: #8858b0;
 }
 
 /* Sunset theme - muted flame orange */
@@ -202,6 +208,7 @@ body.sunset-theme {
   --error: #a05040;
   --separator-color: #6a3818;
   --ai-color: #b06040;
+  --highlight-color: #c87030;
 }
 
 /* Candy theme - muted pink */
@@ -228,6 +235,7 @@ body.candy-theme {
   --error: #8a4040;
   --separator-color: #c060a0;
   --ai-color: #a05080;
+  --highlight-color: #b04888;
 }
 
 
@@ -254,6 +262,7 @@ body.pure-black-theme {
   --error: #f97171;
   --separator-color: #272626;
   --ai-color: #8080c0;
+  --highlight-color: #8090e0;
 }
 
 body.black-theme {
@@ -279,6 +288,7 @@ body.black-theme {
   --error: #a06060;
   --separator-color: #2a2a2a;
   --ai-color: #7070b0;
+  --highlight-color: #7878c0;
 }
 
 /* Theme-aware utility classes */
