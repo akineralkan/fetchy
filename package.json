@@ -1,6 +1,6 @@
 {
   "name": "fetchy",
-  "version": "1.5.25",
+  "version": "1.5.26",
   "description": "Fetchy - Local by design. Reliable by nature.",
   "main": "electron/main.js",
   "scripts": {
