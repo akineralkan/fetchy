@@ -11,10 +11,11 @@ interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onOpenWorkspaces: () => void;
+  onOpenConflictResolver?: () => void;
   initialTab?: 'general' | 'ai' | 'git';
 }
 
-export default function SettingsModal({ isOpen, onClose, onOpenWorkspaces, initialTab }: SettingsModalProps) {
+export default function SettingsModal({ isOpen, onClose, onOpenWorkspaces, onOpenConflictResolver, initialTab }: SettingsModalProps) {
   const { preferences, savePreferences, aiSettings: ai, updateAISettings } = usePreferencesStore();
   const { panelLayout, setPanelLayout } = useAppStore();
   const { workspaces, activeWorkspaceId } = useWorkspacesStore();
@@ -313,6 +314,7 @@ export default function SettingsModal({ isOpen, onClose, onOpenWorkspaces, initi
             <GitSettingsTab
               workspace={activeWorkspace}
               onWorkspaceUpdate={(id, updates) => updateWorkspace(id, updates)}
+              onOpenConflictResolver={onOpenConflictResolver}
             />
           ) : null}
         </div>

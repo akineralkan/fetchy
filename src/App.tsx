@@ -22,6 +22,7 @@ import ResizeHandle from './components/ResizeHandle';
 import Tooltip from './components/Tooltip';
 import OpenApiEditor from './components/OpenApiEditor';
 import CollectionConfigPanel from './components/CollectionConfigPanel';
+import ResolveConflictsDialog from './components/ResolveConflictsDialog';
 import { useAppStore } from './store/appStore';
 import { invalidateWriteCache } from './store/persistence';
 import { usePreferencesStore } from './store/preferencesStore';
@@ -68,6 +69,10 @@ function App() {
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const [postUpdateInfo, setPostUpdateInfo] = useState<any>(null);
+
+  // Merge conflict resolver dialog state
+  const [showConflictResolver, setShowConflictResolver] = useState(false);
+  const [conflictResolverFiles, setConflictResolverFiles] = useState<string[]>([]);
 
   // ── Post-update banner (shown once after a successful update) ─────────────
   useEffect(() => {
@@ -602,7 +607,54 @@ function App() {
           isOpen={showSettingsModal}
           onClose={() => setShowSettingsModal(false)}
           onOpenWorkspaces={() => setShowWorkspacesModal(true)}
+          onOpenConflictResolver={async () => {
+            // Fetch conflict files and open the resolver
+            const api = window.electronAPI;
+            if (!api || !activeWorkspace?.homeDirectory) return;
+            try {
+              const conflictsRes = await api.gitMergeConflicts({ directory: activeWorkspace.homeDirectory });
+              if (conflictsRes.success && conflictsRes.files.length > 0) {
+                setConflictResolverFiles(conflictsRes.files);
+                setShowConflictResolver(true);
+              }
+            } catch {
+              // silently fail
+            }
+          }}
           initialTab={settingsInitialTab}
+        />
+      )}
+
+      {showConflictResolver && activeWorkspace?.homeDirectory && (
+        <ResolveConflictsDialog
+          isOpen={showConflictResolver}
+          onClose={() => setShowConflictResolver(false)}
+          homeDirectory={activeWorkspace.homeDirectory}
+          conflictFiles={conflictResolverFiles}
+          onCompleteMerge={async () => {
+            // User completed the merge — commit the resolution (do NOT auto-push)
+            const api = window.electronAPI;
+            if (!api || !activeWorkspace?.homeDirectory) return;
+            const result = await api.gitAddCommit({
+              directory: activeWorkspace.homeDirectory,
+              message: 'Merge conflict resolution',
+            });
+            if (result.success) {
+              invalidateWriteCache();
+              await useAppStore.persist.rehydrate();
+              setShowConflictResolver(false);
+              setConflictResolverFiles([]);
+            }
+          }}
+          onAbortMerge={async () => {
+            const api = window.electronAPI;
+            if (!api || !activeWorkspace?.homeDirectory) return;
+            await api.gitMergeAbort({ directory: activeWorkspace.homeDirectory });
+            invalidateWriteCache();
+            await useAppStore.persist.rehydrate();
+            setShowConflictResolver(false);
+            setConflictResolverFiles([]);
+          }}
         />
       )}
 

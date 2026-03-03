@@ -61,6 +61,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   gitResolveConflict: (data) => ipcRenderer.invoke('git-resolve-conflict', data),
   gitResolveAllConflicts: (data) => ipcRenderer.invoke('git-resolve-all-conflicts', data),
   gitMergeAbort: (data) => ipcRenderer.invoke('git-merge-abort', data),
+  gitReadFileContent: (data) => ipcRenderer.invoke('git-read-file-content', data),
+  gitShowBaseVersion: (data) => ipcRenderer.invoke('git-show-base-version', data),
+  gitWriteResolvedContent: (data) => ipcRenderer.invoke('git-write-resolved-content', data),
 
   // Storage file change events (fired when file changes externally, e.g. after git pull)
   onStorageFileChanged: (callback) => {

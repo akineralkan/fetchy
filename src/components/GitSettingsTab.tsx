@@ -35,11 +35,12 @@ import { invalidateWriteCache } from '../store/persistence';
 interface GitSettingsTabProps {
   workspace: Workspace | null;
   onWorkspaceUpdate?: (id: string, updates: Partial<Workspace>) => void;
+  onOpenConflictResolver?: () => void;
 }
 
 type OpStatus = 'idle' | 'loading' | 'success' | 'error';
 
-export default function GitSettingsTab({ workspace, onWorkspaceUpdate }: GitSettingsTabProps) {
+export default function GitSettingsTab({ workspace, onWorkspaceUpdate, onOpenConflictResolver }: GitSettingsTabProps) {
   const [gitAvailable, setGitAvailable] = useState<boolean | null>(null);
   const [gitVersion, setGitVersion] = useState('');
   const [status, setStatus] = useState<GitStatusResult | null>(null);
@@ -56,10 +57,6 @@ export default function GitSettingsTab({ workspace, onWorkspaceUpdate }: GitSett
   // Merge conflict state
   const [isMerging, setIsMerging] = useState(false);
   const [conflictFiles, setConflictFiles] = useState<string[]>([]);
-  const [selectedConflictFile, setSelectedConflictFile] = useState<string | null>(null);
-  const [oursContent, setOursContent] = useState<string>('');
-  const [theirsContent, setTheirsContent] = useState<string>('');
-  const [conflictViewLoading, setConflictViewLoading] = useState(false);
   const [resolvedFiles, setResolvedFiles] = useState<Set<string>>(new Set());
   const opTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -118,7 +115,6 @@ export default function GitSettingsTab({ workspace, onWorkspaceUpdate }: GitSett
         }
       } else {
         setConflictFiles([]);
-        setSelectedConflictFile(null);
         setResolvedFiles(new Set());
       }
     } catch (e) {
@@ -186,14 +182,18 @@ export default function GitSettingsTab({ workspace, onWorkspaceUpdate }: GitSett
       // Check if pull failed due to merge conflicts
       const errorMsg = result.error || '';
       if (errorMsg.includes('CONFLICT') || errorMsg.includes('conflict') || errorMsg.includes('Merge conflict')) {
-        showOp('error', 'Pull resulted in merge conflicts. Please resolve them below.');
+        showOp('error', 'Pull resulted in merge conflicts. Resolve them using the 3-Way Merge Editor.');
         // Refresh to pick up conflict state
         await refreshStatus();
+        // Auto-open the conflict resolver dialog
+        if (onOpenConflictResolver) {
+          setTimeout(() => onOpenConflictResolver(), 300);
+        }
       } else {
         showOp('error', errorMsg || 'Pull failed');
       }
     }
-  }, [api, homeDir, showOp, refreshStatus]);
+  }, [api, homeDir, showOp, refreshStatus, onOpenConflictResolver]);
 
   // Push
   const handlePush = useCallback(async () => {
@@ -265,25 +265,6 @@ export default function GitSettingsTab({ workspace, onWorkspaceUpdate }: GitSett
     }
   }, [api, homeDir, showOp, refreshStatus]);
 
-  // View conflict details for a file
-  const handleViewConflict = useCallback(async (filepath: string) => {
-    if (!api || !homeDir) return;
-    setSelectedConflictFile(filepath);
-    setConflictViewLoading(true);
-    try {
-      const [oursRes, theirsRes] = await Promise.all([
-        api.gitShowConflictVersion({ directory: homeDir, filepath, version: 'ours' }),
-        api.gitShowConflictVersion({ directory: homeDir, filepath, version: 'theirs' }),
-      ]);
-      setOursContent(oursRes.success ? oursRes.content : oursRes.error || 'Unable to load');
-      setTheirsContent(theirsRes.success ? theirsRes.content : theirsRes.error || 'Unable to load');
-    } catch (e) {
-      setOursContent('Error loading content');
-      setTheirsContent('Error loading content');
-    }
-    setConflictViewLoading(false);
-  }, [api, homeDir]);
-
   // Resolve a single conflict by choosing a version
   const handleResolveFile = useCallback(async (filepath: string, strategy: 'ours' | 'theirs') => {
     if (!api || !homeDir) return;
@@ -299,17 +280,13 @@ export default function GitSettingsTab({ workspace, onWorkspaceUpdate }: GitSett
       if (resolveRes.success) {
         setResolvedFiles(prev => new Set([...prev, filepath]));
         showOp('success', `Resolved ${filepath}`);
-        // If this was the viewed file, close the view
-        if (selectedConflictFile === filepath) {
-          setSelectedConflictFile(null);
-        }
       } else {
         showOp('error', resolveRes.error || 'Failed to resolve conflict');
       }
     } catch (e) {
       showOp('error', 'Error resolving conflict');
     }
-  }, [api, homeDir, showOp, selectedConflictFile]);
+  }, [api, homeDir, showOp]);
 
   // Resolve all conflicts with a single strategy
   const handleResolveAll = useCallback(async (strategy: 'ours' | 'theirs') => {
@@ -319,7 +296,6 @@ export default function GitSettingsTab({ workspace, onWorkspaceUpdate }: GitSett
     if (result.success) {
       showOp('success', 'All conflicts resolved');
       setConflictFiles([]);
-      setSelectedConflictFile(null);
       setResolvedFiles(new Set());
       refreshStatus();
     } else {
@@ -341,7 +317,6 @@ export default function GitSettingsTab({ workspace, onWorkspaceUpdate }: GitSett
       showOp('success', 'Merge completed successfully');
       setIsMerging(false);
       setConflictFiles([]);
-      setSelectedConflictFile(null);
       setResolvedFiles(new Set());
       invalidateWriteCache();
       refreshStatus();
@@ -360,7 +335,6 @@ export default function GitSettingsTab({ workspace, onWorkspaceUpdate }: GitSett
       showOp('success', 'Merge aborted');
       setIsMerging(false);
       setConflictFiles([]);
-      setSelectedConflictFile(null);
       setResolvedFiles(new Set());
       invalidateWriteCache();
       refreshStatus();
@@ -607,15 +581,12 @@ export default function GitSettingsTab({ workspace, onWorkspaceUpdate }: GitSett
               <div className='max-h-40 overflow-y-auto space-y-1'>
                 {conflictFiles.map((file) => {
                   const isResolved = resolvedFiles.has(file);
-                  const isSelected = selectedConflictFile === file;
                   return (
                     <div
                       key={file}
                       className={`flex items-center justify-between p-2 rounded border transition-colors ${
                         isResolved
                           ? 'bg-green-500/10 border-green-500/30'
-                          : isSelected
-                          ? 'bg-[#1a1a2e] border-purple-500/40'
                           : 'bg-[#0f0f1a] border-[#2d2d44] hover:border-[#3d3d54]'
                       }`}
                     >
@@ -629,13 +600,6 @@ export default function GitSettingsTab({ workspace, onWorkspaceUpdate }: GitSett
                       </div>
                       {!isResolved && (
                         <div className='flex gap-1 shrink-0 ml-2'>
-                          <button
-                            onClick={() => handleViewConflict(file)}
-                            className='p-1 text-gray-400 hover:text-white hover:bg-[#2d2d44] rounded transition-colors'
-                            title='View conflict details'
-                          >
-                            <Eye size={12} />
-                          </button>
                           <button
                             onClick={() => handleResolveFile(file, 'ours')}
                             disabled={opStatus === 'loading'}
@@ -657,42 +621,18 @@ export default function GitSettingsTab({ workspace, onWorkspaceUpdate }: GitSett
                 })}
               </div>
 
-              {/* Conflict detail view */}
-              {selectedConflictFile && (
-                <div className='border border-[#2d2d44] rounded overflow-hidden'>
-                  <div className='flex items-center justify-between p-2 bg-[#1a1a2e] border-b border-[#2d2d44]'>
-                    <span className='text-xs font-mono text-gray-400'>{selectedConflictFile}</span>
-                    <button
-                      onClick={() => setSelectedConflictFile(null)}
-                      className='text-gray-500 hover:text-white transition-colors'
-                    >
-                      <XCircle size={12} />
-                    </button>
-                  </div>
-                  {conflictViewLoading ? (
-                    <div className='flex items-center justify-center py-8'>
-                      <Loader2 size={16} className='animate-spin text-purple-400' />
-                    </div>
-                  ) : (
-                    <div className='grid grid-cols-2 divide-x divide-[#2d2d44]'>
-                      <div>
-                        <div className='px-2 py-1 bg-blue-500/10 border-b border-[#2d2d44]'>
-                          <span className='text-[10px] font-medium text-blue-300'>YOURS (Local)</span>
-                        </div>
-                        <pre className='p-2 text-[10px] font-mono text-gray-300 max-h-48 overflow-auto whitespace-pre-wrap break-all'>
-                          {oursContent}
-                        </pre>
-                      </div>
-                      <div>
-                        <div className='px-2 py-1 bg-orange-500/10 border-b border-[#2d2d44]'>
-                          <span className='text-[10px] font-medium text-orange-300'>THEIRS (Remote)</span>
-                        </div>
-                        <pre className='p-2 text-[10px] font-mono text-gray-300 max-h-48 overflow-auto whitespace-pre-wrap break-all'>
-                          {theirsContent}
-                        </pre>
-                      </div>
-                    </div>
-                  )}
+              {/* Open full 3-way merge resolver */}
+              {onOpenConflictResolver && (
+                <div className='pt-2'>
+                  <button
+                    onClick={onOpenConflictResolver}
+                    disabled={opStatus === 'loading'}
+                    className='flex items-center gap-1.5 px-3 py-2 text-xs bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors disabled:opacity-50 w-full justify-center'
+                  >
+                    <Eye size={14} />
+                    Open 3-Way Merge Editor
+                    <span className='text-[10px] text-purple-200 ml-1'>(Resolve file by file)</span>
+                  </button>
                 </div>
               )}
 

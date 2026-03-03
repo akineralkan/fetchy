@@ -1523,6 +1523,46 @@ ipcMain.handle('git-resolve-all-conflicts', async (event, { directory, strategy 
   }
 });
 
+// Read the current working-copy content of a file (may contain conflict markers)
+ipcMain.handle('git-read-file-content', async (event, { directory, filepath }) => {
+  try {
+    if (!directory) return { success: false, error: 'No directory specified', content: '' };
+    const fullPath = path.join(directory, filepath);
+    if (!fs.existsSync(fullPath)) return { success: false, error: 'File does not exist', content: '' };
+    const content = fs.readFileSync(fullPath, 'utf-8');
+    return { success: true, content };
+  } catch (error) {
+    return { success: false, error: error.message, content: '' };
+  }
+});
+
+// Get the common ancestor (base) version for a conflicted file (stage 1)
+ipcMain.handle('git-show-base-version', async (event, { directory, filepath }) => {
+  try {
+    if (!directory) return { success: false, error: 'No directory specified', content: '' };
+    // stage 1 = base (common ancestor)
+    const result = await runGit(['show', `:1:${filepath}`], directory);
+    if (!result.success) return { success: false, error: result.stderr, content: '' };
+    return { success: true, content: result.stdout };
+  } catch (error) {
+    return { success: false, error: error.message, content: '' };
+  }
+});
+
+// Write resolved content to a file (for manual merge editor)
+ipcMain.handle('git-write-resolved-content', async (event, { directory, filepath, content }) => {
+  try {
+    if (!directory) return { success: false, error: 'No directory specified' };
+    const fullPath = path.join(directory, filepath);
+    const parentDir = path.dirname(fullPath);
+    if (!fs.existsSync(parentDir)) fs.mkdirSync(parentDir, { recursive: true });
+    safeWriteFileSync(fullPath, content, 'utf-8');
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
 // Abort an in-progress merge
 ipcMain.handle('git-merge-abort', async (event, { directory }) => {
   try {

@@ -500,6 +500,9 @@ export interface ElectronAPI {
   gitResolveConflict: (data: { directory: string; filepath: string; content: string }) => Promise<GitOperationResult>;
   gitResolveAllConflicts: (data: { directory: string; strategy: 'ours' | 'theirs' }) => Promise<GitOperationResult>;
   gitMergeAbort: (data: { directory: string }) => Promise<GitOperationResult>;
+  gitReadFileContent: (data: { directory: string; filepath: string }) => Promise<GitConflictVersionResult>;
+  gitShowBaseVersion: (data: { directory: string; filepath: string }) => Promise<GitConflictVersionResult>;
+  gitWriteResolvedContent: (data: { directory: string; filepath: string; content: string }) => Promise<GitOperationResult>;
   // Storage file change events
   onStorageFileChanged: (callback: () => void) => (() => void);
   offStorageFileChanged?: (listener: () => void) => void;
