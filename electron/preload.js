@@ -66,6 +66,21 @@ contextBridge.exposeInMainWorld('electronAPI', {
   gitShowBaseVersion: (data) => ipcRenderer.invoke('git-show-base-version', data),
   gitWriteResolvedContent: (data) => ipcRenderer.invoke('git-write-resolved-content', data),
 
+  // Git branch operations
+  gitListBranches: (data) => ipcRenderer.invoke('git-list-branches', data),
+  gitCheckoutBranch: (data) => ipcRenderer.invoke('git-checkout-branch', data),
+  gitCreateBranch: (data) => ipcRenderer.invoke('git-create-branch', data),
+
+  // Git staging operations
+  gitStageFiles: (data) => ipcRenderer.invoke('git-stage-files', data),
+  gitUnstageFiles: (data) => ipcRenderer.invoke('git-unstage-files', data),
+  gitDiscardFiles: (data) => ipcRenderer.invoke('git-discard-files', data),
+  gitCommitStaged: (data) => ipcRenderer.invoke('git-commit-staged', data),
+
+  // Git stash operations
+  gitStash: (data) => ipcRenderer.invoke('git-stash', data),
+  gitStashPop: (data) => ipcRenderer.invoke('git-stash-pop', data),
+
   // Storage file change events (fired when file changes externally, e.g. after git pull)
   onStorageFileChanged: (callback) => {
     const listener = (_, data) => callback(data);

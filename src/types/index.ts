@@ -461,6 +461,20 @@ export interface GitIsMergingResult {
   merging: boolean;
 }
 
+export interface GitBranchInfo {
+  name: string;
+  hash: string;
+  current: boolean;
+  remote: boolean;
+}
+
+export interface GitListBranchesResult {
+  success: boolean;
+  local: GitBranchInfo[];
+  remote: GitBranchInfo[];
+  error?: string;
+}
+
 // Electron API type definition
 export interface ElectronAPI {
   httpRequest: (data: {
@@ -544,6 +558,18 @@ export interface ElectronAPI {
   gitReadFileContent: (data: { directory: string; filepath: string }) => Promise<GitConflictVersionResult>;
   gitShowBaseVersion: (data: { directory: string; filepath: string }) => Promise<GitConflictVersionResult>;
   gitWriteResolvedContent: (data: { directory: string; filepath: string; content: string }) => Promise<GitOperationResult>;
+  // Git branch operations
+  gitListBranches: (data: { directory: string }) => Promise<GitListBranchesResult>;
+  gitCheckoutBranch: (data: { directory: string; branch: string }) => Promise<GitOperationResult>;
+  gitCreateBranch: (data: { directory: string; branch: string; checkout?: boolean }) => Promise<GitOperationResult>;
+  // Git staging operations
+  gitStageFiles: (data: { directory: string; files: string[] }) => Promise<GitOperationResult>;
+  gitUnstageFiles: (data: { directory: string; files: string[] }) => Promise<GitOperationResult>;
+  gitDiscardFiles: (data: { directory: string; files: string[] }) => Promise<GitOperationResult>;
+  gitCommitStaged: (data: { directory: string; message?: string }) => Promise<GitOperationResult>;
+  // Git stash operations
+  gitStash: (data: { directory: string }) => Promise<GitOperationResult>;
+  gitStashPop: (data: { directory: string }) => Promise<GitOperationResult>;
   // Storage file change events
   onStorageFileChanged: (callback: () => void) => (() => void);
   offStorageFileChanged?: (listener: () => void) => void;

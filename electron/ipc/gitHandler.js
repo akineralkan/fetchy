@@ -15,7 +15,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execFile } = require('child_process');
-const { requireString, requireDirectoryPath, requireSafeRelativePath, requireOneOf, optionalString, requirePositiveInt } = require('./validate');
+const { requireString, requireDirectoryPath, requireSafeRelativePath, requireOneOf, optionalString, requirePositiveInt, requireArray } = require('./validate');
 
 // Unique null-byte delimiter for git log parsing —
 // impossible in commit messages, avoids conflicts with | or other characters.
@@ -568,6 +568,190 @@ function register(ipcMain, deps) {
       const result = await runGit(['merge', '--abort'], directory);
       if (!result.success) return { success: false, error: result.stderr };
       return { success: true };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  });
+
+  // ─── Branch operations ───────────────────────────────────────────────────
+
+  ipcMain.handle('git-list-branches', async (event, { directory }) => {
+    try {
+      requireDirectoryPath(directory, 'directory');
+      const localResult = await runGit(
+        ['branch', '--format=%(refname:short)' + GIT_LOG_SEP + '%(objectname:short)' + GIT_LOG_SEP + '%(HEAD)'],
+        directory
+      );
+      const local = [];
+      if (localResult.success) {
+        localResult.stdout.trim().split('\n').filter(l => l.trim()).forEach(line => {
+          const parts = line.split(GIT_LOG_SEP);
+          local.push({
+            name: parts[0] || '',
+            hash: parts[1] || '',
+            current: (parts[2] || '').trim() === '*',
+            remote: false,
+          });
+        });
+      }
+      const remoteResult = await runGit(
+        ['branch', '-r', '--format=%(refname:short)' + GIT_LOG_SEP + '%(objectname:short)'],
+        directory
+      );
+      const remote = [];
+      if (remoteResult.success) {
+        remoteResult.stdout.trim().split('\n').filter(l => l.trim()).forEach(line => {
+          const parts = line.split(GIT_LOG_SEP);
+          const name = parts[0] || '';
+          if (name.includes('HEAD')) return;
+          remote.push({
+            name,
+            hash: parts[1] || '',
+            current: false,
+            remote: true,
+          });
+        });
+      }
+      return { success: true, local, remote };
+    } catch (error) {
+      return { success: false, local: [], remote: [], error: error.message };
+    }
+  });
+
+  ipcMain.handle('git-checkout-branch', async (event, { directory, branch }) => {
+    try {
+      requireDirectoryPath(directory, 'directory');
+      requireString(branch, 'branch', 200);
+      if (branch.includes('\0') || branch.includes('..')) {
+        return { success: false, error: 'Invalid branch name' };
+      }
+      const result = await runGit(['checkout', branch], directory);
+      if (!result.success) return { success: false, error: result.stderr };
+      return { success: true, output: result.stdout.trim() || result.stderr.trim() };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('git-create-branch', async (event, { directory, branch, checkout }) => {
+    try {
+      requireDirectoryPath(directory, 'directory');
+      requireString(branch, 'branch', 200);
+      if (!/^[a-zA-Z0-9][a-zA-Z0-9._\/-]*$/.test(branch) || branch.includes('..')) {
+        return { success: false, error: 'Invalid branch name. Use alphanumeric characters, dots, dashes, underscores, and slashes.' };
+      }
+      const args = checkout !== false ? ['checkout', '-b', branch] : ['branch', branch];
+      const result = await runGit(args, directory);
+      if (!result.success) return { success: false, error: result.stderr };
+      return { success: true, output: result.stdout.trim() || result.stderr.trim() };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  });
+
+  // ─── Staging operations ─────────────────────────────────────────────────
+
+  ipcMain.handle('git-stage-files', async (event, { directory, files }) => {
+    try {
+      requireDirectoryPath(directory, 'directory');
+      requireArray(files, 'files', 1000);
+      for (const f of files) requireSafeRelativePath(f, 'file');
+      const result = await runGit(['add', '--', ...files], directory);
+      if (!result.success) return { success: false, error: result.stderr };
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('git-unstage-files', async (event, { directory, files }) => {
+    try {
+      requireDirectoryPath(directory, 'directory');
+      requireArray(files, 'files', 1000);
+      for (const f of files) requireSafeRelativePath(f, 'file');
+      const result = await runGit(['reset', 'HEAD', '--', ...files], directory);
+      if (!result.success) {
+        // Fallback for repos with no commits yet
+        const rmResult = await runGit(['rm', '--cached', '--', ...files], directory);
+        if (!rmResult.success) return { success: false, error: rmResult.stderr };
+      }
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('git-discard-files', async (event, { directory, files }) => {
+    try {
+      requireDirectoryPath(directory, 'directory');
+      requireArray(files, 'files', 1000);
+      for (const f of files) requireSafeRelativePath(f, 'file');
+      const statusResult = await runGit(['status', '--porcelain', '--', ...files], directory);
+      const untracked = [];
+      const tracked = [];
+      if (statusResult.success) {
+        statusResult.stdout.trim().split('\n').filter(l => l.trim()).forEach(line => {
+          const code = line.substring(0, 2);
+          const filePath = line.substring(3).trim();
+          if (code === '??') {
+            untracked.push(filePath);
+          } else {
+            tracked.push(filePath);
+          }
+        });
+      }
+      if (tracked.length > 0) {
+        const checkoutResult = await runGit(['checkout', '--', ...tracked], directory);
+        if (!checkoutResult.success) return { success: false, error: checkoutResult.stderr };
+      }
+      if (untracked.length > 0) {
+        for (const f of untracked) {
+          const fullPath = path.join(directory, f);
+          if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
+        }
+      }
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('git-commit-staged', async (event, { directory, message }) => {
+    try {
+      requireDirectoryPath(directory, 'directory');
+      if (!message) message = 'Fetchy commit ' + new Date().toISOString();
+      const commitResult = await runGit(['commit', '-m', message], directory);
+      if (!commitResult.success) {
+        if (commitResult.stdout.includes('nothing to commit') || commitResult.stderr.includes('nothing to commit')) {
+          return { success: true, output: 'Nothing to commit' };
+        }
+        return { success: false, error: commitResult.stderr || commitResult.stdout };
+      }
+      return { success: true, output: commitResult.stdout.trim() };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  });
+
+  // ─── Stash operations ───────────────────────────────────────────────────
+
+  ipcMain.handle('git-stash', async (event, { directory }) => {
+    try {
+      requireDirectoryPath(directory, 'directory');
+      const result = await runGit(['stash', 'push', '-u'], directory);
+      if (!result.success) return { success: false, error: result.stderr };
+      return { success: true, output: result.stdout.trim() };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('git-stash-pop', async (event, { directory }) => {
+    try {
+      requireDirectoryPath(directory, 'directory');
+      const result = await runGit(['stash', 'pop'], directory);
+      if (!result.success) return { success: false, error: result.stderr };
+      return { success: true, output: result.stdout.trim() };
     } catch (error) {
       return { success: false, error: error.message };
     }
