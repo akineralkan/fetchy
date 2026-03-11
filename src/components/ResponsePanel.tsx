@@ -22,10 +22,13 @@ export default function ResponsePanel({ response, sentRequest, isLoading }: Resp
     setManualPrettyPrint(false);
   }, [response]);
 
-  // Detect if body is valid JSON but content-type is not application/json (JSONViewer handles that)
+  // Detect if body is valid JSON but content-type is not application/json (JSONViewer handles that).
+  // Skip the JSON.parse check for large bodies — the pretty-print button is non-critical
+  // and parsing 2 MB+ synchronously on every response would block the main thread.
   const isJsonBody = useMemo(() => {
     if (!response || response.bodyEncoding === 'base64') return false;
     if (response.headers['content-type']?.includes('application/json')) return false;
+    if (response.body.length > 100_000) return false;
     try {
       JSON.parse(response.body);
       return true;
@@ -34,7 +37,7 @@ export default function ResponsePanel({ response, sentRequest, isLoading }: Resp
     }
   }, [response]);
 
-  // Detect if body is already pretty-printed
+  // Detect if body is already pretty-printed (body is already guarded to ≤100 KB via isJsonBody)
   const isAlreadyPretty = useMemo(() => {
     if (!response || !isJsonBody) return true;
     return response.body === prettyPrintJson(response.body);
@@ -155,9 +158,9 @@ export default function ResponsePanel({ response, sentRequest, isLoading }: Resp
     );
   }
 
-  const formattedBody = response.headers['content-type']?.includes('application/json')
-    ? prettyPrintJson(response.body)
-    : response.body;
+  // response is guaranteed non-null here (we returned early above if it was null).
+  // JSONViewer handles application/json bodies directly, so no prettyPrintJson call needed.
+  const formattedBody = response.body;
 
   const getRequestBodyContent = () => {
     if (!sentRequest) return '';

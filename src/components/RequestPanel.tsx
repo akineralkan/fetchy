@@ -8,6 +8,7 @@ import { resolveRequestVariables, generateCurl, generateJavaScript, generatePyth
 import { resolveInheritedAuth } from '../utils/authInheritance';
 import { v4 as uuidv4 } from 'uuid';
 import { parseCurlCommand } from '../utils/curlParser';
+import { computeKeyColWidth } from '../utils/kvTableUtils';
 import VariableInput from './VariableInput';
 import Tooltip from './Tooltip';
 import { AIRequestToolbar, AIGenerateRequestModal } from './AIAssistant';
@@ -208,6 +209,11 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
   const handleSend = useCallback(async () => {
     if (!request || isLoading) return;
 
+    // Auto-save before sending (only for requests that belong to a collection)
+    if (activeTab?.collectionId && !activeTab?.isHistoryItem) {
+      handleSave();
+    }
+
     // Create a fresh AbortController for this request
     const controller = new AbortController();
     abortControllerRef.current = controller;
@@ -258,7 +264,7 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
       abortControllerRef.current = null;
       setIsLoading(false);
     }
-  }, [request, isLoading, setIsLoading, setResponse, setSentRequest, collections, activeTab, getActiveEnvironment, getInheritedAuth, addToHistory]);
+  }, [request, isLoading, handleSave, setIsLoading, setResponse, setSentRequest, collections, activeTab, getActiveEnvironment, getInheritedAuth, addToHistory]);
 
   const handleCancel = useCallback(() => {
     abortControllerRef.current?.abort();
@@ -416,15 +422,12 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
   const renderKeyValueTable = (field: 'headers' | 'params') => {
     const items = request[field];
 
+    // Size the Key column to fit the longest key, giving remaining space to Value.
+    const keyColWidth = computeKeyColWidth(items.map(i => i.key));
+
     return (
       <div className="h-full flex flex-col">
-        <div className="flex items-center justify-between gap-2 p-2 border-b border-fetchy-border">
-          <button
-            onClick={() => addKeyValue(field)}
-            className="flex items-center gap-1 px-2 py-1 text-xs text-fetchy-text-muted hover:text-fetchy-text hover:bg-fetchy-border rounded"
-          >
-            <Plus size={14} /> Add {field === 'headers' ? 'Header' : 'Parameter'}
-          </button>
+        <div className="flex items-center justify-end gap-2 p-2 border-b border-fetchy-border">
           <Tooltip content="Bulk Edit">
             <button
               onClick={() => openBatchEdit(field)}
@@ -435,7 +438,13 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
           </Tooltip>
         </div>
         <div className="flex-1 overflow-auto">
-          <table className="w-full kv-table">
+          <table className="w-full kv-table" style={{ tableLayout: 'fixed' }}>
+            <colgroup>
+              <col style={{ width: '32px' }} />
+              <col style={{ width: `${keyColWidth}px` }} />
+              <col />
+              <col style={{ width: '32px' }} />
+            </colgroup>
             <thead className="sticky top-0 bg-fetchy-bg">
               <tr className="text-left text-xs text-fetchy-text-muted border-b border-fetchy-border">
                 <th className="w-8 p-2"></th>
@@ -484,6 +493,12 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
               ))}
             </tbody>
           </table>
+          <button
+            onClick={() => addKeyValue(field)}
+            className="flex items-center gap-1 px-3 py-2 text-sm text-fetchy-text-muted hover:text-fetchy-text"
+          >
+            <Plus size={14} /> Add {field === 'headers' ? 'Header' : 'Parameter'}
+          </button>
         </div>
       </div>
     );

@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Braces } from 'lucide-react';
+import { formatJson } from '../../utils/editorUtils';
 import { KeyValue, RequestBody } from '../../types';
 import { v4 as uuidv4 } from 'uuid';
 import VariableInput from '../VariableInput';
@@ -53,6 +54,11 @@ export default function BodyEditor({ body, onChange }: BodyEditorProps) {
   const [suggestionPos, setSuggestionPos] = useState<{ x: number; y: number } | null>(null);
   const lastCursorRef = useRef<{ pos: number; startIdx: number } | null>(null);
   const codeEditorRef = useRef<CodeEditorHandle>(null);
+
+  const handleFormatJson = useCallback(() => {
+    const formatted = formatJson(body.raw || '');
+    if (formatted !== (body.raw || '')) onChange({ ...body, raw: formatted });
+  }, [body, onChange]);
 
   const handleCursorActivity = useCallback((value: string, cursorPos: number, coords: { x: number; y: number } | null) => {
     const textBefore = value.substring(0, cursorPos);
@@ -115,6 +121,20 @@ export default function BodyEditor({ body, onChange }: BodyEditorProps) {
             {type.label}
           </button>
         ))}
+
+        {body.type === 'json' && (
+          <>
+            <div className="w-px h-4 bg-fetchy-border mx-1" />
+            <button
+              onClick={handleFormatJson}
+              title="Format JSON"
+              className="flex items-center gap-1.5 px-2 py-1 text-xs rounded text-fetchy-text-muted hover:text-fetchy-text hover:bg-fetchy-border transition-colors"
+            >
+              <Braces size={13} />
+              Format
+            </button>
+          </>
+        )}
       </div>
 
       <div className="flex-1 overflow-hidden">

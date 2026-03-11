@@ -8,6 +8,7 @@ import { syntaxHighlighting, HighlightStyle } from '@codemirror/language';
 import { tags } from '@lezer/highlight';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { usePreferencesStore } from '../store/preferencesStore';
+import { isLightTheme } from '../utils/editorUtils';
 
 // Light-mode syntax highlight style (VS Code Light+-inspired)
 const lightHighlightStyle = HighlightStyle.define([
@@ -30,9 +31,6 @@ const darkHighlightStyle = HighlightStyle.define([
   { tag: tags.punctuation,         color: '#cccccc' },                    // brackets & colons
   { tag: tags.bracket,             color: '#cccccc' },
 ]);
-
-// Themes whose --input-bg is a light colour
-const LIGHT_THEMES = new Set(['light', 'ocean', 'earth', 'candy']);
 
 interface CodeEditorProps {
   value: string;
@@ -58,7 +56,7 @@ const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(
   const editorRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const { preferences } = usePreferencesStore();
-  const isLight = LIGHT_THEMES.has(preferences.theme);
+  const isLight = isLightTheme(preferences.theme);
 
   // Mutable refs so the extensions always see the latest values without being recreated
   const variableStatusesRef = useRef(variableStatuses ?? {});
@@ -115,8 +113,11 @@ const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(
       Prec.highest(EditorView.theme({
         '&': { backgroundColor: 'var(--input-bg)' },
         '.cm-gutters': { backgroundColor: 'var(--input-bg)', borderRight: '1px solid var(--border-color)' },
-        '.cm-activeLine': { backgroundColor: 'color-mix(in srgb, var(--input-bg) 80%, var(--text-color) 20%)' },
-        '.cm-activeLineGutter': { backgroundColor: 'color-mix(in srgb, var(--input-bg) 80%, var(--text-color) 20%)' },
+        '.cm-activeLine': { backgroundColor: 'transparent' },
+        '.cm-activeLineGutter': { backgroundColor: 'transparent' },
+        // Override oneDark's near-invisible #3E4451 selection with a clearly contrasted blue
+        '&.cm-focused .cm-selectionBackground, .cm-selectionBackground': { backgroundColor: 'rgba(99, 153, 225, 0.45)' },
+        '& .cm-content ::selection': { backgroundColor: 'rgba(99, 153, 225, 0.35)' },
       })),
       EditorView.updateListener.of((update) => {
         if (update.docChanged && !readOnly) {
