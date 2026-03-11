@@ -57,7 +57,7 @@ function isGitRepo(directory) {
 }
 
 /**
- * Ensures history.json is listed in .gitignore for a git-native workspace.
+ * Ensures history.json and meta.json are listed in .gitignore for a git-native workspace.
  * Creates or appends to .gitignore without clobbering existing content.
  */
 function ensureHistoryJsonIgnored(directory) {
@@ -69,11 +69,12 @@ function ensureHistoryJsonIgnored(directory) {
       content = fs.readFileSync(gitignorePath, 'utf-8');
     }
     const lines = content.split(/\r?\n/).map((l) => l.trim());
-    if (!lines.includes('history.json')) {
+    const toAdd = ['history.json', 'meta.json'].filter((f) => !lines.includes(f));
+    if (toAdd.length > 0) {
       const separator = content.length > 0 && !content.endsWith('\n') ? '\n' : '';
       fs.writeFileSync(
         gitignorePath,
-        content + separator + '\n# Fetchy request history - local only, never commit\nhistory.json\n',
+        content + separator + '\n# Fetchy request history - local only, never commit\n' + toAdd.join('\n') + '\n',
         'utf-8'
       );
     }
@@ -186,7 +187,7 @@ function register(ipcMain, deps) {
       if (!fs.existsSync(gitignorePath)) {
         fs.writeFileSync(
           gitignorePath,
-          '# Fetchy secrets - never commit\n.secrets/\nai-secrets.json\nai-secrets.enc\nfetchy-secrets.json\nfetchy-secrets.enc\n\n# Fetchy request history - local only, never commit\nhistory.json\n\n# OS files\n.DS_Store\nThumbs.db\n',
+          '# Fetchy secrets - never commit\n.secrets/\nai-secrets.json\nai-secrets.enc\nfetchy-secrets.json\nfetchy-secrets.enc\n\n# Fetchy request history - local only, never commit\nhistory.json\nmeta.json\n\n# OS files\n.DS_Store\nThumbs.db\n',
           'utf-8'
         );
       } else {
