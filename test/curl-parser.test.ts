@@ -42,6 +42,58 @@ describe('parseCurlCommand — basic', () => {
     expect(result).not.toBeNull();
     expect(result!.url).toBe('https://api.example.com/data');
   });
+
+  it('handles URL where %27 (encoded quote) acts as the closing single quote', () => {
+    // Some tools URL-encode the closing quote instead of emitting a literal '
+    // e.g. curl 'https://example.com/path?param=value%27 --header 'X-Foo: bar'
+    // Without the fix, "param" gets value "value' --header" instead of "value'"
+    const cmd = `curl --location --request PUT 'https://example.com/resource?rawConfig=true%27 \\
+--header 'X-Tenant: 12345' \\
+--header 'Content-Type: application/json'`;
+    const result = parseCurlCommand(cmd);
+    expect(result).not.toBeNull();
+    // query params are extracted from URL and stored separately
+    expect(result!.url).toBe('https://example.com/resource');
+    const rawConfigParam = result!.params.find(p => p.key === 'rawConfig');
+    expect(rawConfigParam?.value).toBe('true'); // %27 was the closing shell quote, not part of the value
+    const tenant = result!.headers.find(h => h.key === 'X-Tenant');
+    expect(tenant?.value).toBe('12345');
+  });
+
+  it('parses real-world PUT with %27-terminated URL, Bearer JWT, and JSON body', () => {
+    // Regression: URL ends with %27 (URL-encoded ') instead of a literal closing quote.
+    // This caused the query param rawConfig to absorb " --header" into its value.
+    const JWT = 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0LXVzZXIifQ.dummy-signature';
+    const cmd =
+      `curl --location --request PUT 'https://idp.internal.example.com/identity-providers/ae42a505-cbd8-4a13-b171-d1d73de72b93?rawConfig=true%27 \\\n` +
+      `--header 'Authorization: Bearer ${JWT}' \\\n` +
+      `--header 'X-Identity-Zone-Id: 1000010149' \\\n` +
+      `--header 'Content-Type: application/json' \\\n` +
+      `--data '{"id":"ae42a505-cbd8-4a13-b171-d1d73de72b93","active":true}'`;
+
+    const result = parseCurlCommand(cmd);
+    expect(result).not.toBeNull();
+
+    // Method and URL base
+    expect(result!.method).toBe('PUT');
+    expect(result!.url).toBe('https://idp.internal.example.com/identity-providers/ae42a505-cbd8-4a13-b171-d1d73de72b93');
+
+    // Query param must be rawConfig=true' — NOT "true' --header ..."
+    const rawConfigParam = result!.params.find(p => p.key === 'rawConfig');
+    expect(rawConfigParam).toBeDefined();
+    expect(rawConfigParam!.value).toBe('true');
+
+    // Bearer token extracted into auth, not left as a header
+    expect(result!.auth.type).toBe('bearer');
+    expect(result!.auth.bearer!.token).toBe(JWT);
+
+    // X-Identity-Zone-Id header present
+    const zoneHeader = result!.headers.find(h => h.key === 'X-Identity-Zone-Id');
+    expect(zoneHeader?.value).toBe('1000010149');
+
+    // JSON body
+    expect(result!.body.type).toBe('json');
+  });
 });
 
 // ─── HTTP methods ────────────────────────────────────────────────────────────

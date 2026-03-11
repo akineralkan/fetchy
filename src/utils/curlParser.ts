@@ -30,6 +30,9 @@ export const parseCurlCommand = (curlCommand: string): ApiRequest | null => {
     // Helper to extract quoted strings
     const extractQuotedString = (str: string, startIndex: number): { value: string; endIndex: number } => {
       const quote = str[startIndex];
+      // %27 is URL-encoded ' and %22 is URL-encoded " — treat them as closing quotes
+      // when they appear inside the matching quoted string (e.g. curl URLs ending in %27)
+      const encodedQuote = quote === "'" ? '%27' : quote === '"' ? '%22' : null;
       let endIndex = startIndex + 1;
       let value = '';
       let escaped = false;
@@ -43,6 +46,9 @@ export const parseCurlCommand = (curlCommand: string): ApiRequest | null => {
           escaped = true;
         } else if (char === quote) {
           return { value, endIndex: endIndex + 1 };
+        } else if (encodedQuote && str.startsWith(encodedQuote, endIndex)) {
+          // URL-encoded closing quote — treat as the closing delimiter, do not include in value
+          return { value, endIndex: endIndex + encodedQuote.length };
         } else {
           value += char;
         }
