@@ -1,5 +1,6 @@
-import { X, Download, AlertCircle, CheckCircle, Loader2, RotateCw } from 'lucide-react';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { X, Download, AlertCircle, CheckCircle, Loader2, RotateCw, ChevronDown, ChevronUp } from 'lucide-react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { compareVersions, parseReleaseEntries, type ReleaseEntry } from '../utils/updateUtils';
 
 interface UpdateModalProps {
   onClose: () => void;
@@ -23,9 +24,10 @@ interface DownloadProgress {
 
 interface UpdateInfo {
   version?: string;
-  releaseNotes?: string | { note: string }[] | null;
+  releaseNotes?: string | { version: string; note: string }[] | null;
   releaseName?: string;
   releaseDate?: string;
+  intermediateReleases?: ReleaseEntry[];
 }
 
 const CURRENT_VERSION = __APP_VERSION__;
@@ -96,17 +98,31 @@ export default function UpdateModal({ onClose }: UpdateModalProps) {
     if (!isElectron) {
       // Fallback for browser dev mode – use GitHub API directly
       try {
-        const res = await fetch('https://api.github.com/repos/AkinerAlkan94/fetchy/releases/latest');
+        const res = await fetch('https://api.github.com/repos/AkinerAlkan94/fetchy/releases?per_page=50');
         if (!res.ok) throw new Error('Failed to fetch release info');
-        const release = await res.json();
-        const latest = (release.tag_name ?? '').replace(/^v/, '');
+        const releases = await res.json();
+        if (!Array.isArray(releases) || releases.length === 0) throw new Error('No releases found');
+        // GitHub returns newest first
+        const latest = releases[0];
+        const latestVersion = (latest.tag_name ?? '').replace(/^v/, '');
         const current = CURRENT_VERSION.replace(/^v/, '');
-        const hasUpdate = compareVersions(current, latest);
+        const hasUpdate = compareVersions(current, latestVersion);
+        // All versions newer than current but older than latest (i.e. the skipped ones)
+        const intermediate: ReleaseEntry[] = releases
+          .slice(1)
+          .filter((r: any) => compareVersions(current, (r.tag_name ?? '').replace(/^v/, '')))
+          .map((r: any) => ({
+            version: (r.tag_name ?? '').replace(/^v/, ''),
+            note: r.body ?? '',
+            releaseName: r.name,
+            releaseDate: r.published_at,
+          }));
         setUpdateInfo({
-          version: release.tag_name,
-          releaseNotes: release.body,
-          releaseName: release.name,
-          releaseDate: release.published_at,
+          version: latestVersion,
+          releaseNotes: latest.body,
+          releaseName: latest.name,
+          releaseDate: latest.published_at,
+          intermediateReleases: intermediate,
         });
         setStatus(hasUpdate ? 'available' : 'not-available');
       } catch (err) {
@@ -152,14 +168,26 @@ export default function UpdateModal({ onClose }: UpdateModalProps) {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
-  const releaseNotes = (() => {
-    if (!updateInfo?.releaseNotes) return null;
-    if (typeof updateInfo.releaseNotes === 'string') return updateInfo.releaseNotes;
-    if (Array.isArray(updateInfo.releaseNotes)) {
-      return updateInfo.releaseNotes.map((n: any) => (typeof n === 'string' ? n : n.note)).join('\n');
-    }
-    return null;
-  })();
+  const releaseEntries = useMemo((): ReleaseEntry[] => {
+    if (!updateInfo) return [];
+    const entries = parseReleaseEntries(updateInfo.releaseNotes, {
+      version: updateInfo.version,
+      releaseName: updateInfo.releaseName,
+      releaseDate: updateInfo.releaseDate,
+      intermediateReleases: updateInfo.intermediateReleases,
+    });
+    if (entries.length > 0) return entries;
+    // updateInfo exists but no release notes — show version badge with empty note
+    return [{
+      version: (updateInfo.version ?? '').replace(/^v/, ''),
+      note: '',
+      releaseName: updateInfo.releaseName,
+      releaseDate: updateInfo.releaseDate,
+    }];
+  }, [updateInfo]);
+
+  const latestEntry = releaseEntries[0] ?? null;
+  const intermediateEntries = releaseEntries.slice(1);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
@@ -205,33 +233,37 @@ export default function UpdateModal({ onClose }: UpdateModalProps) {
           {/* Update available */}
           {status === 'available' && updateInfo && (
             <div className="space-y-4">
-              <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg flex items-start gap-3 text-green-400">
+              <div className="p-4 bg-fetchy-success/10 border border-fetchy-success/25 rounded-lg flex items-start gap-3 text-fetchy-success">
                 <Download size={20} className="shrink-0 mt-0.5" />
                 <div className="flex-1">
                   <p className="font-medium mb-1">New version available!</p>
                   <p className="text-sm">
-                    Version {updateInfo.version} is ready. You are currently on v{CURRENT_VERSION}.
+                    v{latestEntry?.version} is ready. You are currently on v{CURRENT_VERSION}.
                   </p>
                 </div>
               </div>
 
-              {releaseNotes && (
+              {/* Latest release notes */}
+              {latestEntry?.note && (
                 <div>
-                  {updateInfo.releaseName && (
-                    <h3 className="font-medium text-fetchy-text mb-2">
-                      Release: {updateInfo.releaseName}
-                    </h3>
-                  )}
-                  {updateInfo.releaseDate && (
-                    <div className="text-sm text-fetchy-text-muted mb-2">
-                      Released on {new Date(updateInfo.releaseDate).toLocaleDateString()}
-                    </div>
+                  <h3 className="text-sm font-medium text-fetchy-text mb-1.5">
+                    What's new in v{latestEntry.version}
+                  </h3>
+                  {latestEntry.releaseDate && (
+                    <p className="text-xs text-fetchy-text-muted mb-2">
+                      Released {new Date(latestEntry.releaseDate).toLocaleDateString()}
+                    </p>
                   )}
                   <div
-                    className="bg-fetchy-bg border border-fetchy-border rounded p-4 max-h-64 overflow-y-auto text-sm text-fetchy-text release-notes"
-                    dangerouslySetInnerHTML={{ __html: releaseNotes }}
+                    className="bg-fetchy-bg border border-fetchy-border rounded p-4 max-h-48 overflow-y-auto text-sm text-fetchy-text release-notes"
+                    dangerouslySetInnerHTML={{ __html: latestEntry.note }}
                   />
                 </div>
+              )}
+
+              {/* Intermediate releases (when skipping multiple versions) */}
+              {intermediateEntries.length > 0 && (
+                <IntermediateAccordion entries={intermediateEntries} currentVersion={CURRENT_VERSION} />
               )}
 
               <button
@@ -271,7 +303,7 @@ export default function UpdateModal({ onClose }: UpdateModalProps) {
           {/* Downloaded – ready to install */}
           {status === 'downloaded' && (
             <div className="space-y-4">
-              <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg flex items-start gap-3 text-green-400">
+              <div className="p-4 bg-fetchy-success/10 border border-fetchy-success/25 rounded-lg flex items-start gap-3 text-fetchy-success">
                 <CheckCircle size={20} className="shrink-0 mt-0.5" />
                 <div>
                   <p className="font-medium mb-1">Update downloaded!</p>
@@ -293,7 +325,7 @@ export default function UpdateModal({ onClose }: UpdateModalProps) {
 
           {/* Up to date */}
           {status === 'not-available' && (
-            <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg flex items-start gap-3 text-green-400">
+            <div className="p-4 bg-fetchy-success/10 border border-fetchy-success/25 rounded-lg flex items-start gap-3 text-fetchy-success">
               <CheckCircle size={20} className="shrink-0 mt-0.5" />
               <div>
                 <p className="font-medium mb-1">You're up to date!</p>
@@ -332,13 +364,50 @@ export default function UpdateModal({ onClose }: UpdateModalProps) {
   );
 }
 
-function compareVersions(current: string, latest: string): boolean {
-  const c = current.replace(/^v/, '').split('.').map(Number);
-  const l = latest.replace(/^v/, '').split('.').map(Number);
-  for (let i = 0; i < Math.max(c.length, l.length); i++) {
-    if ((l[i] || 0) > (c[i] || 0)) return true;
-    if ((l[i] || 0) < (c[i] || 0)) return false;
-  }
-  return false;
+interface IntermediateAccordionProps {
+  entries: ReleaseEntry[];
+  currentVersion: string;
 }
+
+function IntermediateAccordion({ entries, currentVersion }: IntermediateAccordionProps) {
+  const [open, setOpen] = useState(false);
+  const oldestVersion = entries[entries.length - 1]?.version ?? '';
+  return (
+    <div className="border border-fetchy-border rounded-lg overflow-hidden">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between px-4 py-2.5 bg-fetchy-sidebar hover:bg-fetchy-border/50 transition-colors text-left"
+      >
+        <span className="text-sm text-fetchy-text-muted">
+          Changes since v{currentVersion}{' '}
+          <span className="opacity-60">(v{oldestVersion} – v{entries[0]?.version})</span>
+        </span>
+        {open ? (
+          <ChevronUp size={14} className="text-fetchy-text-muted shrink-0" />
+        ) : (
+          <ChevronDown size={14} className="text-fetchy-text-muted shrink-0" />
+        )}
+      </button>
+      {open && (
+        <div className="divide-y divide-fetchy-border/50 max-h-60 overflow-y-auto">
+          {entries.map((e, i) => (
+            <div key={i} className="px-4 py-3">
+              <p className="text-xs font-semibold text-fetchy-text-muted mb-1.5">v{e.version}</p>
+              {e.note ? (
+                <div
+                  className="text-sm text-fetchy-text release-notes"
+                  dangerouslySetInnerHTML={{ __html: e.note }}
+                />
+              ) : (
+                <p className="text-xs text-fetchy-text-muted italic">No release notes</p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 

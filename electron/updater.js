@@ -35,9 +35,10 @@ function getPostUpdateFilePath() {
   return path.join(app.getPath('userData'), 'post-update.json');
 }
 
-function savePostUpdateInfo(info) {
+function savePostUpdateInfo(info, previousVersion) {
   try {
     const data = {
+      previousVersion: previousVersion ?? null,
       version: info?.version ?? null,
       releaseName: info?.releaseName ?? null,
       releaseNotes: info?.releaseNotes ?? null,
@@ -113,7 +114,8 @@ ipcMain.handle('updater-download', async () => {
 ipcMain.handle('updater-install', () => {
   // Persist update info so we can show the banner after restart
   if (lastUpdateInfo) {
-    savePostUpdateInfo(lastUpdateInfo);
+    // Capture the version before quitting so the banner can show cumulative changes
+    savePostUpdateInfo(lastUpdateInfo, app.getVersion());
   }
   // Quit the app and install the update silently (no NSIS installer window)
   // isSilent = true  → no installer UI shown
