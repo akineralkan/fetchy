@@ -656,6 +656,29 @@ export default function GitSettingsTab({ workspace, onWorkspaceUpdate, onOpenCon
     );
   }
 
+  // Git status returned an error (e.g. directory missing, git command failed)
+  if (status.success === false) {
+    return (
+      <div className='flex flex-col items-center justify-center py-12 gap-3'>
+        <AlertCircle size={28} className='text-red-400' />
+        <p className='text-sm text-white'>Git status unavailable</p>
+        {status.error && (
+          <p className='text-[11px] text-gray-400 text-center max-w-xs font-mono bg-[#0f0f1a] px-3 py-2 rounded border border-[#2d2d44] break-all'>
+            {status.error}
+          </p>
+        )}
+        <button
+          onClick={refreshStatus}
+          disabled={isRefreshing}
+          className='flex items-center gap-1.5 px-3 py-1.5 text-xs bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors disabled:opacity-50'
+        >
+          <RefreshCw size={12} className={isRefreshing ? 'animate-spin' : ''} />
+          Retry
+        </button>
+      </div>
+    );
+  }
+
   const isRepo = status?.isRepo === true;
   const hasRemote = !!status?.remoteUrl;
   const totalChanges = (staged.length + unstaged.length);
@@ -943,18 +966,24 @@ export default function GitSettingsTab({ workspace, onWorkspaceUpdate, onOpenCon
           </div>
 
           {/* ── Remote URL ── */}
-          <div className='flex items-center gap-2 px-3 py-1.5 bg-[#0f0f1a] rounded border border-[#2d2d44]'>
-            <Link2 size={11} className='text-gray-500 shrink-0' />
+          <div className={`flex items-center gap-2 px-3 py-1.5 rounded border ${
+            hasRemote ? 'bg-[#0f0f1a] border-[#2d2d44]' : 'bg-yellow-500/5 border-yellow-500/30'
+          }`}>
+            <Link2 size={11} className={hasRemote ? 'text-gray-500 shrink-0' : 'text-yellow-500 shrink-0'} />
             {hasRemote ? (
               <span className='text-[10px] text-gray-400 font-mono truncate flex-1'>{status?.remoteUrl}</span>
             ) : (
-              <span className='text-[10px] text-gray-500 flex-1'>No remote configured</span>
+              <span className='text-[10px] text-yellow-400/80 flex-1'>No remote — set one to enable Push, Pull &amp; Fetch</span>
             )}
             <button
               onClick={() => setShowRemoteForm(!showRemoteForm)}
-              className='text-[10px] text-purple-400 hover:text-purple-300 transition-colors shrink-0'
+              className={`text-[10px] shrink-0 transition-colors ${
+                hasRemote
+                  ? 'text-purple-400 hover:text-purple-300'
+                  : 'text-yellow-400 hover:text-yellow-300 font-medium'
+              }`}
             >
-              {hasRemote ? 'Edit' : 'Set'}
+              {hasRemote ? 'Edit' : 'Set Remote'}
             </button>
           </div>
           {showRemoteForm && (
