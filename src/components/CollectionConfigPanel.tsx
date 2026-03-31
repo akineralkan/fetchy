@@ -45,7 +45,7 @@ export default function CollectionConfigPanel({ collectionId }: CollectionConfig
   }, []);
 
   const handleSave = useCallback(() => {
-    if (!collection) return;
+    if (!collection || !isModified) return;
     updateCollection(collectionId, {
       variables: localVariables,
       auth: localAuth,
@@ -54,7 +54,7 @@ export default function CollectionConfigPanel({ collectionId }: CollectionConfig
       description: localDescription,
     });
     setIsModified(false);
-  }, [collection, collectionId, localVariables, localAuth, localPreScript, localScript, localDescription, updateCollection]);
+  }, [collection, collectionId, isModified, localVariables, localAuth, localPreScript, localScript, localDescription, updateCollection]);
 
   // Save keyboard shortcut
   useEffect(() => {
@@ -411,10 +411,11 @@ export default function CollectionConfigPanel({ collectionId }: CollectionConfig
         <Tooltip content="Save Collection Settings (Ctrl+S)">
           <button
             onClick={handleSave}
+            disabled={!isModified}
             className={`px-4 py-2 text-sm font-medium transition-colors flex items-center gap-1 ${
               isModified
                 ? 'text-fetchy-accent hover:bg-fetchy-accent/10'
-                : 'text-fetchy-text-muted hover:text-fetchy-text hover:bg-fetchy-border'
+                : 'text-fetchy-text-muted opacity-40 cursor-not-allowed'
             }`}
           >
             <Save size={16} />

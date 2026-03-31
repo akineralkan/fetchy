@@ -113,6 +113,7 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
 
   const handleSave = useCallback(() => {
     if (!request) return;
+    if (!activeTab?.isModified && !activeTab?.isHistoryItem) return;
 
     // If this is a history item, save to special "Request History Rollback" collection
     if (activeTab?.isHistoryItem) {
@@ -562,7 +563,12 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
         <Tooltip content={activeTab?.isHistoryItem ? "Save to Request History Rollback" : "Save Request"}>
           <button
             onClick={handleSave}
-            className="px-4 py-2 text-sm font-medium text-fetchy-text-muted hover:text-fetchy-text hover:bg-fetchy-border transition-colors flex items-center gap-1"
+            disabled={!activeTab?.isModified && !activeTab?.isHistoryItem}
+            className={`px-4 py-2 text-sm font-medium transition-colors flex items-center gap-1 ${
+              activeTab?.isModified || activeTab?.isHistoryItem
+                ? 'text-fetchy-accent hover:bg-fetchy-accent/10'
+                : 'text-fetchy-text-muted opacity-40 cursor-not-allowed'
+            }`}
           >
             <Save size={16} />
             {activeTab?.isHistoryItem ? 'Save to Rollback' : 'Save'}
