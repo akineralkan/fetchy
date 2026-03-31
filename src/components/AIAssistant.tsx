@@ -522,7 +522,7 @@ export function AIRequestToolbar({
       <AIResultModal
         isOpen={scriptModal.open}
         onClose={() => setScriptModal((prev) => ({ ...prev, open: false }))}
-        title={`AI Generated ${scriptModal.type === 'pre-request' ? 'Pre-Request' : 'Test'} Script`}
+        title={`AI Generated ${scriptModal.type === 'pre-request' ? 'Pre-Request' : 'Post-Request'} Script`}
         icon={<Terminal size={18} className='ai-text' />}
         loading={scriptModal.loading}
         error={scriptModal.error}
