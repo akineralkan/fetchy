@@ -531,8 +531,8 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
             { id: 'headers', label: 'Headers', count: request.headers.filter(h => h.enabled).length },
             { id: 'body', label: 'Body', hasContent: request.body.type !== 'none' },
             { id: 'auth', label: 'Auth' },
-            { id: 'preScript', label: 'Pre-Script', hasContent: !!(request.preScript?.trim()) },
-            { id: 'script', label: 'Post-Script', hasContent: !!(request.script?.trim()), status: activeTab?.scriptExecutionStatus },
+            { id: 'preScript', label: 'Pre-Script' },
+            { id: 'script', label: 'Post-Script' },
           ]).map((section) => (
             <button
               key={section.id}
