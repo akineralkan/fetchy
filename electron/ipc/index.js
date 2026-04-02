@@ -10,6 +10,7 @@ const secretsHandler = require('./secretsHandler');
 const httpHandler = require('./httpHandler');
 const aiHandler = require('./aiHandler');
 const workspaceHandler = require('./workspaceHandler');
+const jiraHandler = require('./jiraHandler');
 
 module.exports = {
   fileHandlers,
@@ -17,4 +18,5 @@ module.exports = {
   httpHandler,
   aiHandler,
   workspaceHandler,
+  jiraHandler,
 };

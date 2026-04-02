@@ -151,6 +151,44 @@ function register(ipcMain, deps) {
       return false;
     }
   });
+
+  // ─── Jira Secrets ────────────────────────────────────────────────────────
+
+  ipcMain.handle('read-jira-secrets', async () => {
+    try {
+      const secretsDir = getEffectiveSecretsDirectory();
+      return readEncryptedSecrets(secretsDir, 'jira-secrets', cryptoDeps);
+    } catch (error) {
+      console.error('Error reading Jira secrets:', error);
+      return null;
+    }
+  });
+
+  ipcMain.handle('write-jira-secrets', async (event, data) => {
+    try {
+      const content = requireString(data?.content, 'content', MAX_SECRETS_SIZE);
+      const secretsDir = getEffectiveSecretsDirectory();
+      writeEncryptedSecrets(secretsDir, 'jira-secrets', content, cryptoDeps);
+      return true;
+    } catch (error) {
+      console.error('Error writing Jira secrets:', error);
+      return false;
+    }
+  });
+
+  ipcMain.handle('delete-jira-secrets', async () => {
+    try {
+      const secretsDir = getEffectiveSecretsDirectory();
+      const encPath = path.join(secretsDir, 'jira-secrets.enc');
+      const jsonPath = path.join(secretsDir, 'jira-secrets.json');
+      if (fs.existsSync(encPath)) fs.unlinkSync(encPath);
+      if (fs.existsSync(jsonPath)) fs.unlinkSync(jsonPath);
+      return true;
+    } catch (error) {
+      console.error('Error deleting Jira secrets:', error);
+      return false;
+    }
+  });
 }
 
 module.exports = { register, readEncryptedSecrets, writeEncryptedSecrets };

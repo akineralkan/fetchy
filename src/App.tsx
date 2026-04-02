@@ -52,7 +52,7 @@ function App() {
     panelLayout,
     togglePanelLayout,
   } = useAppStore();
-  const { loadPreferences, loadAISecrets } = usePreferencesStore();
+  const { loadPreferences, loadAISecrets, loadJiraSecrets } = usePreferencesStore();
   const { workspaces, activeWorkspaceId, isLoading: workspacesLoading, loadWorkspaces } = useWorkspacesStore();
   const activeWorkspace = workspaces.find((w) => w.id === activeWorkspaceId) ?? null;
   const [tabResponses, setTabResponses] = useState<Record<string, TabResponseData>>({});
@@ -63,7 +63,7 @@ function App() {
   const [showEnvironmentModal, setShowEnvironmentModal] = useState(false);
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
-  const [settingsInitialTab, setSettingsInitialTab] = useState<'general' | 'ai'>('general');
+  const [settingsInitialTab, setSettingsInitialTab] = useState<'general' | 'ai' | 'integrations'>('general');
   const [showWorkspacesModal, setShowWorkspacesModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [updateAvailable, setUpdateAvailable] = useState(false);
@@ -160,11 +160,14 @@ function App() {
     prevTabIdsRef.current = currentTabIds;
   }, [tabs]);
 
-  // Load preferences, AI secrets, and workspaces on mount
+  // Load preferences, AI secrets, Jira secrets, and workspaces on mount
   useEffect(() => {
-    loadPreferences().then(() => loadAISecrets());
+    loadPreferences().then(() => {
+      loadAISecrets();
+      loadJiraSecrets();
+    });
     loadWorkspaces();
-  }, [loadPreferences, loadAISecrets, loadWorkspaces]);
+  }, [loadPreferences, loadAISecrets, loadJiraSecrets, loadWorkspaces]);
 
   // Listen for custom event to open AI settings directly
   useEffect(() => {

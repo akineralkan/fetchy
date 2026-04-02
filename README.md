@@ -140,6 +140,29 @@ Variables in the request are resolved before generating the snippet.
 - **Export & Import Workspaces** - Back up and restore a full workspace to/from a single JSON file
 - **Workspace Management** - Add, rename, remove, export, and import workspaces from the Settings panel
 
+### 🤖 AI Assistant
+
+- **AI-Powered Analysis** - Analyze API responses using local or remote AI providers (Ollama, OpenAI, Azure OpenAI, Google Gemini)
+- **Bug Report Generation** - Automatically generate detailed bug reports from failed API responses
+- **One-Click Jira Bug Creation** - Create Jira issues directly from AI-generated bug reports with a single click
+- **Configurable AI Providers** - Choose between local (Ollama) and cloud-based AI providers with customizable models and endpoints
+
+### 🐛 Jira Integration
+
+- **Direct Bug Creation** - Create Jira bugs from AI-generated reports without leaving Fetchy
+- **Secure Token Storage** - Personal Access Token stored securely via OS credential manager
+- **Field Discovery** - Auto-detect required and optional fields from Jira's createmeta API
+- **Custom Field Mapping** - Map any Jira custom field with support for 5 field types:
+  - `text` — plain string values
+  - `option` — single-select fields (`{value: "..."}`)
+  - `array` — multi-value fields (comma-separated)
+  - `insight` — Jira Assets/Insight object keys (`[{key: "..."}]`)
+  - `raw` — arbitrary JSON for exotic field formats
+- **Insight Object Search** - Search Jira Assets objects with live filtering and debounce
+- **Map Required Fields** - One-click mapping of all required fields from field discovery
+- **Connection Testing** - Verify Jira connectivity before creating issues
+- **Clickable Issue Links** - Created issues open directly in system browser
+
 ### ⌨️ Keyboard Shortcuts
 
 | Shortcut | Action |
@@ -292,7 +315,7 @@ After building, you'll find the installers in the `release` folder:
 
 ## 🛠️ Technology Stack
 
-- **Frontend**: React 18 with TypeScript
+- **Frontend**: React 19 with TypeScript
 - **UI Styling**: Tailwind CSS
 - **State Management**: Zustand
 - **Code Editor**: CodeMirror 6
@@ -345,6 +368,8 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 - [x] Workspaces with separate secrets storage
 - [x] Response assertions
 - [x] Request chaining
+- [x] AI Assistant (Ollama, OpenAI, Azure OpenAI, Gemini)
+- [x] Jira bug creation from AI reports (with Assets/Insight field support)
 - [ ] Request documentation/notes
 
 ---

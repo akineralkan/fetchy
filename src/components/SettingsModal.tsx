@@ -1,28 +1,36 @@
-import { useState } from 'react';
-import { X, Layers, Bot, Eye, EyeOff, Check, Loader2, AlertCircle, ShieldAlert, Info } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { X, Layers, Bot, Eye, EyeOff, Check, Loader2, AlertCircle, ShieldAlert, Info, Link2, Plus, Trash2, Search } from 'lucide-react';
 import { usePreferencesStore } from '../store/preferencesStore';
 import { useAppStore } from '../store/appStore';
 import { useWorkspacesStore } from '../store/workspacesStore';
 import { PROVIDER_META, sendAIRequest } from '../utils/aiProvider';
-import type { AIProvider, AISettings } from '../types';
+import type { AIProvider, AISettings, JiraFieldMapping } from '../types';
 
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onOpenWorkspaces: () => void;
-  initialTab?: 'general' | 'ai';
+  initialTab?: 'general' | 'ai' | 'integrations';
 }
 
 export default function SettingsModal({ isOpen, onClose, onOpenWorkspaces, initialTab }: SettingsModalProps) {
-  const { preferences, savePreferences, aiSettings: ai, updateAISettings } = usePreferencesStore();
+  const { preferences, savePreferences, aiSettings: ai, updateAISettings, jiraSettings, jiraPat, updateJiraSettings, updateJiraPat } = usePreferencesStore();
   const { panelLayout, setPanelLayout } = useAppStore();
   const { workspaces, activeWorkspaceId } = useWorkspacesStore();
   const activeWorkspace = workspaces.find((w) => w.id === activeWorkspaceId) ?? null;
 
-  const [activeTab, setActiveTab] = useState<'general' | 'ai'>(initialTab ?? 'general');
+  const [activeTab, setActiveTab] = useState<'general' | 'ai' | 'integrations'>(initialTab ?? 'general');
   const [showApiKey, setShowApiKey] = useState(false);
+  const [showJiraPat, setShowJiraPat] = useState(false);
   const [testStatus, setTestStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [testMessage, setTestMessage] = useState('');
+  const [jiraTestStatus, setJiraTestStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [jiraTestMessage, setJiraTestMessage] = useState('');
+  const [fieldMeta, setFieldMeta] = useState<Record<string, { name: string; required: boolean; type: string; custom: string | null; allowedValues: Array<{ id: string; name?: string; value?: string }> | null }> | null>(null);
+  const [fieldMetaLoading, setFieldMetaLoading] = useState(false);
+  const [fieldMetaError, setFieldMetaError] = useState('');
+  const [insightSearch, setInsightSearch] = useState<{ mappingId: string; query: string; loading: boolean; results: Array<{ displayName: string; value: string }>; error: string } | null>(null);
+  const insightDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const providerMeta = PROVIDER_META[ai.provider];
 
@@ -60,6 +68,164 @@ export default function SettingsModal({ isOpen, onClose, onOpenWorkspaces, initi
     setTimeout(() => setTestStatus('idle'), 5000);
   };
 
+  const handleJiraTestConnection = async () => {
+    setJiraTestStatus('loading');
+    setJiraTestMessage('');
+    try {
+      if (window.electronAPI?.jiraTestConnection) {
+        const result = await window.electronAPI.jiraTestConnection({ baseUrl: jiraSettings.baseUrl, pat: jiraPat });
+        if (result.success) {
+          setJiraTestStatus('success');
+          setJiraTestMessage(result.message);
+        } else {
+          setJiraTestStatus('error');
+          setJiraTestMessage(result.message);
+        }
+      } else {
+        setJiraTestStatus('error');
+        setJiraTestMessage('Jira integration requires the desktop app');
+      }
+    } catch (error) {
+      setJiraTestStatus('error');
+      setJiraTestMessage('Connection failed');
+    }
+    setTimeout(() => setJiraTestStatus('idle'), 5000);
+  };
+
+  const handleAddFieldMapping = () => {
+    const newMapping: JiraFieldMapping = {
+      id: Date.now().toString(),
+      fieldName: '',
+      customFieldId: '',
+      fieldType: 'text',
+      defaultValue: '',
+    };
+    updateJiraSettings({ fieldMappings: [...jiraSettings.fieldMappings, newMapping] });
+  };
+
+  const handleUpdateFieldMapping = (id: string, updates: Partial<JiraFieldMapping>) => {
+    updateJiraSettings({
+      fieldMappings: jiraSettings.fieldMappings.map((m) => (m.id === id ? { ...m, ...updates } : m)),
+    });
+  };
+
+  const handleRemoveFieldMapping = (id: string) => {
+    updateJiraSettings({ fieldMappings: jiraSettings.fieldMappings.filter((m) => m.id !== id) });
+  };
+
+  const handleMapRequiredFields = () => {
+    if (!fieldMeta) return;
+    const existingIds = new Set(jiraSettings.fieldMappings.map((m) => m.customFieldId));
+    const newMappings: JiraFieldMapping[] = [];
+
+    for (const [id, meta] of Object.entries(fieldMeta)) {
+      if (!id.startsWith('customfield_') || !meta.required || existingIds.has(id)) continue;
+      // Auto-detect field type from Jira schema type
+      let fieldType: 'text' | 'option' | 'array' | 'insight' | 'raw' = 'text';
+      if (meta.type === 'option') fieldType = 'option';
+      else if (meta.type === 'array') fieldType = 'array';
+      else if (meta.type === 'any') fieldType = 'insight';
+      else if (meta.allowedValues && meta.allowedValues.length > 0) fieldType = 'option';
+
+      newMappings.push({
+        id: `${Date.now()}-${id}`,
+        fieldName: meta.name,
+        customFieldId: id,
+        fieldType,
+        defaultValue: '',
+      });
+    }
+
+    if (newMappings.length > 0) {
+      updateJiraSettings({ fieldMappings: [...jiraSettings.fieldMappings, ...newMappings] });
+    }
+  };
+
+  const handleAddFieldFromMeta = (id: string, meta: { name: string; type: string; allowedValues: Array<{ id: string; name?: string; value?: string }> | null }) => {
+    const existingIds = new Set(jiraSettings.fieldMappings.map((m) => m.customFieldId));
+    if (existingIds.has(id)) return;
+    let fieldType: 'text' | 'option' | 'array' | 'insight' | 'raw' = 'text';
+    if (meta.type === 'option') fieldType = 'option';
+    else if (meta.type === 'array') fieldType = 'array';
+    else if (meta.type === 'any') fieldType = 'insight';
+    else if (meta.allowedValues && meta.allowedValues.length > 0) fieldType = 'option';
+    updateJiraSettings({
+      fieldMappings: [...jiraSettings.fieldMappings, {
+        id: `${Date.now()}-${id}`,
+        fieldName: meta.name,
+        customFieldId: id,
+        fieldType,
+        defaultValue: '',
+      }],
+    });
+  };
+
+  const handleFetchFieldMeta = async () => {
+    if (!window.electronAPI?.jiraGetCreateMeta || !jiraSettings.baseUrl || !jiraSettings.projectKey) return;
+    setFieldMetaLoading(true);
+    setFieldMetaError('');
+    setFieldMeta(null);
+    try {
+      const result = await window.electronAPI.jiraGetCreateMeta({
+        baseUrl: jiraSettings.baseUrl,
+        projectKey: jiraSettings.projectKey,
+        issueType: jiraSettings.issueType || 'Bug',
+      });
+      if (result.success && result.fields) {
+        setFieldMeta(result.fields);
+      } else {
+        setFieldMetaError(result.error || 'Failed to fetch field metadata');
+      }
+    } catch {
+      setFieldMetaError('Failed to fetch field metadata');
+    } finally {
+      setFieldMetaLoading(false);
+    }
+  };
+
+  const handleSearchInsight = async (mappingId: string, customFieldId: string, query: string) => {
+    if (!window.electronAPI?.jiraSearchInsightObjects || !jiraSettings.baseUrl || !customFieldId) return;
+    const trimmed = query.trim();
+    setInsightSearch((prev) => prev ? { ...prev, mappingId, query, loading: true, error: '' } : { mappingId, query, loading: true, results: [], error: '' });
+    try {
+      const result = await window.electronAPI.jiraSearchInsightObjects({
+        baseUrl: jiraSettings.baseUrl,
+        customFieldId,
+        query: trimmed,
+      });
+      if (result.success) {
+        const cleaned = (result.objects || []).map((o) => {
+          const cleanDisplay = o.displayName.replace(/<\/?b>/gi, '');
+          const cleanValue = o.value.replace(/<\/?b>/gi, '');
+          // Extract the Insight key from values like "DSA (GCE-38216)" → "GCE-38216"
+          // Try multiple patterns: "(KEY)" at end, or standalone "KEY-123" pattern
+          const keyMatch = cleanValue.match(/\(([A-Z]+-\d+)\)/) || cleanDisplay.match(/\(([A-Z]+-\d+)\)/);
+          const insightKey = keyMatch ? keyMatch[1] : cleanValue;
+          return { displayName: cleanDisplay, value: insightKey };
+        });
+        setInsightSearch((prev) => prev ? { ...prev, loading: false, results: cleaned } : null);
+      } else {
+        setInsightSearch((prev) => prev ? { ...prev, loading: false, error: result.error || 'Search failed' } : null);
+      }
+    } catch {
+      setInsightSearch((prev) => prev ? { ...prev, loading: false, error: 'Search failed' } : null);
+    }
+  };
+
+  const handleSelectInsightObject = (mappingId: string, objectKey: string) => {
+    const mapping = jiraSettings.fieldMappings.find((m) => m.id === mappingId);
+    if (!mapping) return;
+    // Extract key from "Name (KEY-123)" format if not already extracted
+    const keyMatch = objectKey.match(/\(([A-Z]+-\d+)\)/);
+    const cleanKey = keyMatch ? keyMatch[1] : objectKey;
+    const current = mapping.defaultValue;
+    const keys = current ? current.split(',').map((k) => k.trim()).filter(Boolean) : [];
+    if (!keys.includes(cleanKey)) {
+      keys.push(cleanKey);
+    }
+    handleUpdateFieldMapping(mappingId, { defaultValue: keys.join(', ') });
+  };
+
   if (!isOpen) return null;
   return (
     <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50'>
@@ -72,6 +238,7 @@ export default function SettingsModal({ isOpen, onClose, onOpenWorkspaces, initi
         <div className='flex border-b border-[#2d2d44]'>
           <button onClick={() => setActiveTab('general')} className={`px-4 py-2.5 text-sm font-medium transition-colors ${activeTab === 'general' ? 'text-purple-400 border-b-2 border-purple-400' : 'text-gray-400 hover:text-white'}`}>General</button>
           <button onClick={() => setActiveTab('ai')} className={`px-4 py-2.5 text-sm font-medium transition-colors flex items-center gap-1.5 ${activeTab === 'ai' ? 'text-purple-400 border-b-2 border-purple-400' : 'text-gray-400 hover:text-white'}`}><Bot size={14} />AI Assistant</button>
+          <button onClick={() => setActiveTab('integrations')} className={`px-4 py-2.5 text-sm font-medium transition-colors flex items-center gap-1.5 ${activeTab === 'integrations' ? 'text-purple-400 border-b-2 border-purple-400' : 'text-gray-400 hover:text-white'}`}><Link2 size={14} />Integrations</button>
         </div>
         <div className='p-6 space-y-6 overflow-y-auto max-h-[calc(80vh-160px)]'>
           {activeTab === 'general' ? (
@@ -362,6 +529,298 @@ export default function SettingsModal({ isOpen, onClose, onOpenWorkspaces, initi
                     <div className='flex items-center gap-1.5 text-red-400 text-sm'>
                       <AlertCircle size={14} />
                       <span className='truncate max-w-[280px]'>{testMessage}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : activeTab === 'integrations' ? (
+            /* ─── Integrations Tab ─── */
+            <div className='space-y-5'>
+              {/* Jira Section Header */}
+              <div>
+                <h3 className='text-sm font-medium text-white uppercase tracking-wider'>Jira Integration</h3>
+                <p className='text-xs text-gray-500 mt-1'>Connect to Jira to create bug reports directly from AI-generated reports</p>
+              </div>
+
+              {/* Enable toggle */}
+              <div className='flex items-center justify-between'>
+                <div>
+                  <label className='text-sm text-gray-300 font-medium'>Enable Jira Integration</label>
+                  <p className='text-xs text-gray-500'>Show "Create Jira Bug" button in bug reports</p>
+                </div>
+                <input type='checkbox' checked={jiraSettings.enabled} onChange={(e) => updateJiraSettings({ enabled: e.target.checked })} className='w-4 h-4 rounded border-[#2d2d44] bg-[#0f0f1a] text-purple-500 focus:ring-purple-500' />
+              </div>
+
+              <div className='border-t border-[#2d2d44]' />
+
+              {/* Base URL (hardcoded) */}
+              <div className='space-y-1.5'>
+                <label className='text-sm text-gray-300 font-medium'>Jira Base URL</label>
+                <div className='w-full px-3 py-2 bg-[#0a0a14] border border-[#2d2d44] rounded text-gray-400 text-sm font-mono'>
+                  {jiraSettings.baseUrl || 'https://jira.si.siemens.cloud'}
+                </div>
+              </div>
+
+              {/* PAT */}
+              <div className='space-y-1.5'>
+                <label className='text-sm text-gray-300 font-medium'>Personal Access Token (PAT)</label>
+                <div className='relative'>
+                  <input
+                    type={showJiraPat ? 'text' : 'password'}
+                    value={jiraPat}
+                    onChange={(e) => updateJiraPat(e.target.value)}
+                    placeholder='Enter your Jira PAT'
+                    className='w-full px-3 py-2 pr-10 bg-[#0f0f1a] border border-[#2d2d44] rounded text-white text-sm focus:outline-none focus:border-purple-500 font-mono'
+                  />
+                  <button onClick={() => setShowJiraPat(!showJiraPat)} className='absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300'>
+                    {showJiraPat ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </button>
+                </div>
+                <p className='text-xs text-gray-500'>Your PAT is stored encrypted in the workspace secrets folder</p>
+              </div>
+
+              {/* Project Key */}
+              <div className='space-y-1.5'>
+                <label className='text-sm text-gray-300 font-medium'>Project Key</label>
+                <input
+                  type='text'
+                  value={jiraSettings.projectKey}
+                  onChange={(e) => updateJiraSettings({ projectKey: e.target.value })}
+                  placeholder='e.g. SIGDSAWEB'
+                  className='w-full px-3 py-2 bg-[#0f0f1a] border border-[#2d2d44] rounded text-white text-sm focus:outline-none focus:border-purple-500 font-mono'
+                />
+              </div>
+
+              <div className='border-t border-[#2d2d44]' />
+
+              {/* Fetch Field Metadata */}
+              <div className='space-y-3'>
+                <div className='flex items-center justify-between'>
+                  <div>
+                    <label className='text-sm text-gray-300 font-medium'>Field Discovery</label>
+                    <p className='text-xs text-gray-500'>Fetch all fields and allowed values from Jira</p>
+                  </div>
+                  <button
+                    onClick={handleFetchFieldMeta}
+                    disabled={fieldMetaLoading || !jiraSettings.baseUrl || !jiraPat || !jiraSettings.projectKey}
+                    className='px-3 py-1.5 text-xs bg-[#0f0f1a] text-gray-300 border border-[#2d2d44] rounded hover:bg-[#1a1a2e] transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed'
+                  >
+                    {fieldMetaLoading ? <Loader2 size={12} className='animate-spin' /> : <Search size={12} />}
+                    Fetch Fields
+                  </button>
+                </div>
+                {fieldMetaError && (
+                  <div className='text-red-400 text-xs flex items-center gap-1'>
+                    <AlertCircle size={12} />
+                    {fieldMetaError}
+                  </div>
+                )}
+                {fieldMeta && (
+                  <div className='space-y-3'>
+                    <div className='bg-[#0a0a15] border border-[#2d2d44] rounded p-3 max-h-[250px] overflow-auto space-y-2'>
+                      <p className='text-[10px] text-gray-500 uppercase tracking-wider mb-2'>
+                        Custom fields for {jiraSettings.projectKey} / {jiraSettings.issueType || 'Bug'}
+                      </p>
+                      {Object.entries(fieldMeta)
+                        .filter(([id]) => id.startsWith('customfield_'))
+                        .sort(([, a], [, b]) => (a.required === b.required ? 0 : a.required ? -1 : 1))
+                        .map(([id, meta]) => (
+                          <div key={id} className='text-xs border-b border-[#2d2d44]/50 pb-2 last:border-0'>
+                            <div className='flex items-center gap-2'>
+                              <button
+                                onClick={() => handleAddFieldFromMeta(id, meta)}
+                                disabled={jiraSettings.fieldMappings.some((m) => m.customFieldId === id)}
+                                className='p-0.5 text-gray-500 hover:text-purple-400 hover:bg-[#2d2d44] rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed flex-shrink-0'
+                                title={jiraSettings.fieldMappings.some((m) => m.customFieldId === id) ? 'Already mapped' : `Add ${meta.name} to mappings`}
+                              >
+                                <Plus size={10} />
+                              </button>
+                              <code className='text-blue-300 font-mono text-[11px]'>{id}</code>
+                              <span className='text-gray-300'>{meta.name}</span>
+                              {meta.required && (
+                                <span className='text-[9px] px-1.5 py-0.5 bg-red-500/20 text-red-300 rounded'>required</span>
+                              )}
+                              <span className='text-[9px] text-gray-500 ml-auto'>{meta.type}</span>
+                            </div>
+                            {meta.allowedValues && meta.allowedValues.length > 0 && (
+                              <div className='mt-1 flex flex-wrap gap-1'>
+                                {meta.allowedValues.map((v, i) => (
+                                  <span key={i} className='text-[10px] px-1.5 py-0.5 bg-[#1a1a2e] text-green-300 rounded border border-[#2d2d44]'>
+                                    {v.name || v.value || v.id}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                    </div>
+                    <button
+                      onClick={handleMapRequiredFields}
+                      className='px-3 py-1.5 text-xs bg-purple-600/80 text-white rounded hover:bg-purple-700 transition-colors flex items-center gap-1.5'
+                    >
+                      <Plus size={12} /> Map Required Fields
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div className='border-t border-[#2d2d44]' />
+
+              {/* Custom Field Mappings */}
+              <div className='space-y-3'>
+                <div className='flex items-center justify-between'>
+                  <div>
+                    <label className='text-sm text-gray-300 font-medium'>Custom Field Mappings</label>
+                    <p className='text-xs text-gray-500'>Map Jira custom fields by their field ID</p>
+                  </div>
+                  <button
+                    onClick={handleAddFieldMapping}
+                    className='px-2 py-1 text-xs bg-[#0f0f1a] text-gray-300 border border-[#2d2d44] rounded hover:bg-[#1a1a2e] transition-colors flex items-center gap-1'
+                  >
+                    <Plus size={12} /> Add Field
+                  </button>
+                </div>
+                {/* Column headers */}
+                <div className='flex items-center gap-2 text-xs text-gray-500 mb-1'>
+                  <span className='w-[20%] min-w-0'>Name</span>
+                  <span className='w-[33%] min-w-0'>Custom Field ID</span>
+                  <span className='w-[15%] min-w-0'>Type</span>
+                  <span className='w-[25%] min-w-0'>Default Value</span>
+                  <span className='w-7 flex-shrink-0' />
+                </div>
+                <div className='space-y-2'>
+                  {jiraSettings.fieldMappings.map((mapping) => (
+                    <React.Fragment key={mapping.id}>
+                    <div className='flex items-center gap-2'>
+                      <input
+                        type='text'
+                        value={mapping.fieldName}
+                        onChange={(e) => handleUpdateFieldMapping(mapping.id, { fieldName: e.target.value })}
+                        placeholder='Field name'
+                        className='w-[20%] min-w-0 px-2 py-1.5 bg-[#0f0f1a] border border-[#2d2d44] rounded text-white text-sm focus:outline-none focus:border-purple-500'
+                      />
+                      <input
+                        type='text'
+                        value={mapping.customFieldId}
+                        onChange={(e) => handleUpdateFieldMapping(mapping.id, { customFieldId: e.target.value })}
+                        placeholder='customfield_12345'
+                        className='w-[33%] min-w-0 px-2 py-1.5 bg-[#0f0f1a] border border-[#2d2d44] rounded text-white text-sm focus:outline-none focus:border-purple-500 font-mono'
+                      />
+                      <select
+                        value={mapping.fieldType || 'text'}
+                        onChange={(e) => handleUpdateFieldMapping(mapping.id, { fieldType: e.target.value as 'text' | 'option' | 'array' | 'insight' | 'raw' })}
+                        className='w-[15%] min-w-0 px-2 py-1.5 bg-[#0f0f1a] border border-[#2d2d44] rounded text-white text-sm focus:outline-none focus:border-purple-500'
+                      >
+                        <option value='text'>Text</option>
+                        <option value='option'>Select</option>
+                        <option value='array'>Multi</option>
+                        <option value='insight'>Insight</option>
+                        <option value='raw'>Raw JSON</option>
+                      </select>
+                      <div className={`${mapping.fieldType === 'insight' ? 'w-[25%]' : 'w-[25%]'} min-w-0 flex items-center gap-1`}>
+                        <input
+                          type='text'
+                          value={mapping.defaultValue}
+                          onChange={(e) => handleUpdateFieldMapping(mapping.id, { defaultValue: e.target.value })}
+                          placeholder={mapping.fieldType === 'array' ? 'Val1, Val2' : mapping.fieldType === 'insight' ? 'GCE-12345, GCE-67890' : mapping.fieldType === 'raw' ? '[{"key":"VAL"}]' : 'Value'}
+                          title={mapping.fieldType === 'array' ? 'Comma-separated values for multi-select fields' : mapping.fieldType === 'insight' ? 'Comma-separated Insight object keys (e.g. GCE-38216)' : mapping.fieldType === 'raw' ? 'Raw JSON value sent as-is to Jira API' : undefined}
+                          className='flex-1 min-w-0 px-2 py-1.5 bg-[#0f0f1a] border border-[#2d2d44] rounded text-white text-sm focus:outline-none focus:border-purple-500'
+                        />
+                        {mapping.fieldType === 'insight' && (
+                          <button
+                            onClick={() => handleSearchInsight(mapping.id, mapping.customFieldId, '')}
+                            className='p-1.5 text-gray-400 hover:text-purple-400 hover:bg-[#2d2d44] rounded transition-colors shrink-0'
+                            title='Search Insight objects'
+                          >
+                            <Search size={14} />
+                          </button>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => handleRemoveFieldMapping(mapping.id)}
+                        className='w-7 flex-shrink-0 p-1.5 text-gray-500 hover:text-red-400 hover:bg-[#2d2d44] rounded transition-colors'
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                    {/* Insight search results dropdown */}
+                    {insightSearch && insightSearch.mappingId === mapping.id && (
+                      <div className='ml-[20%] mr-7 mb-2 bg-[#0f0f1a] border border-[#2d2d44] rounded overflow-hidden'>
+                        <div className='flex items-center gap-2 p-2 border-b border-[#2d2d44]'>
+                          <input
+                            type='text'
+                            value={insightSearch.query}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setInsightSearch((prev) => prev ? { ...prev, query: val } : null);
+                              if (insightDebounceRef.current) clearTimeout(insightDebounceRef.current);
+                              insightDebounceRef.current = setTimeout(() => {
+                                handleSearchInsight(mapping.id, mapping.customFieldId, val);
+                              }, 300);
+                            }}
+                            placeholder='Type to filter...'
+                            className='flex-1 px-2 py-1 bg-[#1a1a2e] border border-[#2d2d44] rounded text-white text-xs focus:outline-none focus:border-purple-500'
+                            autoFocus
+                          />
+                          <button
+                            onClick={() => setInsightSearch(null)}
+                            className='p-1 text-gray-400 hover:text-white rounded'
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+                        {insightSearch.error && (
+                          <div className='px-2 py-1 text-xs text-red-400'>{insightSearch.error}</div>
+                        )}
+                        {insightSearch.results.length > 0 && (
+                          <div className='max-h-[150px] overflow-auto'>
+                            {insightSearch.results.map((obj, i) => (
+                              <button
+                                key={`${obj.value}-${i}`}
+                                onClick={() => { handleSelectInsightObject(mapping.id, obj.value); }}
+                                className='w-full text-left px-3 py-1.5 text-xs hover:bg-[#1a1a2e] transition-colors flex items-center justify-between gap-2'
+                              >
+                                <span className='text-gray-300 truncate'>{obj.displayName}</span>
+                                <span className='text-purple-400 font-mono text-[10px] shrink-0'>{obj.value}</span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        {!insightSearch.loading && insightSearch.results.length === 0 && !insightSearch.error && (
+                          <div className='px-3 py-2 text-xs text-gray-500'>No results</div>
+                        )}
+                      </div>
+                    )}
+                    </React.Fragment>
+                  ))}
+                  {jiraSettings.fieldMappings.length === 0 && (
+                    <p className='text-xs text-gray-500 italic'>No custom fields configured. Use "Fetch Fields" above to discover required fields.</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Test connection */}
+              <div className='border-t border-[#2d2d44] pt-4'>
+                <div className='flex items-center gap-3'>
+                  <button
+                    onClick={handleJiraTestConnection}
+                    disabled={jiraTestStatus === 'loading' || !jiraSettings.baseUrl || !jiraPat}
+                    className='px-4 py-2 text-sm bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2'
+                  >
+                    {jiraTestStatus === 'loading' ? <Loader2 size={14} className='animate-spin' /> : <Link2 size={14} />}
+                    Test Connection
+                  </button>
+                  {jiraTestStatus === 'success' && (
+                    <div className='flex items-center gap-1.5 text-green-400 text-sm'>
+                      <Check size={14} />
+                      <span className='truncate max-w-[280px]'>{jiraTestMessage}</span>
+                    </div>
+                  )}
+                  {jiraTestStatus === 'error' && (
+                    <div className='flex items-center gap-1.5 text-red-400 text-sm'>
+                      <AlertCircle size={14} />
+                      <span className='truncate max-w-[280px]'>{jiraTestMessage}</span>
                     </div>
                   )}
                 </div>

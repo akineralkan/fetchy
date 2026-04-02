@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Bot, X, Loader2, Copy, Check, Sparkles, FileText, Terminal, MessageSquare, Bug, Download, Eye, Code2 } from 'lucide-react';
+import { Bot, X, Loader2, Copy, Check, Sparkles, FileText, Terminal, MessageSquare, Bug, Download, Eye, Code2, Ticket, AlertCircle } from 'lucide-react';
 import { usePreferencesStore } from '../store/preferencesStore';
 import {
   sendAIRequest,
@@ -180,9 +180,12 @@ interface AIResultModalProps {
   language?: string;
   isMarkdown?: boolean;
   downloadFileName?: string;
+  onCreateJira?: () => void;
+  jiraLoading?: boolean;
+  jiraResult?: { success: boolean; issueKey?: string; issueUrl?: string; error?: string } | null;
 }
 
-function AIResultModal({ isOpen, onClose, title, icon, loading, error, result, onCopy, onApply, applyLabel, language, isMarkdown, downloadFileName }: AIResultModalProps) {
+function AIResultModal({ isOpen, onClose, title, icon, loading, error, result, onCopy, onApply, applyLabel, language, isMarkdown, downloadFileName, onCreateJira, jiraLoading, jiraResult }: AIResultModalProps) {
   const [copied, setCopied] = useState(false);
   const [mdView, setMdView] = useState<'preview' | 'source'>('preview');
 
@@ -309,6 +312,48 @@ function AIResultModal({ isOpen, onClose, title, icon, loading, error, result, o
                     <Check size={14} />
                     {applyLabel || 'Apply'}
                   </button>
+                )}
+                {onCreateJira && (
+                  <button
+                    onClick={onCreateJira}
+                    disabled={jiraLoading}
+                    className='px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed ml-auto'
+                  >
+                    {jiraLoading ? <Loader2 size={14} className='animate-spin' /> : <Ticket size={14} />}
+                    {jiraLoading ? 'Creating...' : 'Create Jira Bug'}
+                  </button>
+                )}
+                {jiraResult && jiraResult.success && (
+                  <div className='flex items-center gap-1.5 text-green-400 text-xs ml-2'>
+                    <Check size={12} />
+                    <button
+                      onClick={() => {
+                        if (jiraResult.issueUrl && window.electronAPI?.openExternalUrl) {
+                          window.electronAPI.openExternalUrl(jiraResult.issueUrl);
+                        }
+                      }}
+                      className='hover:text-green-300 underline'
+                    >
+                      {jiraResult.issueKey}
+                    </button>
+                  </div>
+                )}
+                {jiraResult && !jiraResult.success && (
+                  <div className='flex items-center gap-1.5 ml-2'>
+                    <div className='relative group'>
+                      <AlertCircle size={14} className='text-red-400 cursor-help' />
+                      <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-72 p-2 bg-[#1a1a2e] border border-red-500/30 rounded text-xs text-red-300 shadow-lg z-50 whitespace-pre-wrap break-words'>
+                        {jiraResult.error}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => navigator.clipboard.writeText(jiraResult.error || '')}
+                      className='p-0.5 text-red-400 hover:text-red-300 transition-colors shrink-0'
+                      title='Copy error'
+                    >
+                      <Copy size={12} />
+                    </button>
+                  </div>
                 )}
               </div>
             </>
@@ -547,7 +592,7 @@ interface AIResponseToolbarProps {
 }
 
 export function AIResponseToolbar({ request, response }: AIResponseToolbarProps) {
-  const { aiSettings: ai } = usePreferencesStore();
+  const { aiSettings: ai, jiraSettings, jiraPat } = usePreferencesStore();
 
   const [modal, setModal] = useState<{
     open: boolean;
@@ -559,6 +604,8 @@ export function AIResponseToolbar({ request, response }: AIResponseToolbarProps)
 
   const [bugReportPrompt, setBugReportPrompt] = useState(false);
   const [bugNote, setBugNote] = useState('');
+  const [jiraLoading, setJiraLoading] = useState(false);
+  const [jiraResult, setJiraResult] = useState<{ success: boolean; issueKey?: string; issueUrl?: string; error?: string } | null>(null);
 
   const handleExplain = useCallback(async () => {
     // If not configured, open AI settings instead of showing error modal
@@ -609,6 +656,117 @@ export function AIResponseToolbar({ request, response }: AIResponseToolbarProps)
       setModal((prev) => ({ ...prev, loading: false, error: res.error || 'Failed to generate bug report' }));
     }
   }, [request, response, ai]);
+
+  const jiraConfigured = jiraSettings.enabled && jiraSettings.baseUrl && jiraPat && jiraSettings.projectKey;
+
+  // Build custom fields object from configured mappings
+  // Supports multi-value arrays via comma separation: "DSA,Other" → [{value:"DSA"},{value:"Other"}]
+  const buildCustomFields = useCallback(() => {
+    const customFields: Record<string, unknown> = {};
+    for (const mapping of jiraSettings.fieldMappings) {
+      if (mapping.customFieldId && mapping.defaultValue) {
+        const val = mapping.defaultValue;
+        switch (mapping.fieldType) {
+          case 'option':
+            customFields[mapping.customFieldId] = { value: val };
+            break;
+          case 'array':
+            customFields[mapping.customFieldId] = val
+              .split(',')
+              .map((v) => v.trim())
+              .filter(Boolean)
+              .map((v) => ({ name: v, value: v, key: v }));
+            break;
+          case 'insight':
+            customFields[mapping.customFieldId] = val
+              .split(',')
+              .map((v) => v.trim())
+              .filter(Boolean)
+              .map((v) => ({ key: v }));
+            break;
+          case 'raw':
+            try {
+              customFields[mapping.customFieldId] = JSON.parse(val);
+            } catch {
+              customFields[mapping.customFieldId] = val;
+            }
+            break;
+          default:
+            customFields[mapping.customFieldId] = val;
+        }
+      }
+    }
+    return customFields;
+  }, [jiraSettings.fieldMappings]);
+
+  const handleCreateJiraBug = useCallback(async () => {
+    if (!jiraConfigured || !window.electronAPI?.jiraCreateIssue) return;
+
+    setJiraLoading(true);
+    setJiraResult(null);
+
+    // Pre-flight: validate field mappings are complete before calling API
+    const incomplete = jiraSettings.fieldMappings.filter(
+      (m) => m.fieldName && (!m.customFieldId || !m.defaultValue)
+    );
+    if (incomplete.length > 0) {
+      const names = incomplete.map((m) => m.fieldName).join(', ');
+      setJiraResult({
+        success: false,
+        error: `Incomplete field mappings: ${names}. Each mapping needs both a Custom Field ID and Default Value. Fix in Settings > Integrations.`,
+      });
+      setJiraLoading(false);
+      return;
+    }
+
+    // Parse title from AI-generated text
+    // Handles both "## Title\nText" and "Title\n\nText" (first non-empty line after "Title")
+    let summary = '';
+    const titleSectionMatch = modal.result.match(/(?:^|\n)#{1,3}\s*Title\s*\n+(.+)/i);
+    if (titleSectionMatch) {
+      summary = titleSectionMatch[1].trim();
+    } else {
+      // Try plain "Title\n\nActual title text" pattern
+      const plainTitleMatch = modal.result.match(/(?:^|\n)Title\s*\n+(.+)/i);
+      if (plainTitleMatch) {
+        summary = plainTitleMatch[1].trim();
+      }
+    }
+    if (!summary) {
+      summary = `Bug: ${request.method} ${request.url}`;
+    }
+
+    const customFields = buildCustomFields();
+
+    // Clean description for Jira:
+    // 1. Remove "# Bug Report" heading
+    // 2. Remove "## Title\n<title text>" section (already used as summary)
+    // 3. Remove leading/trailing horizontal rules (---)
+    // 4. Fix double-indented numbered lists (e.g. "1.   1." → "1.")
+    let description = modal.result
+      .replace(/^---\s*\n/m, '')
+      .replace(/^#{1,3}\s*🐛?\s*Bug Report\s*\n+/im, '')
+      .replace(/^#{1,3}\s*Title\s*\n+.+\n*/im, '')
+      .replace(/\n---\s*$/m, '')
+      .replace(/^(\d+)\.\s+\d+\.\s+/gm, '$1. ')
+      .trim();
+
+    try {
+      const result = await window.electronAPI.jiraCreateIssue({
+        baseUrl: jiraSettings.baseUrl,
+        summary,
+        description,
+        projectKey: jiraSettings.projectKey,
+        issueType: jiraSettings.issueType,
+        customFields,
+      });
+      setJiraResult(result);
+    } catch (error) {
+      setJiraResult({ success: false, error: 'Failed to create Jira issue' });
+    } finally {
+      setJiraLoading(false);
+    }
+  }, [modal.result, jiraSettings, jiraPat, request, buildCustomFields]);
 
   if (!ai.enabled) return null;
 
@@ -696,7 +854,7 @@ export function AIResponseToolbar({ request, response }: AIResponseToolbarProps)
 
       <AIResultModal
         isOpen={modal.open}
-        onClose={() => setModal((prev) => ({ ...prev, open: false }))}
+        onClose={() => { setModal((prev) => ({ ...prev, open: false })); setJiraResult(null); }}
         title={modalTitles[modal.feature] || 'AI Result'}
         icon={modalIcons[modal.feature] || <Bot size={18} className='ai-text' />}
         loading={modal.loading}
@@ -710,6 +868,9 @@ export function AIResponseToolbar({ request, response }: AIResponseToolbarProps)
             ? `bug-report-${request.method.toLowerCase()}-${request.url.replace(/[^a-z0-9]/gi, '-').slice(0, 40)}.md`
             : `ai-explanation.md`
         }
+        onCreateJira={modal.feature === 'bugreport' && jiraConfigured ? handleCreateJiraBug : undefined}
+        jiraLoading={jiraLoading}
+        jiraResult={jiraResult}
       />
     </>
   );

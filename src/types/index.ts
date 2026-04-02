@@ -219,6 +219,35 @@ export interface ProxySettings {
   password?: string;
 }
 
+// Jira integration types
+export interface JiraFieldMapping {
+  id: string;
+  fieldName: string;
+  customFieldId: string;
+  fieldType: 'text' | 'option' | 'array' | 'insight' | 'raw';
+  defaultValue: string;
+}
+
+export interface JiraSettings {
+  enabled: boolean;
+  baseUrl: string;
+  projectKey: string;
+  issueType: string;
+  fieldMappings: JiraFieldMapping[];
+}
+
+export interface JiraSecretsStorage {
+  version: string;
+  pat: string;
+}
+
+export interface JiraCreateIssueResult {
+  success: boolean;
+  issueKey?: string;
+  issueUrl?: string;
+  error?: string;
+}
+
 export interface AppPreferences {
   homeDirectory: string | null; // Legacy – kept for backward compat
   theme: BuiltinTheme | string; // string for custom theme IDs
@@ -228,6 +257,8 @@ export interface AppPreferences {
   aiSettings: AISettings;
   /** Proxy configuration for HTTP requests (#25) */
   proxy?: ProxySettings;
+  /** Jira integration settings (PAT stored separately in secrets) */
+  jiraSettings?: JiraSettings;
 }
 
 // OpenAPI types
@@ -441,6 +472,50 @@ export interface ElectronAPI {
   readAISecrets: () => Promise<string | null>;
   writeAISecrets: (data: { content: string }) => Promise<boolean>;
   deleteAISecrets: () => Promise<boolean>;
+  // Jira Secrets
+  readJiraSecrets: () => Promise<string | null>;
+  writeJiraSecrets: (data: { content: string }) => Promise<boolean>;
+  deleteJiraSecrets: () => Promise<boolean>;
+  // Jira issue creation
+  jiraCreateIssue: (data: {
+    baseUrl: string;
+    summary: string;
+    description: string;
+    projectKey: string;
+    issueType: string;
+    customFields?: Record<string, unknown>;
+  }) => Promise<JiraCreateIssueResult>;
+  jiraTestConnection: (data: {
+    baseUrl: string;
+    pat: string;
+  }) => Promise<{ success: boolean; message: string }>;
+  jiraGetCreateMeta: (data: {
+    baseUrl: string;
+    projectKey: string;
+    issueType: string;
+  }) => Promise<{
+    success: boolean;
+    fields?: Record<string, {
+      name: string;
+      required: boolean;
+      type: string;
+      custom: string | null;
+      allowedValues: Array<{ id: string; name?: string; value?: string }> | null;
+    }>;
+    error?: string;
+  }>;
+  jiraSearchInsightObjects: (data: {
+    baseUrl: string;
+    customFieldId: string;
+    query?: string;
+  }) => Promise<{
+    success: boolean;
+    objects?: Array<{ displayName: string; value: string }>;
+    info?: string;
+    error?: string;
+  }>;
+  // Open URL in system browser
+  openExternalUrl: (url: string) => Promise<{ success: boolean; error?: string }>;
   // Preferences
   getPreferences: () => Promise<AppPreferences | null>;
   savePreferences: (preferences: AppPreferences) => Promise<boolean>;

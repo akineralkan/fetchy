@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { AppPreferences, AISettings, AISecretsStorage } from '../types';
+import { AppPreferences, AISettings, AISecretsStorage, JiraSettings, JiraSecretsStorage } from '../types';
 import { defaultAISettings } from '../utils/aiProvider';
 
 // ElectronAPI type is declared in ../types/index.ts
@@ -7,6 +7,8 @@ import { defaultAISettings } from '../utils/aiProvider';
 interface PreferencesStore {
   preferences: AppPreferences;
   aiSettings: AISettings; // In-memory AI settings (NOT persisted in preferences.json)
+  jiraSettings: JiraSettings; // In-memory Jira settings (PAT stored separately)
+  jiraPat: string; // In-memory PAT (never persisted in preferences.json)
   isLoading: boolean;
   isElectron: boolean;
 
@@ -15,6 +17,9 @@ interface PreferencesStore {
   savePreferences: (updates: Partial<AppPreferences>) => Promise<boolean>;
   loadAISecrets: () => Promise<void>;
   updateAISettings: (updates: Partial<AISettings>) => Promise<void>;
+  loadJiraSecrets: () => Promise<void>;
+  updateJiraSettings: (updates: Partial<JiraSettings>) => Promise<void>;
+  updateJiraPat: (pat: string) => Promise<void>;
   selectHomeDirectory: () => Promise<string | null>;
   setHomeDirectory: (directory: string, migrateData?: boolean) => Promise<boolean>;
   getHomeDirectory: () => Promise<string>;
@@ -30,6 +35,14 @@ const defaultPreferences: AppPreferences = {
   proxy: { mode: 'system', url: '' },
 };
 
+export const defaultJiraSettings: JiraSettings = {
+  enabled: false,
+  baseUrl: 'https://jira.si.siemens.cloud',
+  projectKey: '',
+  issueType: 'Bug',
+  fieldMappings: [],
+};
+
 /**
  * Strip aiSettings from preferences before persisting so API keys / AI
  * configuration are never written to preferences.json.
@@ -42,6 +55,8 @@ function stripAISettings(prefs: AppPreferences): AppPreferences {
 export const usePreferencesStore = create<PreferencesStore>()((set, get) => ({
   preferences: defaultPreferences,
   aiSettings: { ...defaultAISettings },
+  jiraSettings: { ...defaultJiraSettings },
+  jiraPat: '',
   isLoading: true,
   isElectron: typeof window !== 'undefined' && !!window.electronAPI,
 
@@ -62,6 +77,7 @@ export const usePreferencesStore = create<PreferencesStore>()((set, get) => ({
           set((s) => ({
             preferences: { ...defaultPreferences, ...prefs, aiSettings: defaultAISettings },
             aiSettings: migratedAI ?? s.aiSettings,
+            jiraSettings: prefs.jiraSettings ? { ...defaultJiraSettings, ...prefs.jiraSettings } : s.jiraSettings,
             isLoading: false,
           }));
         } else {
@@ -85,6 +101,7 @@ export const usePreferencesStore = create<PreferencesStore>()((set, get) => ({
           set((s) => ({
             preferences: { ...defaultPreferences, ...prefs, aiSettings: defaultAISettings },
             aiSettings: migratedAI ?? s.aiSettings,
+            jiraSettings: prefs.jiraSettings ? { ...defaultJiraSettings, ...prefs.jiraSettings } : s.jiraSettings,
             isLoading: false,
           }));
         } else {
@@ -168,6 +185,77 @@ export const usePreferencesStore = create<PreferencesStore>()((set, get) => ({
         await window.electronAPI.deleteAISecrets();
       } else {
         localStorage.removeItem('fetchy-ai-secrets');
+      }
+    }
+  },
+
+  /**
+   * Load Jira PAT from the separate secrets file (jira-secrets).
+   * Called once on app startup, after loadPreferences.
+   */
+  loadJiraSecrets: async () => {
+    const { isElectron } = get();
+
+    if (isElectron && window.electronAPI) {
+      try {
+        const raw = await window.electronAPI.readJiraSecrets();
+        if (raw) {
+          const stored: JiraSecretsStorage = JSON.parse(raw);
+          if (stored?.pat) {
+            set({ jiraPat: stored.pat });
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('Error loading Jira secrets:', error);
+      }
+    } else {
+      // Browser mode – localStorage
+      try {
+        const raw = localStorage.getItem('fetchy-jira-secrets');
+        if (raw) {
+          const stored: JiraSecretsStorage = JSON.parse(raw);
+          if (stored?.pat) {
+            set({ jiraPat: stored.pat });
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('Error loading Jira secrets from localStorage:', error);
+      }
+    }
+  },
+
+  /**
+   * Update Jira settings (non-secret fields) and persist to preferences.
+   */
+  updateJiraSettings: async (updates: Partial<JiraSettings>) => {
+    const { jiraSettings, savePreferences } = get();
+    const newSettings: JiraSettings = { ...jiraSettings, ...updates };
+    set({ jiraSettings: newSettings });
+    await savePreferences({ jiraSettings: newSettings });
+  },
+
+  /**
+   * Update Jira PAT and persist to the secrets file.
+   */
+  updateJiraPat: async (pat: string) => {
+    const { isElectron } = get();
+    set({ jiraPat: pat });
+
+    if (pat) {
+      const storage: JiraSecretsStorage = { version: '1.0', pat };
+      if (isElectron && window.electronAPI) {
+        await window.electronAPI.writeJiraSecrets({ content: JSON.stringify(storage, null, 2) });
+      } else {
+        localStorage.setItem('fetchy-jira-secrets', JSON.stringify(storage));
+      }
+    } else {
+      // PAT cleared – delete the secrets file
+      if (isElectron && window.electronAPI) {
+        await window.electronAPI.deleteJiraSecrets();
+      } else {
+        localStorage.removeItem('fetchy-jira-secrets');
       }
     }
   },

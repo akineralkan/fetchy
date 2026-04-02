@@ -19,6 +19,20 @@ contextBridge.exposeInMainWorld('electronAPI', {
   writeAISecrets: (data) => ipcRenderer.invoke('write-ai-secrets', data),
   deleteAISecrets: () => ipcRenderer.invoke('delete-ai-secrets'),
 
+  // Jira Secrets storage (PAT only)
+  readJiraSecrets: () => ipcRenderer.invoke('read-jira-secrets'),
+  writeJiraSecrets: (data) => ipcRenderer.invoke('write-jira-secrets', data),
+  deleteJiraSecrets: () => ipcRenderer.invoke('delete-jira-secrets'),
+
+  // Jira issue creation
+  jiraCreateIssue: (data) => ipcRenderer.invoke('jira-create-issue', data),
+  jiraTestConnection: (data) => ipcRenderer.invoke('jira-test-connection', data),
+  jiraGetCreateMeta: (data) => ipcRenderer.invoke('jira-get-create-meta', data),
+  jiraSearchInsightObjects: (data) => ipcRenderer.invoke('jira-search-insight-objects', data),
+
+  // Open URL in system browser
+  openExternalUrl: (url) => ipcRenderer.invoke('open-external-url', url),
+
   // Preferences
   getPreferences: () => ipcRenderer.invoke('get-preferences'),
   savePreferences: (preferences) => ipcRenderer.invoke('save-preferences', preferences),

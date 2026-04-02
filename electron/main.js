@@ -1,10 +1,10 @@
-﻿const { app, BrowserWindow, ipcMain, dialog, Menu, screen, safeStorage } = require('electron');
+﻿const { app, BrowserWindow, ipcMain, dialog, Menu, screen, safeStorage, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { initUpdater } = require('./updater');
 
 // IPC handler modules (decomposed from this file – #13)
-const { fileHandlers, secretsHandler, httpHandler, aiHandler, workspaceHandler } = require('./ipc');
+const { fileHandlers, secretsHandler, httpHandler, aiHandler, workspaceHandler, jiraHandler } = require('./ipc');
 
 /**
  * Atomic file write: writes content to a temporary file in the same directory,
@@ -367,4 +367,13 @@ secretsHandler.register(ipcMain, ipcDeps);
 httpHandler.register(ipcMain, ipcDeps);
 aiHandler.register(ipcMain, ipcDeps);
 workspaceHandler.register(ipcMain, ipcDeps);
+jiraHandler.register(ipcMain, ipcDeps);
 
+// Open URL in the system's default browser
+ipcMain.handle('open-external-url', async (_event, url) => {
+  if (typeof url !== 'string' || (!url.startsWith('https://') && !url.startsWith('http://'))) {
+    return { success: false, error: 'Invalid URL' };
+  }
+  await shell.openExternal(url);
+  return { success: true };
+});
