@@ -29,6 +29,7 @@ const sidebars = {
         'features/workspaces',
         'features/themes',
         'features/keyboard-shortcuts',
+        'features/jira-integration',
       ],
     },
     {
@@ -39,6 +40,7 @@ const sidebars = {
         'guides/environment-variables',
         'guides/collections',
         'guides/scripts',
+        'guides/jira-bug-reports',
       ],
     },
   ],
