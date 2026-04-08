@@ -1,9 +1,35 @@
 import { ApiRequest, KeyValue } from '../types';
 import { replaceVariables } from './variables';
 
+/**
+ * Build a fully URL-encoded request URL by stripping the raw (display) query
+ * from request.url and re-appending params from request.params using
+ * encodeURIComponent so values with quotes, JSON, spaces etc. are safe.
+ * <<variable>> placeholders in both keys and values are resolved first.
+ */
+function buildEncodedRequestUrl(request: ApiRequest, variables: KeyValue[]): string {
+  let url = replaceVariables(request.url, variables, []);
+  const qIndex = url.indexOf('?');
+  if (qIndex >= 0) {
+    url = url.substring(0, qIndex);
+  }
+  const enabledParams = request.params.filter(p => p.enabled && p.key);
+  if (enabledParams.length > 0) {
+    const qs = enabledParams
+      .map(p => {
+        const key = encodeURIComponent(replaceVariables(p.key, variables, []));
+        const value = encodeURIComponent(replaceVariables(p.value, variables, []));
+        return `${key}=${value}`;
+      })
+      .join('&');
+    url = `${url}?${qs}`;
+  }
+  return url;
+}
+
 // Generate cURL command from request
 export const generateCurl = (request: ApiRequest, variables: KeyValue[] = []): string => {
-  const url = replaceVariables(request.url, variables, []);
+  const url = buildEncodedRequestUrl(request, variables);
   let curl = `curl -X ${request.method} '${url}'`;
 
   // Add headers
@@ -45,7 +71,7 @@ export const generateCurl = (request: ApiRequest, variables: KeyValue[] = []): s
 
 // Generate JavaScript fetch code from request
 export const generateJavaScript = (request: ApiRequest, variables: KeyValue[] = []): string => {
-  const url = replaceVariables(request.url, variables, []);
+  const url = buildEncodedRequestUrl(request, variables);
   let code = `fetch('${url}', {\n  method: '${request.method}'`;
 
   // Add headers
@@ -93,7 +119,7 @@ export const generateJavaScript = (request: ApiRequest, variables: KeyValue[] = 
 
 // Generate Python requests code from request
 export const generatePython = (request: ApiRequest, variables: KeyValue[] = []): string => {
-  const url = replaceVariables(request.url, variables, []);
+  const url = buildEncodedRequestUrl(request, variables);
   let code = `import requests\n\n`;
 
   code += `url = '${url}'\n`;
@@ -149,7 +175,7 @@ export const generatePython = (request: ApiRequest, variables: KeyValue[] = []):
 
 // Generate Java HttpClient code from request
 export const generateJava = (request: ApiRequest, variables: KeyValue[] = []): string => {
-  const url = replaceVariables(request.url, variables, []);
+  const url = buildEncodedRequestUrl(request, variables);
   let code = `import java.net.http.HttpClient;\nimport java.net.http.HttpRequest;\nimport java.net.http.HttpResponse;\nimport java.net.URI;\n\n`;
 
   code += `public class ApiRequest {\n`;
@@ -209,7 +235,7 @@ export const generateJava = (request: ApiRequest, variables: KeyValue[] = []): s
 
 // Generate .NET Core HttpClient code from request
 export const generateDotNet = (request: ApiRequest, variables: KeyValue[] = []): string => {
-  const url = replaceVariables(request.url, variables, []);
+  const url = buildEncodedRequestUrl(request, variables);
   let code = `using System;\nusing System.Net.Http;\nusing System.Text;\nusing System.Threading.Tasks;\n\n`;
 
   code += `class Program\n{\n`;
@@ -268,7 +294,7 @@ export const generateDotNet = (request: ApiRequest, variables: KeyValue[] = []):
 
 // Generate Go net/http code from request
 export const generateGo = (request: ApiRequest, variables: KeyValue[] = []): string => {
-  const url = replaceVariables(request.url, variables, []);
+  const url = buildEncodedRequestUrl(request, variables);
   let code = `package main\n\nimport (\n    "bytes"\n    "fmt"\n    "io"\n    "net/http"\n)\n\n`;
 
   code += `func main() {\n`;
@@ -328,7 +354,7 @@ export const generateGo = (request: ApiRequest, variables: KeyValue[] = []): str
 
 // Generate Rust reqwest code from request
 export const generateRust = (request: ApiRequest, variables: KeyValue[] = []): string => {
-  const url = replaceVariables(request.url, variables, []);
+  const url = buildEncodedRequestUrl(request, variables);
   let code = `use reqwest::header::{HeaderMap, HeaderValue};\nuse std::error::Error;\n\n`;
 
   code += `#[tokio::main]\nasync fn main() -> Result<(), Box<dyn Error>> {\n`;
@@ -386,7 +412,7 @@ export const generateRust = (request: ApiRequest, variables: KeyValue[] = []): s
 
 // Generate C++ libcurl code from request
 export const generateCpp = (request: ApiRequest, variables: KeyValue[] = []): string => {
-  const url = replaceVariables(request.url, variables, []);
+  const url = buildEncodedRequestUrl(request, variables);
   let code = `#include <iostream>\n#include <string>\n#include <curl/curl.h>\n\n`;
 
   code += `static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp) {\n`;

@@ -93,26 +93,29 @@ export const executeRequest = async ({
     url = url.substring(0, qIndex);
   }
 
-  // Add query parameters from Params tab
+  // Add query parameters from Params tab — use encodeURIComponent for RFC 3986-compliant
+  // encoding (%20 for spaces, not +) and resolve <<variable>> in both key and value.
   const enabledParams = request.params.filter(p => p.enabled && p.key);
   if (enabledParams.length > 0) {
-    const urlObj = new URL(url.startsWith('http') ? url : `http://${url}`);
-    enabledParams.forEach(p => {
-      const value = replaceVariables(p.value, collectionVariables, environmentVariables);
-      urlObj.searchParams.append(p.key, value);
-    });
-    url = urlObj.toString();
+    const qs = enabledParams
+      .map(p => {
+        const key = encodeURIComponent(replaceVariables(p.key, collectionVariables, environmentVariables));
+        const value = encodeURIComponent(replaceVariables(p.value, collectionVariables, environmentVariables));
+        return `${key}=${value}`;
+      })
+      .join('&');
+    url = `${url}?${qs}`;
   }
 
   // Add API key to query if configured
   if (effectiveAuth.type === 'api-key' && effectiveAuth.apiKey?.addTo === 'query') {
-    const urlObj = new URL(url.startsWith('http') ? url : `http://${url}`);
     const key = replaceVariables(effectiveAuth.apiKey.key, collectionVariables, environmentVariables);
     const value = replaceVariables(effectiveAuth.apiKey.value, collectionVariables, environmentVariables);
     // Only add query parameter if both key and value are not empty
     if (key && key.trim() && value && value.trim()) {
-      urlObj.searchParams.append(key, value);
-      url = urlObj.toString();
+      const encodedKey = encodeURIComponent(key);
+      const encodedValue = encodeURIComponent(value);
+      url = `${url}${url.includes('?') ? '&' : '?'}${encodedKey}=${encodedValue}`;
     }
   }
 
