@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { HelpCircle, Settings, RefreshCw, PanelLeftClose, PanelLeftOpen, Rows, Columns, BookOpen } from 'lucide-react';
+import { HelpCircle, Settings, RefreshCw, PanelLeftClose, PanelLeftOpen, Rows, Columns, BookOpen, Star, Github, Keyboard } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import TabBar from './components/TabBar';
 import RequestPanel from './components/RequestPanel';
@@ -68,6 +68,14 @@ function App() {
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const [postUpdateInfo, setPostUpdateInfo] = useState<any>(null);
+  const [githubStars, setGithubStars] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetch('https://api.github.com/repos/akineralkan/fetchy')
+      .then(res => res.json())
+      .then(data => { if (typeof data.stargazers_count === 'number') setGithubStars(data.stargazers_count); })
+      .catch(() => {});
+  }, []);
 
   // ── Post-update banner (shown once after a successful update) ─────────────
   useEffect(() => {
@@ -490,10 +498,25 @@ function App() {
 
         <Tooltip content="Documentation">
           <button
-            onClick={() => window.open('https://akineralkan94.github.io/fetchy/', '_blank')}
+            onClick={() => window.open('https://akineralkan.github.io/fetchy/', '_blank')}
             className="p-2 hover:bg-fetchy-border rounded text-fetchy-text-muted hover:text-fetchy-text"
           >
             <BookOpen size={18} />
+          </button>
+        </Tooltip>
+
+        <Tooltip content="GitHub">
+          <button
+            onClick={() => window.open('https://github.com/akineralkan/fetchy', '_blank')}
+            className="flex items-center gap-1.5 px-2 py-1.5 hover:bg-fetchy-border rounded text-fetchy-text-muted hover:text-fetchy-text"
+          >
+            <Github size={18} />
+            {githubStars !== null && (
+              <span className="flex items-center gap-0.5 text-xs font-medium">
+                <Star size={12} className="fill-current" />
+                {githubStars >= 1000 ? `${(githubStars / 1000).toFixed(1)}k` : githubStars}
+              </span>
+            )}
           </button>
         </Tooltip>
 
@@ -502,7 +525,7 @@ function App() {
             onClick={() => setShowShortcutsModal(true)}
             className="p-2 hover:bg-fetchy-border rounded text-fetchy-text-muted hover:text-fetchy-text"
           >
-            <HelpCircle size={18} />
+            <Keyboard size={18} />
           </button>
         </Tooltip>
       </div>
