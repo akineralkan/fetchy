@@ -399,6 +399,7 @@ export interface TabState {
   historyRequest?: ApiRequest; // Store the original history request data
   historyResponse?: ApiResponse; // Store the original history response data
   scriptExecutionStatus?: 'success' | 'error' | 'none'; // Flag to indicate the result of the post-request script execution
+  draftRequest?: ApiRequest; // In-memory unsaved edits — cleared on explicit save, never persisted
 }
 
 export interface AppState {

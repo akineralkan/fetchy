@@ -48,24 +48,45 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
   const [showAIGenerateModal, setShowAIGenerateModal] = useState(false);
   const [curlImportFlash, setCurlImportFlash] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
+  // Tracks the previously-loaded tab identity so we can detect real tab switches versus
+  // incidental collection updates that should NOT overwrite unsaved edits.
+  const prevTabKeyRef = useRef<string | null>(null);
 
-  // Load request data when tab changes or when collections update
-  // BUG FIX: Added 'collections' to dependency array to prevent stale data issue
-  // Without it, when a user edits the request name in the sidebar, the local state here
-  // doesn't update. Then when saving, it would overwrite with the old name from local state.
-  // By including 'collections', the local state refreshes whenever the store updates,
-  // ensuring we always have the latest request data including name changes from sidebar.
+  // Load request data when the active tab changes or when external collection updates arrive.
+  //
+  // Rules:
+  //  1. Tab switched  → prefer tab.draftRequest (unsaved edits) if present, else load from store.
+  //  2. Same tab, not modified (e.g. sidebar rename applied)  → reload from store so the new name
+  //     is picked up (the appStore also updates draftRequest.name in this case).
+  //  3. Same tab, isModified=true → skip reload; local edits are already correct.
   useEffect(() => {
-    // If this is a history item tab, load the history request data
+    const tabKey = `${activeTab?.collectionId ?? ''}:${activeTab?.requestId ?? ''}`;
+    const tabChanged = prevTabKeyRef.current !== tabKey;
+    prevTabKeyRef.current = tabKey;
+
     if (activeTab?.isHistoryItem && activeTab?.historyRequest) {
       setLocalRequest({ ...activeTab.historyRequest });
-    } else if (activeTab?.collectionId && activeTab?.requestId) {
-      const req = getRequest(activeTab.collectionId, activeTab.requestId);
-      if (req) {
-        setLocalRequest({ ...req });
-      }
+      return;
     }
-  }, [activeTab?.requestId, activeTab?.collectionId, activeTab?.isHistoryItem, activeTab?.historyRequest, getRequest, collections]);
+
+    if (!activeTab?.collectionId || !activeTab?.requestId) return;
+
+    if (tabChanged) {
+      // Switching to a (different) tab – restore draft if the user had unsaved changes.
+      if (activeTab.draftRequest) {
+        setLocalRequest({ ...activeTab.draftRequest });
+      } else {
+        const req = getRequest(activeTab.collectionId, activeTab.requestId);
+        if (req) setLocalRequest({ ...req });
+      }
+    } else if (!activeTab.isModified) {
+      // Same tab, nothing modified – allow reload so external changes (e.g. sidebar
+      // rename, workspace sync) are reflected immediately.
+      const req = getRequest(activeTab.collectionId, activeTab.requestId);
+      if (req) setLocalRequest({ ...req });
+    }
+    // Same tab + isModified: skip reload and keep the user's unsaved edits.
+  }, [activeTab?.requestId, activeTab?.collectionId, activeTab?.isHistoryItem, activeTab?.historyRequest, activeTab?.isModified, getRequest, collections]);
 
   const handleShowCode = useCallback((language: string = 'curl') => {
     if (!request) return;
@@ -140,16 +161,24 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
     } else if (activeTab?.collectionId) {
       // Normal save for regular requests
       updateRequest(activeTab.collectionId, request.id, request);
-      updateTab(activeTab.id, { isModified: false, title: request.name });
+      // Clear the draft and mark as clean.
+      updateTab(activeTab.id, { isModified: false, draftRequest: undefined, title: request.name });
     }
   }, [request, activeTab, updateRequest, updateTab, collections, addCollection, addRequest]);
 
   const handleChange = useCallback((updates: Partial<ApiRequest>) => {
     if (request) {
+      // Safety guard: skip the update if the local request is out-of-sync with the
+      // active tab (e.g. a stale closure from a CodeMirror callback fires after a
+      // rapid tab switch but before React has reconciled the new state).
+      if (activeTab?.requestId && request.id !== activeTab.requestId) return;
+
       const updated = { ...request, ...updates };
       setLocalRequest(updated);
       if (activeTab) {
-        updateTab(activeTab.id, { isModified: true });
+        // Store the full updated request as a draft so it survives tab switches and
+        // incidental collection updates without being saved to the collection.
+        updateTab(activeTab.id, { isModified: true, draftRequest: updated });
       }
     }
   }, [request, activeTab, updateTab]);
@@ -208,11 +237,6 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
 
   const handleSend = useCallback(async () => {
     if (!request || isLoading) return;
-
-    // Auto-save before sending (only for requests that belong to a collection)
-    if (activeTab?.collectionId && !activeTab?.isHistoryItem) {
-      handleSave();
-    }
 
     // Create a fresh AbortController for this request
     const controller = new AbortController();

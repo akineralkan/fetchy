@@ -547,11 +547,22 @@ export const useAppStore = create<AppStore>()(
             }
           }
 
-          // If the request name was updated, update any open tabs
+          // If the request name was updated, keep all open tabs in sync.
+          // • If the tab has a draftRequest (unsaved edits), update only the name field
+          //   inside the draft so the user's other modifications are not discarded.
+          // • If there is no draft, reset isModified so the panel reloads the new name
+          //   from the collection (original behaviour).
           if (updates.name) {
             state.tabs = state.tabs.map(tab => {
               if (tab.type === 'request' && tab.requestId === requestId) {
-                return { ...tab, title: updates.name!, isModified: false };
+                const draft = tab.draftRequest;
+                return {
+                  ...tab,
+                  title: updates.name!,
+                  ...(draft
+                    ? { draftRequest: { ...draft, name: updates.name! } }
+                    : { isModified: false }),
+                };
               }
               return tab;
             });

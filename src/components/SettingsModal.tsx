@@ -264,10 +264,6 @@ export default function SettingsModal({ isOpen, onClose, onOpenWorkspaces, initi
             <h3 className='text-sm font-medium text-white uppercase tracking-wider'>General Settings</h3>
             <div className='space-y-3'>
               <div className='flex items-center justify-between'>
-                <div><label className='text-sm text-gray-300'>Auto-save</label><p className='text-xs text-gray-500'>Automatically save changes to collections</p></div>
-                <input type='checkbox' checked={preferences.autoSave} onChange={(e) => savePreferences({ autoSave: e.target.checked })} className='w-4 h-4 rounded border-[#2d2d44] bg-[#0f0f1a] text-purple-500 focus:ring-purple-500' />
-              </div>
-              <div className='flex items-center justify-between'>
                 <div><label className='text-sm text-gray-300'>Max History Items</label><p className='text-xs text-gray-500'>Number of request history items to keep</p></div>
                 <input type='number' min={10} max={500} value={preferences.maxHistoryItems} onChange={(e) => savePreferences({ maxHistoryItems: parseInt(e.target.value) || 100 })} className='w-20 px-2 py-1 bg-[#0f0f1a] border border-[#2d2d44] rounded text-white text-sm focus:outline-none focus:border-purple-500' />
               </div>

@@ -59,10 +59,14 @@ const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(
   const isLight = isLightTheme(preferences.theme);
 
   // Mutable refs so the extensions always see the latest values without being recreated
+  const onChangeRef = useRef(onChange);
   const variableStatusesRef = useRef(variableStatuses ?? {});
   const onCursorActivityRef = useRef(onCursorActivity);
   const onKeyDownInterceptRef = useRef(onKeyDownIntercept);
+  // Flag to suppress onChange when we are programmatically syncing the editor content
+  const isSyncingRef = useRef(false);
 
+  useEffect(() => { onChangeRef.current = onChange; }, [onChange]);
   useEffect(() => { variableStatusesRef.current = variableStatuses ?? {}; }, [variableStatuses]);
   useEffect(() => { onCursorActivityRef.current = onCursorActivity; }, [onCursorActivity]);
   useEffect(() => { onKeyDownInterceptRef.current = onKeyDownIntercept; }, [onKeyDownIntercept]);
@@ -120,8 +124,8 @@ const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(
         '& .cm-content ::selection': { backgroundColor: 'rgba(99, 153, 225, 0.35)' },
       })),
       EditorView.updateListener.of((update) => {
-        if (update.docChanged && !readOnly) {
-          onChange(update.state.doc.toString());
+        if (update.docChanged && !readOnly && !isSyncingRef.current) {
+          onChangeRef.current(update.state.doc.toString());
         }
         if (update.docChanged || update.selectionSet) {
           const cb = onCursorActivityRef.current;
@@ -170,11 +174,15 @@ const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(
     };
   }, [language, readOnly, isLight]);
 
-  // Update content when value changes externally
+  // Update content when value changes externally (e.g. tab switch).
+  // We set isSyncingRef so the updateListener does NOT fire onChange for
+  // this programmatic content swap — otherwise the stale callback from
+  // the previous tab would be invoked before React reconciles.
   useEffect(() => {
     if (viewRef.current) {
       const currentValue = viewRef.current.state.doc.toString();
       if (currentValue !== value) {
+        isSyncingRef.current = true;
         viewRef.current.dispatch({
           changes: {
             from: 0,
@@ -182,6 +190,7 @@ const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(
             insert: value,
           },
         });
+        isSyncingRef.current = false;
       }
     }
   }, [value]);
