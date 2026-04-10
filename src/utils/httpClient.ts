@@ -84,124 +84,28 @@ export const executeRequest = async ({
     ? inheritedAuth
     : request.auth;
 
-  // Process URL with variables (collection vars take precedence over env vars)
-  let url = replaceVariables(request.url, collectionVariables, environmentVariables);
-
-  // Strip any inline query params from the URL (they are already synced to request.params)
-  const qIndex = url.indexOf('?');
-  if (qIndex >= 0) {
-    url = url.substring(0, qIndex);
-  }
-
-  // Add query parameters from Params tab — use encodeURIComponent for RFC 3986-compliant
-  // encoding (%20 for spaces, not +) and resolve <<variable>> in both key and value.
-  const enabledParams = request.params.filter(p => p.enabled && p.key);
-  if (enabledParams.length > 0) {
-    const qs = enabledParams
-      .map(p => {
-        const key = encodeURIComponent(replaceVariables(p.key, collectionVariables, environmentVariables));
-        const value = encodeURIComponent(replaceVariables(p.value, collectionVariables, environmentVariables));
-        return `${key}=${value}`;
-      })
-      .join('&');
-    url = `${url}?${qs}`;
-  }
-
-  // Add API key to query if configured
-  if (effectiveAuth.type === 'api-key' && effectiveAuth.apiKey?.addTo === 'query') {
-    const key = replaceVariables(effectiveAuth.apiKey.key, collectionVariables, environmentVariables);
-    const value = replaceVariables(effectiveAuth.apiKey.value, collectionVariables, environmentVariables);
-    // Only add query parameter if both key and value are not empty
-    if (key && key.trim() && value && value.trim()) {
-      const encodedKey = encodeURIComponent(key);
-      const encodedValue = encodeURIComponent(value);
-      url = `${url}${url.includes('?') ? '&' : '?'}${encodedKey}=${encodedValue}`;
-    }
-  }
-
-  // Build headers
-  const headers: Record<string, string> = {};
-
-  // Add request headers
-  for (const header of request.headers) {
-    if (header.enabled && header.key && header.key.trim()) {
-      const headerValue = replaceVariables(header.value, collectionVariables, environmentVariables);
-      // Allow empty values for headers (some headers can be empty), but trim the key
-      headers[header.key.trim()] = headerValue;
-    }
-  }
-
-  // Add auth headers
-  if (effectiveAuth.type === 'bearer' && effectiveAuth.bearer) {
-    const token = replaceVariables(effectiveAuth.bearer.token, collectionVariables, environmentVariables);
-    if (token && token.trim()) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-  } else if (effectiveAuth.type === 'basic' && effectiveAuth.basic) {
-    const username = replaceVariables(effectiveAuth.basic.username, collectionVariables, environmentVariables);
-    const password = replaceVariables(effectiveAuth.basic.password, collectionVariables, environmentVariables);
-    if (username && username.trim()) {
-      const credentials = btoa(`${username}:${password}`);
-      headers['Authorization'] = `Basic ${credentials}`;
-    }
-  } else if (effectiveAuth.type === 'api-key' && effectiveAuth.apiKey?.addTo === 'header') {
-    const key = replaceVariables(effectiveAuth.apiKey.key, collectionVariables, environmentVariables);
-    const value = replaceVariables(effectiveAuth.apiKey.value, collectionVariables, environmentVariables);
-    if (key && key.trim() && value && value.trim()) {
-      headers[key] = value;
-    }
-  }
-
-  // Build body
-  let body: string | FormData | undefined;
-
-  if (request.method !== 'GET' && request.method !== 'HEAD') {
-    switch (request.body.type) {
-      case 'json':
-        headers['Content-Type'] = headers['Content-Type'] || 'application/json';
-        body = replaceVariables(request.body.raw || '', collectionVariables, environmentVariables);
-        break;
-      case 'raw':
-        body = replaceVariables(request.body.raw || '', collectionVariables, environmentVariables);
-        break;
-      case 'x-www-form-urlencoded': {
-        headers['Content-Type'] = headers['Content-Type'] || 'application/x-www-form-urlencoded';
-        const params = new URLSearchParams();
-        for (const item of request.body.urlencoded || []) {
-          if (item.enabled && item.key) {
-            params.append(item.key, replaceVariables(item.value, collectionVariables, environmentVariables));
-          }
-        }
-        body = params.toString();
-        break;
-      }
-      case 'form-data': {
-        const formData = new FormData();
-        for (const item of request.body.formData || []) {
-          if (item.enabled && item.key) {
-            formData.append(item.key, replaceVariables(item.value, collectionVariables, environmentVariables));
-          }
-        }
-        body = formData;
-        // Don't set Content-Type for FormData, let the browser set it with boundary
-        delete headers['Content-Type'];
-        break;
-      }
-    }
-  }
-
   const { updateTab, activeTabId } = useAppStore.getState();
   if (activeTabId) {
     updateTab(activeTabId, { scriptExecutionStatus: 'none' });
   }
 
-  // Run collection-level pre-script first, then request-level pre-script.
+  // ---------------------------------------------------------------------------
+  // Run pre-scripts BEFORE variable replacement so that variables set by
+  // fetchy.environment.set() / pm.environment.set() are available in the
+  // request URL, headers, body, auth, and query parameters.
   // Collection pre-scripts run before request pre-scripts.
+  //
+  // We collect envUpdates locally so that even when no environment is active
+  // (applyEnvUpdates early-returns), newly created variables are still
+  // merged into the env used for variable replacement.
+  // ---------------------------------------------------------------------------
   const allPreScriptOutputs: string[] = [];
+  const allEnvUpdates: Array<{ key: string; value: string }> = [];
 
   if (collectionPreScript) {
     const collPreResult = await runScriptInWorker(collectionPreScript, 'pre', environmentVariables);
     applyEnvUpdates(collPreResult.envUpdates);
+    if (collPreResult.envUpdates) allEnvUpdates.push(...collPreResult.envUpdates);
     if (collPreResult.output) allPreScriptOutputs.push('[Collection Pre-Script]\n' + collPreResult.output);
     if (collPreResult.error) {
       return {
@@ -218,8 +122,17 @@ export const executeRequest = async ({
   }
 
   if (request.preScript) {
-    const preScriptResult = await runScriptInWorker(request.preScript, 'pre', environmentVariables);
+    // Build the env snapshot for the request pre-script: start from the store
+    // (which includes collection pre-script updates when an environment is active),
+    // then layer on locally-collected envUpdates so new variables created by the
+    // collection pre-script are visible even without an active environment.
+    const latestEnvForReqScript = mergeScriptEnvUpdates(
+      useAppStore.getState().getActiveEnvironment()?.variables || environmentVariables,
+      allEnvUpdates,
+    );
+    const preScriptResult = await runScriptInWorker(request.preScript, 'pre', latestEnvForReqScript);
     applyEnvUpdates(preScriptResult.envUpdates);
+    if (preScriptResult.envUpdates) allEnvUpdates.push(...preScriptResult.envUpdates);
     if (preScriptResult.output) allPreScriptOutputs.push('[Request Pre-Script]\n' + preScriptResult.output);
     if (preScriptResult.error) {
       return {
@@ -235,6 +148,122 @@ export const executeRequest = async ({
     }
   }
   const preScriptOutput = allPreScriptOutputs.length > 0 ? allPreScriptOutputs.join('\n') : undefined;
+
+  // Build the definitive environment for variable replacement.
+  // Start from the store (captures applyEnvUpdates writes when an env is active),
+  // then merge collected envUpdates on top so that:
+  //  • newly created variables are present even without an active environment
+  //  • the latest value always wins if a variable was set multiple times
+  const resolvedEnvVars = mergeScriptEnvUpdates(
+    useAppStore.getState().getActiveEnvironment()?.variables || environmentVariables,
+    allEnvUpdates,
+  );
+
+  // Process URL with variables (collection vars take precedence over env vars)
+  let url = replaceVariables(request.url, collectionVariables, resolvedEnvVars);
+
+  // Strip any inline query params from the URL (they are already synced to request.params)
+  const qIndex = url.indexOf('?');
+  if (qIndex >= 0) {
+    url = url.substring(0, qIndex);
+  }
+
+  // Add query parameters from Params tab — use encodeURIComponent for RFC 3986-compliant
+  // encoding (%20 for spaces, not +) and resolve <<variable>> in both key and value.
+  const enabledParams = request.params.filter(p => p.enabled && p.key);
+  if (enabledParams.length > 0) {
+    const qs = enabledParams
+      .map(p => {
+        const key = encodeURIComponent(replaceVariables(p.key, collectionVariables, resolvedEnvVars));
+        const value = encodeURIComponent(replaceVariables(p.value, collectionVariables, resolvedEnvVars));
+        return `${key}=${value}`;
+      })
+      .join('&');
+    url = `${url}?${qs}`;
+  }
+
+  // Add API key to query if configured
+  if (effectiveAuth.type === 'api-key' && effectiveAuth.apiKey?.addTo === 'query') {
+    const key = replaceVariables(effectiveAuth.apiKey.key, collectionVariables, resolvedEnvVars);
+    const value = replaceVariables(effectiveAuth.apiKey.value, collectionVariables, resolvedEnvVars);
+    // Only add query parameter if both key and value are not empty
+    if (key && key.trim() && value && value.trim()) {
+      const encodedKey = encodeURIComponent(key);
+      const encodedValue = encodeURIComponent(value);
+      url = `${url}${url.includes('?') ? '&' : '?'}${encodedKey}=${encodedValue}`;
+    }
+  }
+
+  // Build headers
+  const headers: Record<string, string> = {};
+
+  // Add request headers
+  for (const header of request.headers) {
+    if (header.enabled && header.key && header.key.trim()) {
+      const headerValue = replaceVariables(header.value, collectionVariables, resolvedEnvVars);
+      // Allow empty values for headers (some headers can be empty), but trim the key
+      headers[header.key.trim()] = headerValue;
+    }
+  }
+
+  // Add auth headers
+  if (effectiveAuth.type === 'bearer' && effectiveAuth.bearer) {
+    const token = replaceVariables(effectiveAuth.bearer.token, collectionVariables, resolvedEnvVars);
+    if (token && token.trim()) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+  } else if (effectiveAuth.type === 'basic' && effectiveAuth.basic) {
+    const username = replaceVariables(effectiveAuth.basic.username, collectionVariables, resolvedEnvVars);
+    const password = replaceVariables(effectiveAuth.basic.password, collectionVariables, resolvedEnvVars);
+    if (username && username.trim()) {
+      const credentials = btoa(`${username}:${password}`);
+      headers['Authorization'] = `Basic ${credentials}`;
+    }
+  } else if (effectiveAuth.type === 'api-key' && effectiveAuth.apiKey?.addTo === 'header') {
+    const key = replaceVariables(effectiveAuth.apiKey.key, collectionVariables, resolvedEnvVars);
+    const value = replaceVariables(effectiveAuth.apiKey.value, collectionVariables, resolvedEnvVars);
+    if (key && key.trim() && value && value.trim()) {
+      headers[key] = value;
+    }
+  }
+
+  // Build body
+  let body: string | FormData | undefined;
+
+  if (request.method !== 'GET' && request.method !== 'HEAD') {
+    switch (request.body.type) {
+      case 'json':
+        headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+        body = replaceVariables(request.body.raw || '', collectionVariables, resolvedEnvVars);
+        break;
+      case 'raw':
+        body = replaceVariables(request.body.raw || '', collectionVariables, resolvedEnvVars);
+        break;
+      case 'x-www-form-urlencoded': {
+        headers['Content-Type'] = headers['Content-Type'] || 'application/x-www-form-urlencoded';
+        const params = new URLSearchParams();
+        for (const item of request.body.urlencoded || []) {
+          if (item.enabled && item.key) {
+            params.append(item.key, replaceVariables(item.value, collectionVariables, resolvedEnvVars));
+          }
+        }
+        body = params.toString();
+        break;
+      }
+      case 'form-data': {
+        const formData = new FormData();
+        for (const item of request.body.formData || []) {
+          if (item.enabled && item.key) {
+            formData.append(item.key, replaceVariables(item.value, collectionVariables, resolvedEnvVars));
+          }
+        }
+        body = formData;
+        // Don't set Content-Type for FormData, let the browser set it with boundary
+        delete headers['Content-Type'];
+        break;
+      }
+    }
+  }
 
   try {
     // If in Electron, use the main process for HTTP requests to bypass CORS.
@@ -612,5 +641,38 @@ const applyEnvUpdates = (envUpdates?: Array<{ key: string; value: string }>) => 
     }
   }
   updateEnvironment(activeEnvironment.id, { variables });
+};
+
+/**
+ * Merge script-produced env updates into an existing environment variables array.
+ * For existing keys, `currentValue` is overwritten; for new keys a new entry is
+ * created.  This is a pure function — it does NOT mutate the input array.
+ *
+ * Used to guarantee that variables created/modified by pre-scripts are visible
+ * for variable replacement even when no active environment is selected
+ * (applyEnvUpdates cannot persist to the store without an active environment).
+ */
+const mergeScriptEnvUpdates = (
+  base: KeyValue[],
+  updates: Array<{ key: string; value: string }>,
+): KeyValue[] => {
+  if (!updates || updates.length === 0) return base;
+
+  const merged = [...base];
+  for (const { key, value } of updates) {
+    const idx = merged.findIndex(v => v.key === key);
+    if (idx > -1) {
+      merged[idx] = { ...merged[idx], currentValue: value };
+    } else {
+      merged.push({
+        id: `script-${key}-${Date.now()}`,
+        key,
+        value: '',
+        currentValue: value,
+        enabled: true,
+      });
+    }
+  }
+  return merged;
 };
 
