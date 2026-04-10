@@ -24,3 +24,29 @@ export function formatJson(raw: string): string {
     return raw;
   }
 }
+
+export interface JsonValidationResult {
+  valid: boolean;
+  error?: string;
+}
+
+/**
+ * Validate a JSON string, substituting any `<<variable>>` template tokens
+ * with placeholder values so they don't produce false-positive errors.
+ */
+export function validateJson(raw: string): JsonValidationResult {
+  if (!raw || !raw.trim()) return { valid: false, error: 'Body is empty' };
+  // Replace already-quoted variables: "<<var>>" → "__var__"
+  let sanitized = raw.replace(/"<<[^>]+>>"/g, '"__var__"');
+  // Replace bare (unquoted) variables: <<var>> → "__var__"
+  sanitized = sanitized.replace(/<<[^>]+>>/g, '"__var__"');
+  try {
+    JSON.parse(sanitized);
+    return { valid: true };
+  } catch (e) {
+    return {
+      valid: false,
+      error: e instanceof SyntaxError ? e.message : 'Invalid JSON',
+    };
+  }
+}

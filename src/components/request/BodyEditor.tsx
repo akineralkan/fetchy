@@ -1,7 +1,8 @@
 import { useState, useCallback, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Plus, Trash2, Braces } from 'lucide-react';
-import { formatJson } from '../../utils/editorUtils';
+import { Plus, Trash2, Braces, ShieldCheck, CheckCircle2, AlertCircle } from 'lucide-react';
+import Tooltip from '../Tooltip';
+import { formatJson, validateJson, JsonValidationResult } from '../../utils/editorUtils';
 import { KeyValue, RequestBody } from '../../types';
 import { v4 as uuidv4 } from 'uuid';
 import VariableInput from '../VariableInput';
@@ -54,11 +55,16 @@ export default function BodyEditor({ body, onChange }: BodyEditorProps) {
   const [suggestionPos, setSuggestionPos] = useState<{ x: number; y: number } | null>(null);
   const lastCursorRef = useRef<{ pos: number; startIdx: number } | null>(null);
   const codeEditorRef = useRef<CodeEditorHandle>(null);
+  const [jsonValidation, setJsonValidation] = useState<JsonValidationResult | null>(null);
 
   const handleFormatJson = useCallback(() => {
     const formatted = formatJson(body.raw || '');
     if (formatted !== (body.raw || '')) onChange({ ...body, raw: formatted });
   }, [body, onChange]);
+
+  const handleValidateJson = useCallback(() => {
+    setJsonValidation(validateJson(body.raw || ''));
+  }, [body.raw]);
 
   const handleCursorActivity = useCallback((value: string, cursorPos: number, coords: { x: number; y: number } | null) => {
     const textBefore = value.substring(0, cursorPos);
@@ -133,6 +139,34 @@ export default function BodyEditor({ body, onChange }: BodyEditorProps) {
               <Braces size={13} />
               Format
             </button>
+            <Tooltip
+              content={
+                jsonValidation
+                  ? jsonValidation.valid
+                    ? '\u2713 Valid JSON'
+                    : `\u2717 ${jsonValidation.error}`
+                  : 'Validate JSON'
+              }
+              delay={jsonValidation ? 0 : 500}
+            >
+              <button
+                onClick={handleValidateJson}
+                className={`flex items-center gap-1.5 px-2 py-1 text-xs rounded hover:bg-fetchy-border transition-colors ${
+                  jsonValidation
+                    ? jsonValidation.valid
+                      ? 'text-green-500 hover:text-green-400'
+                      : 'text-red-400 hover:text-red-300'
+                    : 'text-fetchy-text-muted hover:text-fetchy-text'
+                }`}
+              >
+                {jsonValidation ? (
+                  jsonValidation.valid ? <CheckCircle2 size={13} /> : <AlertCircle size={13} />
+                ) : (
+                  <ShieldCheck size={13} />
+                )}
+                Validate
+              </button>
+            </Tooltip>
           </>
         )}
       </div>
@@ -149,7 +183,7 @@ export default function BodyEditor({ body, onChange }: BodyEditorProps) {
             <CodeEditor
               ref={codeEditorRef}
               value={body.raw || ''}
-              onChange={(value: string) => onChange({ ...body, raw: value })}
+              onChange={(value: string) => { setJsonValidation(null); onChange({ ...body, raw: value }); }}
               language="json"
               variableStatuses={variableStatuses}
               onCursorActivity={handleCursorActivity}
