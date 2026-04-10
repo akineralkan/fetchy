@@ -225,15 +225,6 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
     const environment = getActiveEnvironment();
     const inheritedAuth = getInheritedAuth();
 
-    // Resolve variables for history and sentRequest display
-    const resolvedRequest = resolveRequestVariables(
-      request,
-      collection?.variables || [],
-      environment?.variables || []
-    );
-
-    setSentRequest?.(resolvedRequest);
-
     try {
       const response = await executeRequest({
         request,
@@ -245,6 +236,17 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
         signal: controller.signal,
       });
 
+      // Resolve variables AFTER executeRequest so that prescripts have already
+      // updated the environment (via fetchy.environment.set / pm.environment.set).
+      // Re-read the environment from the store to pick up prescript changes.
+      const postScriptEnv = getActiveEnvironment();
+      const resolvedRequest = resolveRequestVariables(
+        request,
+        collection?.variables || [],
+        postScriptEnv?.variables || []
+      );
+
+      setSentRequest?.(resolvedRequest);
       setResponse(response);
       // Save to history with resolved variables so actual values are shown
       addToHistory({ request: resolvedRequest, response });
