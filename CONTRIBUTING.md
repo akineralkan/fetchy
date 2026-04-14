@@ -7,6 +7,7 @@ Thank you for your interest in contributing to **Fetchy** — a privacy-focused,
 ## Table of Contents
 
 - [AI-Driven Development](#ai-driven-development)
+- [Understanding the Codebase](#understanding-the-codebase)
 - [Demands / Feature Requests](#demands--feature-requests)
 - [Bug Reports](#bug-reports)
 - [Contributing Code](#contributing-code)
@@ -28,6 +29,17 @@ Fetchy is an **AI-native project**. All contributors are expected to leverage AI
 - Your role as a contributor is to **guide, review, and validate** the agent's output rather than write code by hand.
 - Pull requests written entirely without AI assistance are not the expected workflow and may receive feedback asking you to adopt agentic tooling.
 - If you are new to AI-assisted development, the [GitHub Copilot documentation](https://docs.github.com/en/copilot) is a good starting point.
+
+---
+
+## Understanding the Codebase
+
+Before contributing, AI agents (and human contributors) should familiarize themselves with the project structure and conventions:
+
+- **[AGENTS.md](AGENTS.md)** — Comprehensive guide for AI coding agents. Covers project structure, architecture, key concepts, coding conventions, and common tasks. **Start here** if you're new to the codebase.
+- **[ARCHITECTURE_REVIEW.md](ARCHITECTURE_REVIEW.md)** — Technical assessment of the codebase including known issues and anti-patterns to avoid.
+- **[ROADMAP.md](ROADMAP.md)** — Prioritized remediation checklist tracking completed and pending improvements.
+- **[FEATURE_DEMANDS.md](FEATURE_DEMANDS.md)** — Product feature backlog for future development.
 
 ---
 

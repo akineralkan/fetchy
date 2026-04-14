@@ -378,6 +378,8 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 We welcome contributions from the community! Whether you want to report a bug, request a feature, or submit a code change, please read our [Contributing Guidelines](CONTRIBUTING.md) to get started.
 
+For AI coding agents, see [AGENTS.md](AGENTS.md) for a comprehensive guide to the project structure, architecture, and conventions.
+
 ---
 
 ## 📄 License
