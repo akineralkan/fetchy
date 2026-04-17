@@ -1,5 +1,5 @@
 import { useState, useRef, useMemo } from 'react';
-import { X, Plus, Trash2, Check, Edit2, Lock, Unlock, Download, Upload, Copy, GripVertical, Zap } from 'lucide-react';
+import { X, Plus, Trash2, Check, Edit2, Lock, Unlock, Download, Upload, Copy, GripVertical, Zap, Sparkles, Loader2, Info } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -17,6 +17,8 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useAppStore } from '../store/appStore';
+import { usePreferencesStore } from '../store/preferencesStore';
+import { aiConvertEnvironment } from '../utils/aiImport';
 import { KeyValue, Environment } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -288,6 +290,9 @@ export default function EnvironmentModal({ onClose }: EnvironmentModalProps) {
   const [importSuccess, setImportSuccess] = useState<string | null>(null);
   const [varSearchQuery, setVarSearchQuery] = useState('');
   const [deleteConfirmEnvId, setDeleteConfirmEnvId] = useState<string | null>(null);
+  const [aiAssisted, setAiAssisted] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const { aiSettings } = usePreferencesStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Drag and drop sensors
@@ -394,9 +399,31 @@ export default function EnvironmentModal({ onClose }: EnvironmentModalProps) {
     setImportSuccess(null);
 
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       try {
         const content = event.target?.result as string;
+
+        // ── AI-assisted path ──────────────────────────────────────
+        if (aiAssisted) {
+          setAiLoading(true);
+          try {
+            const { environment, error: aiErr } = await aiConvertEnvironment(aiSettings, content);
+            if (aiErr || !environment) throw new Error(aiErr || 'AI conversion failed');
+
+            setDraftEnvironments(prev => [...prev, environment]);
+            setSelectedEnvId(environment.id);
+            setImportSuccess(`AI imported "${environment.name}"`);
+            setTimeout(() => setImportSuccess(null), 3000);
+          } catch (err) {
+            setImportError(err instanceof Error ? err.message : 'AI-assisted import failed');
+            setTimeout(() => setImportError(null), 5000);
+          } finally {
+            setAiLoading(false);
+          }
+          return;
+        }
+
+        // ── Standard path ─────────────────────────────────────────
         const data = JSON.parse(content);
 
         // Validate the imported data
@@ -543,7 +570,7 @@ export default function EnvironmentModal({ onClose }: EnvironmentModalProps) {
             type="file"
             ref={fileInputRef}
             onChange={handleFileSelect}
-            accept=".json"
+            accept={aiAssisted ? '*' : '.json'}
             className="hidden"
           />
 
@@ -556,12 +583,36 @@ export default function EnvironmentModal({ onClose }: EnvironmentModalProps) {
               >
                 <Plus size={16} /> Add Environment
               </button>
-              <button
-                onClick={handleImportClick}
-                className="btn btn-secondary w-full flex items-center justify-center gap-2 text-sm"
-              >
-                <Download size={16} /> Import
-              </button>
+              {/* Import + AI toggle — split button */}
+              <div className={`flex items-stretch rounded border ${aiAssisted && aiSettings.enabled ? 'border-fetchy-accent/50' : 'border-fetchy-border'} transition-colors`}>
+                <button
+                  onClick={handleImportClick}
+                  disabled={aiLoading}
+                  className={`flex-1 flex items-center justify-center gap-2 text-sm px-3 py-1.5 transition-colors disabled:opacity-50 rounded-l
+                    ${aiAssisted && aiSettings.enabled
+                      ? 'bg-fetchy-accent/10 text-fetchy-accent hover:bg-fetchy-accent/20'
+                      : 'bg-fetchy-card text-fetchy-text hover:bg-fetchy-border'
+                    }`}
+                >
+                  {aiLoading ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+                  <span>{aiLoading ? 'Converting...' : aiAssisted && aiSettings.enabled ? 'AI Import' : 'Import'}</span>
+                </button>
+                {aiSettings.enabled && (
+                  <button
+                    onClick={() => setAiAssisted(!aiAssisted)}
+                    className={`group relative flex items-center justify-center px-2 border-l transition-colors rounded-r
+                      ${aiAssisted
+                        ? 'border-fetchy-accent/50 bg-fetchy-accent/10 text-fetchy-accent hover:bg-fetchy-accent/20'
+                        : 'border-fetchy-border bg-fetchy-card text-fetchy-text-muted hover:text-fetchy-accent hover:bg-fetchy-border'
+                      }`}
+                  >
+                    <Sparkles size={12} />
+                    <span className="pointer-events-none absolute top-1/2 -translate-y-1/2 left-full ml-2 px-3 py-2 bg-fetchy-tooltip text-fetchy-text text-xs rounded-lg shadow-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-50">
+                      Uses AI to convert any file format<br/>into Fetchy environment format.<br/>Best-effort — minor inconsistencies possible.
+                    </span>
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Import success/error messages */}

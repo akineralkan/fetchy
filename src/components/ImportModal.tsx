@@ -1,7 +1,8 @@
 import { useState, useRef, useCallback } from 'react';
-import { X, Download, FileJson, AlertCircle, Check, Globe, FolderOpen, Braces, Terminal } from 'lucide-react';
+import { X, Download, FileJson, AlertCircle, Check, Globe, FolderOpen, Braces, Terminal, Sparkles, Loader2, Info } from 'lucide-react';
 import { getFirstDroppedFile } from '../utils/fileUtils';
 import { useAppStore } from '../store/appStore';
+import { usePreferencesStore } from '../store/preferencesStore';
 import {
   importPostmanCollection,
   importPostmanEnvironment,
@@ -12,6 +13,7 @@ import {
   importBrunoEnvironment,
 } from '../utils/helpers';
 import { parseCurlCommand } from '../utils/curlParser';
+import { aiConvertCollection, aiConvertEnvironment, aiConvertRequest } from '../utils/aiImport';
 import { Collection, Environment } from '../types';
 
 // ---------------------------------------------------------------------------
@@ -92,6 +94,9 @@ export default function ImportModal({ onClose, initialImportType = 'postman' }: 
 
   const [curlInput, setCurlInput] = useState('');
   const [isDragging, setIsDragging] = useState(false);
+  const [aiAssisted, setAiAssisted] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const { aiSettings } = usePreferencesStore();
 
   // Reset state when switching category
   const handleCategoryChange = useCallback((cat: ImportCategory) => {
@@ -166,7 +171,64 @@ export default function ImportModal({ onClose, initialImportType = 'postman' }: 
     readFile(file);
   }, [readFile]);
 
-  const handleImport = useCallback(() => {
+  const handleImport = useCallback(async () => {
+    // ── AI-Assisted import path ──────────────────────────────────────────
+    if (aiAssisted) {
+      const content = category === 'request' ? curlInput.trim() : fileContent;
+      if (!content) {
+        setError(category === 'request' ? 'Please enter content to import' : 'Please select a file or paste content');
+        return;
+      }
+
+      setError(null);
+      setSuccess(null);
+      setAiLoading(true);
+
+      try {
+        if (category === 'request') {
+          const { request, error: aiErr } = await aiConvertRequest(aiSettings, content);
+          if (aiErr || !request) throw new Error(aiErr || 'AI conversion failed');
+
+          let targetCollectionId: string;
+          if (collections.length > 0) {
+            targetCollectionId = collections[0].id;
+          } else {
+            const collection = addCollection('My Collection');
+            targetCollectionId = collection.id;
+          }
+
+          const newRequest = addRequest(targetCollectionId, null, request);
+          openTab({
+            type: 'request',
+            title: newRequest.name,
+            requestId: newRequest.id,
+            collectionId: targetCollectionId,
+          });
+          setSuccess(`AI imported request "${newRequest.name}"`);
+          setTimeout(onClose, 1500);
+        } else if (category === 'collection' || !isEnvironmentSource(source)) {
+          const { collection, error: aiErr } = await aiConvertCollection(aiSettings, content);
+          if (aiErr || !collection) throw new Error(aiErr || 'AI conversion failed');
+
+          importCollection(collection);
+          setSuccess(`AI imported collection "${collection.name}"`);
+          setTimeout(onClose, 1500);
+        } else {
+          const { environment, error: aiErr } = await aiConvertEnvironment(aiSettings, content);
+          if (aiErr || !environment) throw new Error(aiErr || 'AI conversion failed');
+
+          importEnvironment(environment);
+          setSuccess(`AI imported environment "${environment.name}"`);
+          setTimeout(onClose, 1500);
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'AI-assisted import failed');
+      } finally {
+        setAiLoading(false);
+      }
+      return;
+    }
+
     // ── Request (cURL) import ───────────────────────────────────────────
     if (category === 'request') {
       if (!curlInput.trim()) {
@@ -298,7 +360,7 @@ export default function ImportModal({ onClose, initialImportType = 'postman' }: 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Import failed');
     }
-  }, [fileContent, curlInput, source, category, onClose, importCollection, importEnvironment, collections, addCollection, addRequest, openTab]);
+  }, [fileContent, curlInput, source, category, onClose, importCollection, importEnvironment, collections, addCollection, addRequest, openTab, aiAssisted, aiSettings]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
@@ -440,6 +502,32 @@ export default function ImportModal({ onClose, initialImportType = 'postman' }: 
             </>
           )}
 
+          {/* AI-Assisted Import checkbox */}
+          {aiSettings.enabled && (
+            <div className="mb-4">
+              <label className="inline-flex items-center gap-2 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={aiAssisted}
+                  onChange={(e) => setAiAssisted(e.target.checked)}
+                  className="w-4 h-4 rounded border-fetchy-border text-fetchy-accent focus:ring-fetchy-accent bg-fetchy-input"
+                />
+                <Sparkles size={16} className={aiAssisted ? 'text-fetchy-accent' : 'text-fetchy-text-muted'} />
+                <span className={`text-sm font-medium ${aiAssisted ? 'text-fetchy-accent' : 'text-fetchy-text'}`}>
+                  AI-Assisted Import
+                </span>
+                <span className="relative">
+                  <Info size={14} className="text-fetchy-text-muted hover:text-fetchy-text cursor-help" />
+                  <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-fetchy-tooltip text-fetchy-text text-xs rounded-lg shadow-lg whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50">
+                    Uses AI to convert any file format into Fetchy&apos;s expected format.<br/>
+                    Best-effort conversion — there may be minor inconsistencies.<br/>
+                    Helps import files from unsupported or custom formats.
+                  </span>
+                </span>
+              </label>
+            </div>
+          )}
+
           {/* Error / Success messages */}
           {error && (
             <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg flex items-center gap-2 text-red-400">
@@ -463,10 +551,11 @@ export default function ImportModal({ onClose, initialImportType = 'postman' }: 
           </button>
           <button
             onClick={handleImport}
-            disabled={category === 'request' ? !curlInput.trim() : !fileContent}
-            className="btn btn-primary disabled:opacity-50"
+            disabled={(category === 'request' ? !curlInput.trim() : !fileContent) || aiLoading}
+            className="btn btn-primary disabled:opacity-50 flex items-center gap-2"
           >
-            Import
+            {aiLoading && <Loader2 size={16} className="animate-spin" />}
+            {aiLoading ? 'Converting with AI...' : aiAssisted ? 'AI Import' : 'Import'}
           </button>
         </div>
       </div>

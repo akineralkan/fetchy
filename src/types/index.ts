@@ -2,6 +2,8 @@
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS';
 
+export type AppMode = 'rest' | 'graphql' | 'grpc' | 'websocket' | 'mqtt' | 'socketio' | 'sse';
+
 export interface KeyValue {
   id: string;
   key: string;

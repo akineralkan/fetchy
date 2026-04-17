@@ -1,10 +1,5 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { HelpCircle, Settings, RefreshCw, PanelLeftClose, PanelLeftOpen, Rows, Columns, BookOpen, Star, Github, Keyboard } from 'lucide-react';
-import Sidebar from './components/Sidebar';
-import TabBar from './components/TabBar';
-import RequestPanel from './components/RequestPanel';
-import ResponsePanel from './components/ResponsePanel';
-import WelcomeScreen from './components/WelcomeScreen';
 import ImportModal, { type ImportSource } from './components/ImportModal';
 import ImportRequestModal from './components/ImportRequestModal';
 import ExportModal from './components/ExportModal';
@@ -18,44 +13,33 @@ import CreateWorkspaceScreen from './components/CreateWorkspaceScreen';
 import UpdateModal from './components/UpdateModal';
 import UpdateBanner from './components/UpdateBanner';
 import ThemeToggle from './components/ThemeToggle';
-import ResizeHandle from './components/ResizeHandle';
 import Tooltip from './components/Tooltip';
-import OpenApiEditor from './components/OpenApiEditor';
-import CollectionConfigPanel from './components/CollectionConfigPanel';
+import ModeDropdown from './components/ModeDropdown';
+import ComingSoonView from './components/ComingSoonView';
+import RestModeView from './components/RestModeView';
 import { useAppStore, rehydrateWorkspace } from './store/appStore';
 import { invalidateWriteCache } from './store/persistence';
 import { usePreferencesStore } from './store/preferencesStore';
 import { useWorkspacesStore } from './store/workspacesStore';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
-import { ApiResponse, RequestHistoryItem, ApiRequest } from './types';
-
-interface TabResponseData {
-  response: ApiResponse | null;
-  sentRequest: ApiRequest | null;
-  isLoading: boolean;
-}
+import { AppMode } from './types';
 
 function App() {
   const {
     tabs,
     activeTabId,
-    sidebarWidth,
     sidebarCollapsed,
     toggleSidebar,
     collections,
     addCollection,
     addRequest,
     openTab,
-    setSidebarWidth,
-    requestPanelWidth,
-    setRequestPanelWidth,
     panelLayout,
     togglePanelLayout,
   } = useAppStore();
   const { loadPreferences, loadAISecrets, loadJiraSecrets } = usePreferencesStore();
   const { workspaces, activeWorkspaceId, isLoading: workspacesLoading, loadWorkspaces } = useWorkspacesStore();
   const activeWorkspace = workspaces.find((w) => w.id === activeWorkspaceId) ?? null;
-  const [tabResponses, setTabResponses] = useState<Record<string, TabResponseData>>({});
   const [showImportModal, setShowImportModal] = useState(false);
   const [importType, setImportType] = useState<ImportSource>('postman');
   const [showImportRequestModal, setShowImportRequestModal] = useState(false);
@@ -69,6 +53,7 @@ function App() {
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const [postUpdateInfo, setPostUpdateInfo] = useState<any>(null);
   const [githubStars, setGithubStars] = useState<number | null>(null);
+  const [activeMode, setActiveMode] = useState<AppMode>('rest');
 
   useEffect(() => {
     fetch('https://api.github.com/repos/akineralkan/fetchy')
@@ -103,70 +88,6 @@ function App() {
     });
     return () => api.offUpdaterEvent(listener);
   }, []);
-
-  const mainPanelRef = useRef<HTMLDivElement>(null);
-  const prevTabIdsRef = useRef<Set<string>>(new Set());
-  const [urlBarContainer, setUrlBarContainer] = useState<HTMLDivElement | null>(null);
-
-  // Derive per-tab response data for the active tab
-  const currentTabData = activeTabId ? tabResponses[activeTabId] : undefined;
-  const response = currentTabData?.response ?? null;
-  const sentRequest = currentTabData?.sentRequest ?? null;
-  const isLoading = currentTabData?.isLoading ?? false;
-
-  // Per-tab setters that capture activeTabId at creation time
-  const setResponse = useCallback((resp: ApiResponse | null) => {
-    const tabId = activeTabId;
-    if (!tabId) return;
-    setTabResponses(prev => ({
-      ...prev,
-      [tabId]: {
-        ...(prev[tabId] ?? { response: null, sentRequest: null, isLoading: false }),
-        response: resp,
-      },
-    }));
-  }, [activeTabId]);
-
-  const setSentRequest = useCallback((req: ApiRequest | null) => {
-    const tabId = activeTabId;
-    if (!tabId) return;
-    setTabResponses(prev => ({
-      ...prev,
-      [tabId]: {
-        ...(prev[tabId] ?? { response: null, sentRequest: null, isLoading: false }),
-        sentRequest: req,
-      },
-    }));
-  }, [activeTabId]);
-
-  const setIsLoading = useCallback((loading: boolean) => {
-    const tabId = activeTabId;
-    if (!tabId) return;
-    setTabResponses(prev => ({
-      ...prev,
-      [tabId]: {
-        ...(prev[tabId] ?? { response: null, sentRequest: null, isLoading: false }),
-        isLoading: loading,
-      },
-    }));
-  }, [activeTabId]);
-
-  // Clean up response data when tabs are closed
-  useEffect(() => {
-    const currentTabIds = new Set(tabs.map(t => t.id));
-    const removedIds: string[] = [];
-    prevTabIdsRef.current.forEach(id => {
-      if (!currentTabIds.has(id)) removedIds.push(id);
-    });
-    if (removedIds.length > 0) {
-      setTabResponses(prev => {
-        const next = { ...prev };
-        removedIds.forEach(id => delete next[id]);
-        return next;
-      });
-    }
-    prevTabIdsRef.current = currentTabIds;
-  }, [tabs]);
 
   // Load preferences, AI secrets, Jira secrets, and workspaces on mount
   useEffect(() => {
@@ -206,35 +127,6 @@ function App() {
 
   const activeTab = tabs.find(t => t.id === activeTabId);
   const hasActiveRequest = activeTab?.type === 'request';
-  const hasActiveOpenApi = activeTab?.type === 'openapi';
-  const hasActiveCollection = activeTab?.type === 'collection';
-
-  // Load history response/request when switching to a history tab
-  useEffect(() => {
-    if (activeTab?.isHistoryItem && activeTabId && !tabResponses[activeTabId]) {
-      setTabResponses(prev => ({
-        ...prev,
-        [activeTabId]: {
-          response: activeTab.historyResponse ?? null,
-          sentRequest: activeTab.historyRequest ?? null,
-          isLoading: false,
-        },
-      }));
-    }
-  }, [activeTabId, activeTab?.isHistoryItem, activeTab?.historyResponse, activeTab?.historyRequest, tabResponses]);
-
-  const handleHistoryItemClick = useCallback((item: RequestHistoryItem) => {
-    // Open a new tab for the history item
-    openTab({
-      type: 'request',
-      title: `${item.request.method} ${item.request.name || 'History'}`,
-      isHistoryItem: true,
-      historyRequest: item.request,
-      historyResponse: item.response,
-    });
-
-    // Response will be loaded by the history tab effect when the tab becomes active
-  }, [openTab]);
 
   const handleNewRequest = useCallback(() => {
     if (collections.length === 0) {
@@ -277,31 +169,6 @@ function App() {
     setImportType('postman-env');
     setShowImportModal(true);
   }, []);
-
-  // Resize handlers
-  const handleSidebarResize = useCallback((delta: number) => {
-    const newWidth = Math.max(200, Math.min(600, sidebarWidth + delta));
-    setSidebarWidth(newWidth);
-  }, [sidebarWidth, setSidebarWidth]);
-
-  const handleRequestPanelResize = useCallback((delta: number) => {
-    if (!mainPanelRef.current) return;
-
-    if (panelLayout === 'horizontal') {
-      const containerWidth = mainPanelRef.current.offsetWidth;
-      const pixelWidth = (requestPanelWidth / 100) * containerWidth;
-      const newPixelWidth = Math.max(200, Math.min(containerWidth - 200, pixelWidth + delta));
-      const newPercentage = (newPixelWidth / containerWidth) * 100;
-      setRequestPanelWidth(newPercentage);
-    } else {
-      // Vertical layout
-      const containerHeight = mainPanelRef.current.offsetHeight - 40; // Subtract TabBar height
-      const pixelHeight = (requestPanelWidth / 100) * containerHeight;
-      const newPixelHeight = Math.max(150, Math.min(containerHeight - 150, pixelHeight + delta));
-      const newPercentage = (newPixelHeight / containerHeight) * 100;
-      setRequestPanelWidth(newPercentage);
-    }
-  }, [requestPanelWidth, setRequestPanelWidth, panelLayout]);
 
   // Set up keyboard shortcuts
   useKeyboardShortcuts([
@@ -361,6 +228,8 @@ function App() {
           <span className="text-xs text-fetchy-text-muted">v{__APP_VERSION__}</span>
         </div>
         <div className="flex items-center gap-2">
+          <ModeDropdown activeMode={activeMode} onModeChange={setActiveMode} />
+          <div className="w-px h-5 bg-fetchy-border" />
           <EnvironmentDropdown onOpenSettings={() => setShowEnvironmentModal(true)} />
           <WorkspaceDropdown onOpenSettings={() => setShowWorkspacesModal(true)} />
           <Tooltip content="Settings">
@@ -376,100 +245,32 @@ function App() {
 
       {/* Main content */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Sidebar */}
-        <div
-          style={{ width: sidebarCollapsed ? 0 : sidebarWidth }}
-          className="shrink-0 transition-all duration-200 overflow-hidden"
-        >
-          <Sidebar
-            onImport={() => handleImport()}
-            onHistoryItemClick={handleHistoryItemClick}
+        {activeMode === 'rest' ? (
+          <RestModeView
+            onImport={handleImport}
+            onImportRequest={handleImportRequest}
+            onImportCollection={handleImportCollection}
+            onImportEnvironment={handleImportEnvironment}
           />
-        </div>
-
-        {/* Sidebar resize handle */}
-        {!sidebarCollapsed && (
-          <ResizeHandle
-            direction="horizontal"
-            onResize={handleSidebarResize}
-          />
+        ) : (
+          <ComingSoonView mode={activeMode} />
         )}
-
-        {/* Main panel */}
-        <div className="flex-1 flex flex-col overflow-hidden" ref={mainPanelRef}>
-          {/* Tab bar */}
-          <TabBar />
-
-          {/* URL bar portal target – spans full width above the split */}
-          {hasActiveRequest && (
-            <div ref={setUrlBarContainer} className="shrink-0" />
-          )}
-
-          {/* Request/Response area */}
-          {hasActiveRequest ? (
-            <div className={`flex-1 flex overflow-hidden ${panelLayout === 'vertical' ? 'flex-col' : ''}`}>
-              {/* Request panel */}
-              <div
-                style={panelLayout === 'horizontal'
-                  ? { width: `${requestPanelWidth}%` }
-                  : { height: `${requestPanelWidth}%` }
-                }
-                className="shrink-0 overflow-hidden"
-              >
-                <RequestPanel
-                  setResponse={setResponse}
-                  setSentRequest={setSentRequest}
-                  setIsLoading={setIsLoading}
-                  isLoading={isLoading}
-                  urlBarContainer={urlBarContainer}
-                />
-              </div>
-
-              {/* Request/Response resize handle */}
-              <ResizeHandle
-                direction={panelLayout === 'horizontal' ? 'horizontal' : 'vertical'}
-                onResize={handleRequestPanelResize}
-              />
-
-              {/* Response panel */}
-              <div className="flex-1 overflow-hidden">
-                <ResponsePanel
-                  response={response}
-                  sentRequest={sentRequest}
-                  isLoading={isLoading}
-                />
-              </div>
-            </div>
-          ) : hasActiveOpenApi ? (
-            <div className="flex-1 overflow-hidden">
-              <OpenApiEditor documentId={activeTab?.openApiDocId} />
-            </div>
-          ) : hasActiveCollection ? (
-            <div className="flex-1 overflow-hidden">
-              <CollectionConfigPanel collectionId={activeTab?.collectionId!} />
-            </div>
-          ) : (
-            <WelcomeScreen
-              onImportRequest={handleImportRequest}
-              onImportCollection={handleImportCollection}
-              onImportEnvironment={handleImportEnvironment}
-            />
-          )}
-        </div>
       </div>
 
       {/* Bottom bar with toggle buttons */}
       <div className="h-10 bg-fetchy-sidebar border-t border-fetchy-border flex items-center px-4 gap-2 shrink-0">
-        <Tooltip content={sidebarCollapsed ? "Show Sidebar" : "Hide Sidebar"}>
-          <button
-            onClick={toggleSidebar}
-            className="p-2 hover:bg-fetchy-border rounded text-fetchy-text-muted hover:text-fetchy-text"
-          >
-            {sidebarCollapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
-          </button>
-        </Tooltip>
+        {activeMode === 'rest' && (
+          <Tooltip content={sidebarCollapsed ? "Show Sidebar" : "Hide Sidebar"}>
+            <button
+              onClick={toggleSidebar}
+              className="p-2 hover:bg-fetchy-border rounded text-fetchy-text-muted hover:text-fetchy-text"
+            >
+              {sidebarCollapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+            </button>
+          </Tooltip>
+        )}
 
-        {hasActiveRequest && (
+        {activeMode === 'rest' && hasActiveRequest && (
           <Tooltip content={panelLayout === 'horizontal' ? "Switch to Vertical Layout" : "Switch to Horizontal Layout"}>
             <button
               onClick={togglePanelLayout}
