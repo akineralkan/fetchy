@@ -61,6 +61,10 @@ describe('compareVersions', () => {
   it('treats a missing segment as 0 (1.5.1 vs 1.5 → not newer)', () => {
     expect(compareVersions('1.5.1', '1.5')).toBe(false);
   });
+
+  it('continues comparison across equal zero-valued segments', () => {
+    expect(compareVersions('1.0.1', '1.0.0')).toBe(false);
+  });
 });
 
 // ─── parseReleaseEntries ──────────────────────────────────────────────────────

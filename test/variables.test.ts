@@ -106,6 +106,11 @@ describe('replaceVariables', () => {
     expect(replaceVariables('<<key>>', vars, [])).toBe('initial');
   });
 
+  it('falls back to an empty string when no variable value is available', () => {
+    const vars = [makeVar('key', '', { currentValue: undefined, initialValue: undefined })];
+    expect(replaceVariables('before-<<key>>-after', vars, [])).toBe('before--after');
+  });
+
   // Environment variables
   it('substitutes environment variables', () => {
     const envVars = [makeVar('env_url', 'https://staging.api')];
