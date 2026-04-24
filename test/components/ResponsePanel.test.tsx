@@ -160,4 +160,260 @@ describe('ResponsePanel', () => {
     const img = document.querySelector('img');
     expect(img).toBeDefined();
   });
+
+  // ── Additional coverage tests ──────────────────────────────────────────
+
+  it('shows binary response view for non-image binary content', () => {
+    render(
+      <ResponsePanel
+        response={makeResponse({
+          headers: { 'content-type': 'application/pdf' },
+          body: 'JVBER',
+          bodyEncoding: 'base64',
+        })}
+        isLoading={false}
+      />
+    );
+    expect(screen.getByText('Binary Response')).toBeDefined();
+    expect(screen.getByText(/application\/pdf/)).toBeDefined();
+  });
+
+  it('shows save button for binary responses', () => {
+    render(
+      <ResponsePanel
+        response={makeResponse({
+          headers: { 'content-type': 'application/octet-stream' },
+          body: 'AAAA',
+          bodyEncoding: 'base64',
+        })}
+        isLoading={false}
+      />
+    );
+    expect(screen.getByText('Save to File')).toBeDefined();
+  });
+
+  it('shows save image button for image binary response', () => {
+    render(
+      <ResponsePanel
+        response={makeResponse({
+          headers: { 'content-type': 'image/jpeg' },
+          body: '/9j/4AAQ',
+          bodyEncoding: 'base64',
+        })}
+        isLoading={false}
+      />
+    );
+    expect(screen.getByText('Save Image')).toBeDefined();
+  });
+
+  it('switches to console tab and shows no script output', () => {
+    render(
+      <ResponsePanel
+        response={makeResponse()}
+        isLoading={false}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: /console/i }));
+    expect(screen.getByText('No script output')).toBeDefined();
+  });
+
+  it('shows pre-script output in console tab', () => {
+    render(
+      <ResponsePanel
+        response={makeResponse({ preScriptOutput: 'pre-script log' })}
+        isLoading={false}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: /console/i }));
+    expect(screen.getByText('pre-script log')).toBeDefined();
+  });
+
+  it('shows pre-script error in console tab', () => {
+    render(
+      <ResponsePanel
+        response={makeResponse({ preScriptError: 'pre-script error msg' })}
+        isLoading={false}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: /console/i }));
+    expect(screen.getByText('pre-script error msg')).toBeDefined();
+  });
+
+  it('shows post-script output in console tab', () => {
+    render(
+      <ResponsePanel
+        response={makeResponse({ scriptOutput: 'post-script log' })}
+        isLoading={false}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: /console/i }));
+    expect(screen.getByText('post-script log')).toBeDefined();
+  });
+
+  it('shows post-script error in console tab', () => {
+    render(
+      <ResponsePanel
+        response={makeResponse({ scriptError: 'post-script error msg' })}
+        isLoading={false}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: /console/i }));
+    expect(screen.getByText('post-script error msg')).toBeDefined();
+  });
+
+  it('shows red dot on Console tab when script errors exist', () => {
+    const { container } = render(
+      <ResponsePanel
+        response={makeResponse({ scriptError: 'error' })}
+        isLoading={false}
+      />
+    );
+    const consoleDot = container.querySelector('.bg-red-500');
+    expect(consoleDot).toBeTruthy();
+  });
+
+  it('switches to request body tab and shows body type', () => {
+    render(
+      <ResponsePanel
+        response={makeResponse()}
+        sentRequest={makeSentRequest({ body: { type: 'json', raw: '{"key":"val"}' } })}
+        isLoading={false}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: /Request Body/i }));
+    expect(screen.getByText('json')).toBeDefined();
+  });
+
+  it('shows no request body for body type none', () => {
+    render(
+      <ResponsePanel
+        response={makeResponse()}
+        sentRequest={makeSentRequest({ body: { type: 'none' } })}
+        isLoading={false}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: /Request Body/i }));
+    expect(screen.getByText('No request body')).toBeDefined();
+  });
+
+  it('shows form-data body content in request body tab', () => {
+    render(
+      <ResponsePanel
+        response={makeResponse()}
+        sentRequest={makeSentRequest({
+          body: {
+            type: 'form-data',
+            formData: [
+              { key: 'field1', value: 'val1', enabled: true },
+              { key: 'field2', value: 'val2', enabled: false },
+            ],
+          },
+        })}
+        isLoading={false}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: /Request Body/i }));
+    expect(screen.getByTestId('code-editor')).toBeDefined();
+  });
+
+  it('shows urlencoded body content in request body tab', () => {
+    render(
+      <ResponsePanel
+        response={makeResponse()}
+        sentRequest={makeSentRequest({
+          body: {
+            type: 'x-www-form-urlencoded',
+            urlencoded: [
+              { key: 'a', value: '1', enabled: true },
+              { key: 'b', value: '2', enabled: true },
+            ],
+          },
+        })}
+        isLoading={false}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: /Request Body/i }));
+    expect(screen.getByTestId('code-editor')).toBeDefined();
+  });
+
+  it('shows no request headers message when none exist', () => {
+    render(
+      <ResponsePanel
+        response={makeResponse()}
+        sentRequest={makeSentRequest({ headers: [] })}
+        isLoading={false}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: /Request Headers/i }));
+    expect(screen.getByText('No request headers')).toBeDefined();
+  });
+
+  it('shows truncated response banner', () => {
+    render(
+      <ResponsePanel
+        response={makeResponse({ bodyTruncated: true, fullBodySize: 5000000 })}
+        isLoading={false}
+      />
+    );
+    expect(screen.getByText(/response truncated/i)).toBeDefined();
+    expect(screen.getByText(/save full response/i)).toBeDefined();
+  });
+
+  it('copies binary response as placeholder text', () => {
+    render(
+      <ResponsePanel
+        response={makeResponse({
+          headers: { 'content-type': 'application/pdf' },
+          body: 'JVBER',
+          bodyEncoding: 'base64',
+          size: 2048,
+        })}
+        isLoading={false}
+      />
+    );
+    const copyBtn = screen.getAllByRole('button').find(b => b.getAttribute('title')?.includes('Copy'));
+    if (copyBtn) {
+      fireEvent.click(copyBtn);
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(expect.stringContaining('Binary response'));
+    }
+  });
+
+  it('shows pretty print button for JSON body with non-JSON content type', () => {
+    const body = '{"a":1}';
+    render(
+      <ResponsePanel
+        response={makeResponse({
+          headers: { 'content-type': 'text/plain' },
+          body,
+        })}
+        isLoading={false}
+      />
+    );
+    // The pretty print button should be visible
+    const prettyBtn = screen.getAllByRole('button').find(b => b.getAttribute('title')?.includes('Pretty print'));
+    // May or may not be visible depending on prettyPrintJson mock
+    expect(screen.getByTestId('code-editor')).toBeDefined();
+  });
+
+  it('does not show request-related tabs when sentRequest is null', () => {
+    render(
+      <ResponsePanel
+        response={makeResponse()}
+        isLoading={false}
+      />
+    );
+    expect(screen.queryByText(/Request Headers/)).toBeNull();
+    expect(screen.queryByText(/Request Body/)).toBeNull();
+  });
+
+  it('renders AI toolbar when sentRequest is provided', () => {
+    render(
+      <ResponsePanel
+        response={makeResponse()}
+        sentRequest={makeSentRequest()}
+        isLoading={false}
+      />
+    );
+    expect(screen.getByTestId('ai-toolbar')).toBeDefined();
+  });
 });

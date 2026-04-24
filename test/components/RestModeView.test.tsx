@@ -196,4 +196,126 @@ describe('RestModeView', () => {
     screen.getByRole('button', { name: 'Import' }).click();
     expect(onImport).toHaveBeenCalled();
   });
+
+  it('sets sidebar width from store value', () => {
+    mockStore({ sidebarWidth: 350, sidebarCollapsed: false });
+    render(
+      <RestModeView
+        onImport={vi.fn()}
+        onImportRequest={vi.fn()}
+        onImportCollection={vi.fn()}
+        onImportEnvironment={vi.fn()}
+      />
+    );
+    const sidebarContainer = screen.getByTestId('sidebar').parentElement!;
+    expect(sidebarContainer.style.width).toBe('350px');
+  });
+
+  it('renders resize handle when sidebar is not collapsed', () => {
+    mockStore({ sidebarCollapsed: false });
+    render(
+      <RestModeView
+        onImport={vi.fn()}
+        onImportRequest={vi.fn()}
+        onImportCollection={vi.fn()}
+        onImportEnvironment={vi.fn()}
+      />
+    );
+    expect(screen.getByTestId('resize-handle')).toBeDefined();
+  });
+
+  it('renders URL bar container for active request tab', () => {
+    mockStore({
+      tabs: [{ id: 't1', title: 'Get', type: 'request', collectionId: 'c1', requestId: 'r1', isHistoryItem: false, isModified: false }],
+      activeTabId: 't1',
+    });
+    render(
+      <RestModeView
+        onImport={vi.fn()}
+        onImportRequest={vi.fn()}
+        onImportCollection={vi.fn()}
+        onImportEnvironment={vi.fn()}
+      />
+    );
+    // Should have request panel and response panel
+    expect(screen.getByTestId('request-panel')).toBeDefined();
+    expect(screen.getByTestId('response-panel')).toBeDefined();
+  });
+
+  it('does not render request/response panels for non-request tabs', () => {
+    mockStore({
+      tabs: [{ id: 't1', title: 'API Spec', type: 'openapi', openApiDocId: 'd1', isHistoryItem: false, isModified: false }],
+      activeTabId: 't1',
+    });
+    render(
+      <RestModeView
+        onImport={vi.fn()}
+        onImportRequest={vi.fn()}
+        onImportCollection={vi.fn()}
+        onImportEnvironment={vi.fn()}
+      />
+    );
+    expect(screen.queryByTestId('request-panel')).toBeNull();
+    expect(screen.queryByTestId('response-panel')).toBeNull();
+  });
+
+  it('renders tab bar always', () => {
+    mockStore({ tabs: [], activeTabId: null });
+    render(
+      <RestModeView
+        onImport={vi.fn()}
+        onImportRequest={vi.fn()}
+        onImportCollection={vi.fn()}
+        onImportEnvironment={vi.fn()}
+      />
+    );
+    expect(screen.getByTestId('tab-bar')).toBeDefined();
+  });
+
+  it('shows welcome screen when there are tabs but no active tab', () => {
+    mockStore({
+      tabs: [{ id: 't1', title: 'Get', type: 'request', collectionId: 'c1', requestId: 'r1', isHistoryItem: false, isModified: false }],
+      activeTabId: null,
+    });
+    render(
+      <RestModeView
+        onImport={vi.fn()}
+        onImportRequest={vi.fn()}
+        onImportCollection={vi.fn()}
+        onImportEnvironment={vi.fn()}
+      />
+    );
+    expect(screen.getByTestId('welcome-screen')).toBeDefined();
+  });
+
+  it('uses default sidebar width of 280', () => {
+    mockStore();
+    render(
+      <RestModeView
+        onImport={vi.fn()}
+        onImportRequest={vi.fn()}
+        onImportCollection={vi.fn()}
+        onImportEnvironment={vi.fn()}
+      />
+    );
+    const sidebarContainer = screen.getByTestId('sidebar').parentElement!;
+    expect(sidebarContainer.style.width).toBe('280px');
+  });
+
+  it('renders with vertical panel layout', () => {
+    mockStore({
+      panelLayout: 'vertical',
+      tabs: [{ id: 't1', title: 'Get', type: 'request', collectionId: 'c1', requestId: 'r1', isHistoryItem: false, isModified: false }],
+      activeTabId: 't1',
+    });
+    render(
+      <RestModeView
+        onImport={vi.fn()}
+        onImportRequest={vi.fn()}
+        onImportCollection={vi.fn()}
+        onImportEnvironment={vi.fn()}
+      />
+    );
+    expect(screen.getByTestId('request-panel')).toBeDefined();
+  });
 });

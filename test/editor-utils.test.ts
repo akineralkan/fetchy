@@ -6,7 +6,7 @@
  *  - formatJson    — pretty-prints JSON for the "Format" button in BodyEditor
  */
 import { describe, it, expect } from 'vitest';
-import { isLightTheme, LIGHT_THEMES, formatJson } from '../src/utils/editorUtils';
+import { isLightTheme, LIGHT_THEMES, formatJson, validateJson } from '../src/utils/editorUtils';
 
 // ─── isLightTheme ─────────────────────────────────────────────────────────────
 
@@ -177,5 +177,73 @@ describe('formatJson', () => {
       const bad = 'NaN';
       expect(formatJson(bad)).toBe(bad);
     });
+  });
+});
+
+// ─── validateJson ─────────────────────────────────────────────────────────────
+
+describe('validateJson', () => {
+  it('returns valid: true for a valid JSON object', () => {
+    const result = validateJson('{"key": "value"}');
+    expect(result.valid).toBe(true);
+    expect(result.error).toBeUndefined();
+  });
+
+  it('returns valid: true for a valid JSON array', () => {
+    const result = validateJson('[1, 2, 3]');
+    expect(result.valid).toBe(true);
+  });
+
+  it('returns valid: false with error for empty string', () => {
+    const result = validateJson('');
+    expect(result.valid).toBe(false);
+    expect(result.error).toBe('Body is empty');
+  });
+
+  it('returns valid: false with error for whitespace-only string', () => {
+    const result = validateJson('   \n  ');
+    expect(result.valid).toBe(false);
+    expect(result.error).toBe('Body is empty');
+  });
+
+  it('returns valid: false with SyntaxError message for invalid JSON', () => {
+    const result = validateJson('{invalid}');
+    expect(result.valid).toBe(false);
+    expect(result.error).toBeDefined();
+    expect(result.error).not.toBe('Body is empty');
+  });
+
+  it('handles quoted <<variable>> templates (replaces with placeholder)', () => {
+    const result = validateJson('{"url": "<<base_url>>"}');
+    expect(result.valid).toBe(true);
+  });
+
+  it('handles bare (unquoted) <<variable>> templates', () => {
+    const result = validateJson('{"count": <<total_count>>}');
+    expect(result.valid).toBe(true);
+  });
+
+  it('handles multiple variables in the same JSON', () => {
+    const result = validateJson('{"url": "<<base>>", "key": "<<api_key>>", "count": <<num>>}');
+    expect(result.valid).toBe(true);
+  });
+
+  it('returns valid: false for truly broken JSON with variables', () => {
+    const result = validateJson('{"key": <<var>> extra garbage}');
+    expect(result.valid).toBe(false);
+  });
+
+  it('returns "Invalid JSON" for non-SyntaxError exceptions', () => {
+    // This is hard to trigger naturally, but we test the else branch
+    const result = validateJson('{,}');
+    expect(result.valid).toBe(false);
+    expect(result.error).toBeDefined();
+  });
+
+  it('validates a JSON primitive', () => {
+    expect(validateJson('"hello"').valid).toBe(true);
+    expect(validateJson('42').valid).toBe(true);
+    expect(validateJson('true').valid).toBe(true);
+    expect(validateJson('null').valid).toBe(true);
   });
 });

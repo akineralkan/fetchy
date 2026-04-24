@@ -108,7 +108,15 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    include: ['test/**/*.test.ts'],
+    include: ['test/**/*.test.ts', 'test/**/*.test.tsx'],
+    coverage: {
+      all: true,
+      provider: 'v8',
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: ['src/**/*.d.ts', 'src/types/**', 'src/components/sidebar/types.ts'],
+      reporter: ['html', 'text-summary'],
+      reportsDirectory: 'coverage',
+    },
   },
 })
 

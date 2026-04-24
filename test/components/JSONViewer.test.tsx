@@ -102,4 +102,66 @@ describe('JSONViewer', () => {
     // The array should be collapsed (showing item count)
     expect(screen.getByText(/60 items/)).toBeDefined();
   });
+
+  // ─── Additional coverage tests ──────────────────────────────────────────────
+
+  it('renders JWT token with tooltip wrapper', () => {
+    const jwt = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyIn0.sig';
+    render(<JSONViewer data={JSON.stringify(jwt)} />);
+    expect(screen.getByTestId('jwt-tooltip')).toBeDefined();
+  });
+
+  it('renders nested objects with keys and values', () => {
+    render(<JSONViewer data='{"outer":{"inner":"deep"}}' />);
+    expect(screen.getByText('"outer"')).toBeDefined();
+    expect(screen.getByText('"inner"')).toBeDefined();
+    expect(screen.getByText(/"deep"/)).toBeDefined();
+  });
+
+  it('renders mixed types in an object', () => {
+    render(<JSONViewer data='{"str":"hi","num":42,"bool":true,"nil":null}' />);
+    expect(screen.getByText(/"hi"/)).toBeDefined();
+    expect(screen.getByText('42')).toBeDefined();
+    expect(screen.getByText('true')).toBeDefined();
+    expect(screen.getByText('null')).toBeDefined();
+  });
+
+  it('re-renders without crash when data changes', () => {
+    const { rerender } = render(<JSONViewer data='{"a":1}' />);
+    rerender(<JSONViewer data='{"b":2}' />);
+    expect(screen.getByText('"b"')).toBeDefined();
+  });
+
+  it('shows "keys" text for collapsed objects', () => {
+    // Object at depth ≥ 3 auto-collapses
+    const deep = JSON.stringify({ a: { b: { c: { d: { key: 'val' } } } } });
+    render(<JSONViewer data={deep} />);
+    // Deep nodes auto-collapse and show "N keys"
+    expect(screen.getByText(/1 key/)).toBeDefined();
+  });
+
+  it('handles large JSON gate by showing Render Tree button', () => {
+    const bigJson = JSON.stringify({ a: 'x'.repeat(400_000) });
+    const { container } = render(<JSONViewer data={bigJson} />);
+    const button = screen.getByRole('button', { name: /Render Tree/i });
+    expect(button).toBeDefined();
+    // Click to render
+    fireEvent.click(button);
+    // After clicking, the warning should disappear
+    expect(screen.queryByRole('button', { name: /Render Tree/i })).toBeNull();
+  });
+
+  it('renders an array of objects', () => {
+    render(<JSONViewer data='[{"id":1},{"id":2}]' />);
+    // Should show both id values
+    expect(screen.getAllByText('"id"').length).toBe(2);
+  });
+
+  it('shows array item count when collapsed', () => {
+    render(<JSONViewer data='[1,2,3]' />);
+    // Collapse the array
+    const collapseBtn = screen.getByLabelText('Collapse');
+    fireEvent.click(collapseBtn);
+    expect(screen.getByText(/3 items/)).toBeDefined();
+  });
 });

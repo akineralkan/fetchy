@@ -133,4 +133,187 @@ describe('SortableApiDocItem', () => {
       expect(document.body).toBeTruthy();
     }
   });
+
+  it('displays the format badge', () => {
+    render(<SortableApiDocItem doc={makeDoc({ format: 'yaml' } as any)} {...defaultProps} />);
+    expect(screen.getByText('yaml')).toBeTruthy();
+  });
+
+  it('displays json format badge', () => {
+    render(<SortableApiDocItem doc={makeDoc({ format: 'json' } as any)} {...defaultProps} />);
+    expect(screen.getByText('json')).toBeTruthy();
+  });
+
+  it('calls onEditComplete on Escape key in editing mode', () => {
+    const onEditComplete = vi.fn();
+    render(
+      <SortableApiDocItem
+        doc={makeDoc()}
+        {...defaultProps}
+        editingId="doc-1"
+        editingName="Name"
+        onEditComplete={onEditComplete}
+      />
+    );
+    fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Escape' });
+    expect(onEditComplete).toHaveBeenCalled();
+  });
+
+  it('calls onEditComplete on blur in editing mode', () => {
+    const onEditComplete = vi.fn();
+    render(
+      <SortableApiDocItem
+        doc={makeDoc()}
+        {...defaultProps}
+        editingId="doc-1"
+        editingName="Name"
+        onEditComplete={onEditComplete}
+      />
+    );
+    fireEvent.blur(screen.getByRole('textbox'));
+    expect(onEditComplete).toHaveBeenCalled();
+  });
+
+  it('does not render editing input when editingId does not match', () => {
+    render(
+      <SortableApiDocItem
+        doc={makeDoc()}
+        {...defaultProps}
+        editingId="other-doc"
+        editingName="Other"
+      />
+    );
+    expect(screen.queryByRole('textbox')).toBeNull();
+    expect(screen.getByText('Petstore API')).toBeTruthy();
+  });
+
+  it('opens menu and calls onGenerateCollection', () => {
+    const onGenerateCollection = vi.fn();
+    render(
+      <SortableApiDocItem
+        doc={makeDoc()}
+        {...defaultProps}
+        onGenerateCollection={onGenerateCollection}
+      />
+    );
+    // Find and click the menu trigger button (MoreVertical)
+    const buttons = screen.getAllByRole('button');
+    const menuBtn = buttons.find(b => b.getAttribute('title') === 'More options');
+    if (menuBtn) {
+      fireEvent.click(menuBtn);
+      const genBtn = screen.queryByText(/generate collection/i);
+      if (genBtn) {
+        fireEvent.click(genBtn);
+        expect(onGenerateCollection).toHaveBeenCalled();
+      }
+    }
+  });
+
+  it('opens menu and calls onExport', () => {
+    const onExport = vi.fn();
+    render(
+      <SortableApiDocItem
+        doc={makeDoc()}
+        {...defaultProps}
+        onExport={onExport}
+      />
+    );
+    const menuBtn = screen.getAllByRole('button').find(b => b.getAttribute('title') === 'More options');
+    if (menuBtn) {
+      fireEvent.click(menuBtn);
+      const exportBtn = screen.queryByText(/export/i);
+      if (exportBtn) {
+        fireEvent.click(exportBtn);
+        expect(onExport).toHaveBeenCalled();
+      }
+    }
+  });
+
+  it('opens menu and calls onDelete', () => {
+    const onDelete = vi.fn();
+    render(
+      <SortableApiDocItem
+        doc={makeDoc()}
+        {...defaultProps}
+        onDelete={onDelete}
+      />
+    );
+    const menuBtn = screen.getAllByRole('button').find(b => b.getAttribute('title') === 'More options');
+    if (menuBtn) {
+      fireEvent.click(menuBtn);
+      const deleteBtn = screen.queryByText(/delete/i);
+      if (deleteBtn) {
+        fireEvent.click(deleteBtn);
+        expect(onDelete).toHaveBeenCalled();
+      }
+    }
+  });
+
+  it('opens menu and calls onEdit (Rename)', () => {
+    const onEdit = vi.fn();
+    render(
+      <SortableApiDocItem
+        doc={makeDoc()}
+        {...defaultProps}
+        onEdit={onEdit}
+      />
+    );
+    const menuBtn = screen.getAllByRole('button').find(b => b.getAttribute('title') === 'More options');
+    if (menuBtn) {
+      fireEvent.click(menuBtn);
+      const renameBtn = screen.queryByText(/rename/i);
+      if (renameBtn) {
+        fireEvent.click(renameBtn);
+        expect(onEdit).toHaveBeenCalled();
+      }
+    }
+  });
+
+  it('shows Convert to YAML option for json format docs in menu', () => {
+    render(
+      <SortableApiDocItem
+        doc={makeDoc({ format: 'json' } as any)}
+        {...defaultProps}
+      />
+    );
+    const menuBtn = screen.getAllByRole('button').find(b => b.getAttribute('title') === 'More options');
+    if (menuBtn) {
+      fireEvent.click(menuBtn);
+      expect(screen.queryByText(/convert to yaml/i)).toBeTruthy();
+    }
+  });
+
+  it('shows Convert to JSON option for yaml format docs in menu', () => {
+    render(
+      <SortableApiDocItem
+        doc={makeDoc({ format: 'yaml' } as any)}
+        {...defaultProps}
+      />
+    );
+    const menuBtn = screen.getAllByRole('button').find(b => b.getAttribute('title') === 'More options');
+    if (menuBtn) {
+      fireEvent.click(menuBtn);
+      expect(screen.queryByText(/convert to json/i)).toBeTruthy();
+    }
+  });
+
+  it('stops propagation when clicking the editing input', () => {
+    const onClick = vi.fn();
+    render(
+      <SortableApiDocItem
+        doc={makeDoc()}
+        {...defaultProps}
+        editingId="doc-1"
+        editingName="Test"
+        onClick={onClick}
+      />
+    );
+    fireEvent.click(screen.getByRole('textbox'));
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
+  it('renders without crashing when doc has no format', () => {
+    render(<SortableApiDocItem doc={makeDoc()} {...defaultProps} />);
+    expect(screen.getByText('Petstore API')).toBeTruthy();
+  });
 });

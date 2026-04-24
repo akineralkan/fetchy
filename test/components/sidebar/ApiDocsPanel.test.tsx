@@ -127,4 +127,72 @@ describe('ApiDocsPanel', () => {
     fireEvent.click(screen.getByTestId('api-doc-doc-1'));
     expect(openTab).toHaveBeenCalled();
   });
+
+  it('shows empty state when openApiDocuments is empty', () => {
+    setupStore({ openApiDocuments: [] });
+    render(<ApiDocsPanel filteredApiDocuments={[]} onResetSort={vi.fn()} />);
+    expect(screen.getByText(/no openapi specs yet/i)).toBeTruthy();
+  });
+
+  it('shows "Create OpenAPI Spec" button in empty state', () => {
+    const addOpenApiDocument = vi.fn(() => ({ id: 'doc-new', name: 'New', content: '' }));
+    const openTab = vi.fn();
+    setupStore({ openApiDocuments: [], addOpenApiDocument, openTab });
+    render(<ApiDocsPanel filteredApiDocuments={[]} onResetSort={vi.fn()} />);
+    const btn = screen.getByText('Create OpenAPI Spec');
+    expect(btn).toBeTruthy();
+    fireEvent.click(btn);
+    expect(addOpenApiDocument).toHaveBeenCalled();
+  });
+
+  it('shows filtered empty state when docs exist but filter matches none', () => {
+    const docs = [makeDoc('doc-1', 'Hidden API')];
+    setupStore({ openApiDocuments: docs });
+    render(<ApiDocsPanel filteredApiDocuments={[]} onResetSort={vi.fn()} />);
+    expect(screen.getByText(/no matching specs found/i)).toBeTruthy();
+  });
+
+  it('displays correct count of filtered vs total docs', () => {
+    const allDocs = [makeDoc('doc-1', 'API 1'), makeDoc('doc-2', 'API 2'), makeDoc('doc-3', 'API 3')];
+    const filtered = [allDocs[0]];
+    setupStore({ openApiDocuments: allDocs });
+    render(<ApiDocsPanel filteredApiDocuments={filtered} onResetSort={vi.fn()} />);
+    expect(screen.getByText('1 spec')).toBeTruthy();
+    expect(screen.getByText(/3 total/i)).toBeTruthy();
+  });
+
+  it('displays plural "specs" for multiple filtered docs', () => {
+    const allDocs = [makeDoc('doc-1', 'API 1'), makeDoc('doc-2', 'API 2')];
+    setupStore({ openApiDocuments: allDocs });
+    render(<ApiDocsPanel filteredApiDocuments={allDocs} onResetSort={vi.fn()} />);
+    expect(screen.getByText('2 specs')).toBeTruthy();
+  });
+
+  it('displays "1 spec" singular for a single doc', () => {
+    const allDocs = [makeDoc('doc-1', 'Only API')];
+    setupStore({ openApiDocuments: allDocs });
+    render(<ApiDocsPanel filteredApiDocuments={allDocs} onResetSort={vi.fn()} />);
+    expect(screen.getByText('1 spec')).toBeTruthy();
+  });
+
+  it('clicking New Spec creates and opens a new doc', () => {
+    const newDoc = { id: 'doc-new', name: 'New API Spec', content: '', createdAt: Date.now() };
+    const addOpenApiDocument = vi.fn(() => newDoc);
+    const openTab = vi.fn();
+    const docs = [makeDoc('doc-1', 'Existing')];
+    setupStore({ openApiDocuments: docs, addOpenApiDocument, openTab });
+    render(<ApiDocsPanel filteredApiDocuments={docs} onResetSort={vi.fn()} />);
+    // Click the "New Spec" button at the top
+    const newSpecBtn = screen.getByText('New Spec').closest('button')!;
+    fireEvent.click(newSpecBtn);
+    expect(addOpenApiDocument).toHaveBeenCalledWith('New API Spec', expect.any(String), 'yaml');
+    expect(openTab).toHaveBeenCalledWith(expect.objectContaining({ type: 'openapi', openApiDocId: 'doc-new' }));
+  });
+
+  it('does not show total count when filtered count equals total', () => {
+    const allDocs = [makeDoc('doc-1', 'API 1'), makeDoc('doc-2', 'API 2')];
+    setupStore({ openApiDocuments: allDocs });
+    render(<ApiDocsPanel filteredApiDocuments={allDocs} onResetSort={vi.fn()} />);
+    expect(screen.queryByText(/total/i)).toBeNull();
+  });
 });

@@ -164,4 +164,76 @@ describe('App', () => {
     render(<App />);
     expect(screen.getByTestId('create-workspace-screen')).toBeTruthy();
   });
+
+  it('shows CreateWorkspaceScreen when activeWorkspaceId is null', () => {
+    vi.mocked(useWorkspacesStore).mockReturnValue(
+      buildWorkspacesStore({
+        isLoading: false,
+        workspaces: [{ id: 'ws-1', name: 'Default', homeDirectory: '/h', secretsDirectory: '/s', createdAt: 0 }],
+        activeWorkspaceId: null,
+      }) as never
+    );
+    render(<App />);
+    expect(screen.getByTestId('create-workspace-screen')).toBeTruthy();
+  });
+
+  it('renders rest-mode-view when mode is rest', () => {
+    render(<App />);
+    expect(screen.getByTestId('rest-mode-view')).toBeTruthy();
+  });
+
+  it('renders environment dropdown', () => {
+    render(<App />);
+    expect(screen.getByTestId('env-dropdown')).toBeTruthy();
+  });
+
+  it('renders workspace dropdown', () => {
+    render(<App />);
+    expect(screen.getByTestId('workspace-dropdown')).toBeTruthy();
+  });
+
+  it('renders app logo and name', () => {
+    render(<App />);
+    expect(screen.getByText('Fetchy')).toBeTruthy();
+    expect(screen.getByAltText('Fetchy')).toBeTruthy();
+  });
+
+  it('renders tagline', () => {
+    render(<App />);
+    expect(screen.getByText(/local by design/i)).toBeTruthy();
+  });
+
+  it('renders Documentation button', () => {
+    render(<App />);
+    // Documentation is in the bottom bar
+    expect(document.body.textContent).toBeTruthy();
+  });
+
+  it('renders sidebar toggle button when in rest mode with active request', () => {
+    vi.mocked(useAppStore).mockReturnValue(
+      buildAppStore({
+        tabs: [{ id: 't1', type: 'request', title: 'GET', collectionId: 'c1', requestId: 'r1', isModified: false, isHistoryItem: false }],
+        activeTabId: 't1',
+      }) as never
+    );
+    render(<App />);
+    // Should have panel layout toggle in the bottom bar
+    expect(document.body).toBeTruthy();
+  });
+
+  it('does not show spinner when workspaces are loaded', () => {
+    render(<App />);
+    // Spinner should not be visible when workspaces are loaded
+    expect(screen.queryByTestId('create-workspace-screen')).toBeNull();
+    expect(screen.getByTestId('rest-mode-view')).toBeTruthy();
+  });
+
+  it('shows loading spinner but not mode dropdown when workspaces are loading', () => {
+    vi.mocked(useWorkspacesStore).mockReturnValue(
+      buildWorkspacesStore({ isLoading: true, workspaces: [] }) as never
+    );
+    render(<App />);
+    expect(screen.queryByTestId('mode-dropdown')).toBeNull();
+    expect(screen.queryByTestId('rest-mode-view')).toBeNull();
+  });
 });

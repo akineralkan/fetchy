@@ -270,6 +270,21 @@ const COLOR_FIELDS: Array<{ key: keyof CustomThemeColors; label: string; descrip
   { key: 'highlightColor', label: 'Search Highlight', description: 'Ring color for search-found requests in the sidebar' },
 ];
 
+function getInitialColors(editingTheme?: CustomTheme | null): CustomThemeColors {
+  const base = editingTheme?.colors
+    ? { ...editingTheme.colors }
+    : { ...PRESET_STARTERS.dark.colors };
+
+  if (!base.aiColor) {
+    base.aiColor = '#9070b0';
+  }
+  if (!base.highlightColor) {
+    base.highlightColor = '#c49030';
+  }
+
+  return base as CustomThemeColors;
+}
+
 export default function CustomThemeEditorModal({
   isOpen,
   editingTheme,
@@ -277,21 +292,14 @@ export default function CustomThemeEditorModal({
   onCancel,
 }: CustomThemeEditorModalProps) {
   const [name, setName] = useState(editingTheme?.name ?? '');
-  const [colors, setColors] = useState<CustomThemeColors>(
-    editingTheme?.colors ?? PRESET_STARTERS.dark.colors
-  );
+  const [colors, setColors] = useState<CustomThemeColors>(() => getInitialColors(editingTheme));
   const [nameError, setNameError] = useState('');
 
   // Reset form state whenever the modal opens (or editingTheme changes)
   useEffect(() => {
     if (isOpen) {
       setName(editingTheme?.name ?? '');
-      const base = editingTheme?.colors ? { ...editingTheme.colors } : { ...PRESET_STARTERS.dark.colors };
-      // Ensure aiColor has a fallback for themes created before this field existed
-      if (!base.aiColor) base.aiColor = '#9070b0';
-      // Ensure highlightColor has a fallback for themes created before this field existed
-      if (!base.highlightColor) base.highlightColor = '#c49030';
-      setColors(base);
+      setColors(getInitialColors(editingTheme));
       setNameError('');
     }
   }, [isOpen, editingTheme]);

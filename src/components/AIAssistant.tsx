@@ -748,7 +748,7 @@ export function AIResponseToolbar({ request, response }: AIResponseToolbarProps)
     } else {
       setModal((prev) => ({ ...prev, loading: false, error: res.error || 'Failed to get AI response' }));
     }
-  }, [selectedSnippet, bugNote, request, response, ai]);
+  }, [selectedSnippet, bugNote, customChatMessage, request, response, ai]);
 
   const jiraConfigured = jiraSettings.enabled && jiraSettings.baseUrl && jiraPat && jiraSettings.projectKey;
 

@@ -271,3 +271,121 @@ describe('aiConvertRequest', () => {
     expect(result.request!.id).toBeTruthy();
   });
 });
+
+// ─── Additional coverage tests ────────────────────────────────────────────────
+
+describe('extractJson — edge cases (via aiConvert functions)', () => {
+  it('handles AI response with extra text before JSON', async () => {
+    const inner = JSON.stringify({ name: 'TestColl', folders: [], requests: [], variables: [] });
+    mockSend.mockResolvedValueOnce({ success: true, content: 'Here is the result: ' + inner + ' end.' });
+
+    const result = await aiConvertCollection(fakeSettings, 'data');
+    expect(result.error).toBeNull();
+    expect(result.collection!.name).toBe('TestColl');
+  });
+
+  it('handles AI response with array wrapper', async () => {
+    const inner = JSON.stringify([{ key: 'x', value: 'y', enabled: true }]);
+    // Use a request prompt to test extractJson with [ ... ]
+    mockSend.mockResolvedValueOnce({ success: true, content: 'Text ' + inner });
+
+    // This will fail to produce a valid request, but tests extractJson's [ branch
+    const result = await aiConvertRequest(fakeSettings, 'data');
+    // The parsed array won't have 'name', so defaults are used
+    expect(result.request).not.toBeNull();
+  });
+
+  it('handles AI response with no JSON at all', async () => {
+    mockSend.mockResolvedValueOnce({ success: true, content: 'Just plain text with no braces' });
+
+    const result = await aiConvertCollection(fakeSettings, 'data');
+    expect(result.collection).toBeNull();
+    expect(result.error).toContain('invalid JSON');
+  });
+});
+
+describe('aiConvertCollection — ID injection details', () => {
+  it('injects IDs into nested folders and variables', async () => {
+    const aiJson = JSON.stringify({
+      name: 'Nested',
+      folders: [{
+        name: 'Sub',
+        requests: [{ name: 'Inner', method: 'GET', url: 'https://x.com', headers: [], params: [], body: { type: 'none' }, auth: { type: 'none' } }],
+        folders: [],
+      }],
+      requests: [],
+      variables: [{ key: 'var1', value: 'val1', enabled: true }],
+      auth: { type: 'bearer', bearer: { token: 'abc' } },
+    });
+    mockSend.mockResolvedValueOnce({ success: true, content: aiJson });
+
+    const result = await aiConvertCollection(fakeSettings, 'data');
+    expect(result.collection!.folders[0].id).toBeTruthy();
+    expect(result.collection!.folders[0].requests[0].id).toBeTruthy();
+    expect(result.collection!.variables![0].id).toBeTruthy();
+    expect(result.collection!.auth?.type).toBe('bearer');
+  });
+
+  it('uses default name when collection name is missing', async () => {
+    const aiJson = JSON.stringify({ folders: [], requests: [], variables: [] });
+    mockSend.mockResolvedValueOnce({ success: true, content: aiJson });
+
+    const result = await aiConvertCollection(fakeSettings, 'data');
+    expect(result.collection!.name).toBe('AI Imported Collection');
+  });
+});
+
+describe('aiConvertEnvironment — defaults', () => {
+  it('uses default name when environment name is missing', async () => {
+    const aiJson = JSON.stringify({ variables: [{ key: 'x', value: 'y' }] });
+    mockSend.mockResolvedValueOnce({ success: true, content: aiJson });
+
+    const result = await aiConvertEnvironment(fakeSettings, 'data');
+    expect(result.environment!.name).toBe('AI Imported Environment');
+  });
+
+  it('handles variables with isSecret flag', async () => {
+    const aiJson = JSON.stringify({
+      name: 'Secrets',
+      variables: [{ key: 'token', value: 'secret', enabled: true, isSecret: true }],
+    });
+    mockSend.mockResolvedValueOnce({ success: true, content: aiJson });
+
+    const result = await aiConvertEnvironment(fakeSettings, 'data');
+    expect(result.environment!.variables[0].isSecret).toBe(true);
+  });
+});
+
+describe('aiConvertRequest — defaults', () => {
+  it('uses default name when request name is missing', async () => {
+    const aiJson = JSON.stringify({
+      method: 'GET',
+      url: 'https://x.com',
+      headers: [],
+      params: [],
+      body: { type: 'none' },
+      auth: { type: 'none' },
+    });
+    mockSend.mockResolvedValueOnce({ success: true, content: aiJson });
+
+    const result = await aiConvertRequest(fakeSettings, 'data');
+    expect(result.request!.name).toBe('Imported Request');
+  });
+
+  it('injects IDs into headers and params', async () => {
+    const aiJson = JSON.stringify({
+      name: 'With Headers',
+      method: 'POST',
+      url: 'https://x.com',
+      headers: [{ key: 'H1', value: 'V1', enabled: true }],
+      params: [{ key: 'P1', value: 'V1', enabled: true }],
+      body: { type: 'none' },
+      auth: { type: 'none' },
+    });
+    mockSend.mockResolvedValueOnce({ success: true, content: aiJson });
+
+    const result = await aiConvertRequest(fakeSettings, 'data');
+    expect(result.request!.headers[0].id).toBeTruthy();
+    expect(result.request!.params[0].id).toBeTruthy();
+  });
+});

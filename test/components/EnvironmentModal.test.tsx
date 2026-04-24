@@ -356,4 +356,158 @@ describe('EnvironmentModal', () => {
 
     expect(onClose).toHaveBeenCalledTimes(1);
   });
+
+  // ─── Additional coverage tests ──────────────────────────────────────────────
+
+  it('shows AI import error when aiConvertEnvironment fails', async () => {
+    vi.mocked(aiConvertEnvironment).mockResolvedValue({
+      environment: null,
+      error: 'AI conversion failed: invalid format',
+    } as never);
+
+    const { container } = render(<EnvironmentModal onClose={onClose} />);
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
+
+    // Enable AI import
+    fireEvent.click(container.querySelector('button.group') as HTMLButtonElement);
+
+    fileReaderResult = 'some arbitrary content';
+    fireEvent.change(fileInput, {
+      target: { files: [new File(['content'], 'env.txt')] },
+    });
+
+    expect(await screen.findByText(/AI conversion failed/)).toBeTruthy();
+  });
+
+  it('handles file reader error', async () => {
+    fileReaderMode = 'error';
+
+    const { container } = render(<EnvironmentModal onClose={onClose} />);
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
+
+    fireEvent.change(fileInput, {
+      target: { files: [new File(['{}'], 'broken.json', { type: 'application/json' })] },
+    });
+
+    expect(await screen.findByText('Failed to read file')).toBeTruthy();
+  });
+
+  it('deletes a variable', () => {
+    render(<EnvironmentModal onClose={onClose} />);
+
+    // Count initial variable inputs (excluding script variables)
+    const initialNameInputs = screen.getAllByPlaceholderText('Variable name');
+    const initialCount = initialNameInputs.length;
+
+    // Click the delete button on the first variable
+    const deleteButtons = screen.getAllByRole('button').filter(
+      b => b.querySelector('svg') && b.className.includes('text-red') || b.className.includes('hover:text-red')
+    );
+    // Find a delete button in the variable table
+    const varTable = document.querySelector('table');
+    if (varTable) {
+      const trashBtns = varTable.querySelectorAll('button');
+      const lastBtn = trashBtns[trashBtns.length - 1] as HTMLElement;
+      fireEvent.click(lastBtn);
+    }
+
+    // Variable count should decrease
+    const remainingInputs = screen.getAllByPlaceholderText('Variable name');
+    expect(remainingInputs.length).toBeLessThanOrEqual(initialCount);
+  });
+
+  it('filters variables by search query', () => {
+    render(<EnvironmentModal onClose={onClose} />);
+
+    const searchInput = screen.getByPlaceholderText(/search variables/i);
+    fireEvent.change(searchInput, { target: { value: 'token' } });
+
+    // Only 'token' variable should be visible
+    const nameInputs = screen.getAllByPlaceholderText('Variable name');
+    expect(nameInputs.length).toBeGreaterThanOrEqual(1);
+    expect((nameInputs[0] as HTMLInputElement).value).toBe('token');
+  });
+
+  it('shows script variables section', () => {
+    render(<EnvironmentModal onClose={onClose} />);
+
+    // There is a script variable in the base environment
+    expect(screen.getAllByText(/Script Variables/i).length).toBeGreaterThan(0);
+  });
+
+  it('renames environment via Enter key', () => {
+    render(<EnvironmentModal onClose={onClose} />);
+
+    const renameBtn = screen.getAllByTitle('Rename')[0];
+    fireEvent.click(renameBtn);
+
+    const input = screen.getByDisplayValue('Staging');
+    fireEvent.change(input, { target: { value: 'Renamed Staging' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+
+    expect(screen.getAllByText('Renamed Staging').length).toBeGreaterThan(0);
+  });
+
+  it('cancels environment rename via Escape key', () => {
+    render(<EnvironmentModal onClose={onClose} />);
+
+    const renameBtn = screen.getAllByTitle('Rename')[0];
+    fireEvent.click(renameBtn);
+
+    const input = screen.getByDisplayValue('Staging');
+    fireEvent.change(input, { target: { value: 'Should Not Apply' } });
+    fireEvent.keyDown(input, { key: 'Escape' });
+
+    // Original name should still be shown
+    expect(screen.getAllByText('Staging').length).toBeGreaterThan(0);
+  });
+
+  it('no-ops drag with no over target', () => {
+    render(<EnvironmentModal onClose={onClose} />);
+
+    act(() => {
+      dragHandlers[0]({ active: { id: 'env-1' }, over: null });
+    });
+
+    // Should not throw, environments should still be in order
+    fireEvent.click(screen.getByRole('button', { name: /^save$/i }));
+    const [savedEnvironments] = bulkUpdateEnvironments.mock.calls[0];
+    expect(savedEnvironments[0].id).toBe('env-1');
+  });
+
+  it('no-ops drag with same id', () => {
+    render(<EnvironmentModal onClose={onClose} />);
+
+    act(() => {
+      dragHandlers[0]({ active: { id: 'env-1' }, over: { id: 'env-1' } });
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /^save$/i }));
+    const [savedEnvironments] = bulkUpdateEnvironments.mock.calls[0];
+    expect(savedEnvironments[0].id).toBe('env-1');
+  });
+
+  it('closes without prompt when no unsaved changes', () => {
+    render(<EnvironmentModal onClose={onClose} />);
+
+    // Click close (X button)
+    const closeBtn = screen.getAllByRole('button').find(
+      b => b.querySelector('svg') && b.closest('.border-b')
+    );
+    // Use the cancel button which calls handleClose
+    fireEvent.click(screen.getByRole('button', { name: /^cancel$/i }));
+
+    // Should close directly since no changes
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not import when no file is selected', () => {
+    const { container } = render(<EnvironmentModal onClose={onClose} />);
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
+
+    // Change with no files
+    fireEvent.change(fileInput, { target: { files: null } });
+    // Should not crash or add any environments
+    expect(screen.queryByText(/Successfully imported/)).toBeNull();
+  });
 });

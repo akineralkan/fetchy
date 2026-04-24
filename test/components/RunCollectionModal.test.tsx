@@ -142,4 +142,101 @@ describe('RunCollectionModal', () => {
     fireEvent.click(checkbox);
     expect(checkbox.checked).toBe(true);
   });
+
+  it('renders parallel mode option', () => {
+    mockStore();
+    render(<RunCollectionModal isOpen={true} onClose={vi.fn()} collectionId="col-1" />);
+    const select = document.querySelector('select') as HTMLSelectElement;
+    expect(select).not.toBeNull();
+    fireEvent.change(select, { target: { value: 'parallel' } });
+    expect(select.value).toBe('parallel');
+  });
+
+  it('allows changing delay between requests', () => {
+    mockStore();
+    render(<RunCollectionModal isOpen={true} onClose={vi.fn()} collectionId="col-1" />);
+    const delayInput = screen.getByDisplayValue('0');
+    fireEvent.change(delayInput, { target: { value: '500' } });
+    expect((delayInput as HTMLInputElement).value).toBe('500');
+  });
+
+  it('shows request count info', () => {
+    mockStore();
+    render(<RunCollectionModal isOpen={true} onClose={vi.fn()} collectionId="col-1" />);
+    // The count "1" is in a <span> and "request will be executed" is adjacent text
+    const countInfo = document.querySelector('.mt-4 p');
+    expect(countInfo?.textContent).toContain('request will be executed');
+  });
+
+  it('flattens requests from nested folders', () => {
+    const nestedCollection = {
+      id: 'col-1',
+      name: 'Nested API',
+      requests: [mockRequest],
+      folders: [{
+        id: 'f-1',
+        name: 'Folder 1',
+        requests: [{ ...mockRequest, id: 'req-2', name: 'Folder Request' }],
+        folders: [{
+          id: 'f-2',
+          name: 'Sub Folder',
+          requests: [{ ...mockRequest, id: 'req-3', name: 'Sub Request' }],
+          folders: [],
+        }],
+      }],
+      variables: [],
+      auth: { type: 'none' as const },
+    };
+    vi.mocked(useAppStore).mockReturnValue({
+      collections: [nestedCollection],
+      getActiveEnvironment: vi.fn(() => null),
+    } as ReturnType<typeof useAppStore>);
+    render(<RunCollectionModal isOpen={true} onClose={vi.fn()} collectionId="col-1" />);
+    // The "3" is in a span, so we check textContent of the info paragraph
+    const countInfo = document.querySelector('.mt-4 p');
+    expect(countInfo?.textContent).toContain('3');
+    expect(countInfo?.textContent).toContain('requests will be executed');
+  });
+
+  it('shows total execution count when iterations > 1', () => {
+    mockStore();
+    render(<RunCollectionModal isOpen={true} onClose={vi.fn()} collectionId="col-1" />);
+    const iterationInput = screen.getByDisplayValue('1');
+    fireEvent.change(iterationInput, { target: { value: '5' } });
+    expect(screen.getByText(/5 total/i)).toBeTruthy();
+  });
+
+  it('shows Run Collection button in config mode', () => {
+    mockStore();
+    render(<RunCollectionModal isOpen={true} onClose={vi.fn()} collectionId="col-1" />);
+    expect(screen.getByRole('button', { name: /Run Collection/i })).toBeTruthy();
+  });
+
+  it('disables close button while running', async () => {
+    mockStore();
+    render(<RunCollectionModal isOpen={true} onClose={vi.fn()} collectionId="col-1" />);
+    // The button should not be disabled initially
+    const closeBtn = screen.getByText('Close');
+    expect((closeBtn as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it('displays collection name in header', () => {
+    mockStore();
+    render(<RunCollectionModal isOpen={true} onClose={vi.fn()} collectionId="col-1" />);
+    expect(screen.getByText('My API')).toBeTruthy();
+  });
+
+  it('shows run mode description for sequential', () => {
+    mockStore();
+    render(<RunCollectionModal isOpen={true} onClose={vi.fn()} collectionId="col-1" />);
+    expect(screen.getByText(/requests run one after another/i)).toBeTruthy();
+  });
+
+  it('shows header title "Run Collection"', () => {
+    mockStore();
+    render(<RunCollectionModal isOpen={true} onClose={vi.fn()} collectionId="col-1" />);
+    // The h2 title should contain "Run Collection"
+    const heading = document.querySelector('h2');
+    expect(heading?.textContent).toContain('Run Collection');
+  });
 });

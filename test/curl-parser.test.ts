@@ -368,3 +368,177 @@ describe('parseCurlCommand — real-world examples', () => {
     result!.headers.forEach(h => expect(h.id).toBeDefined());
   });
 });
+
+// ─── Additional coverage tests ───────────────────────────────────────────────
+
+describe('parseCurlCommand — cookie file reference', () => {
+  it('skips -b when value starts with @ (cookie file)', () => {
+    const cmd = `curl -b @/tmp/cookies.txt https://api.example.com`;
+    const result = parseCurlCommand(cmd);
+    expect(result).not.toBeNull();
+    // File-based cookies are NOT added as a Cookie header
+    expect(result!.headers.find(h => h.key === 'Cookie')).toBeUndefined();
+  });
+
+  it('adds -b value as Cookie header when not a file', () => {
+    const cmd = `curl --cookie 'session=abc' https://api.example.com`;
+    const result = parseCurlCommand(cmd);
+    expect(result!.headers.find(h => h.key === 'Cookie')!.value).toBe('session=abc');
+  });
+});
+
+describe('parseCurlCommand — unknown flags', () => {
+  it('skips unknown flag and its value argument', () => {
+    // --max-time 30 is unknown; parser should skip it and its argument
+    const cmd = `curl --max-time 30 https://api.example.com`;
+    const result = parseCurlCommand(cmd);
+    expect(result).not.toBeNull();
+    expect(result!.url).toContain('api.example.com');
+  });
+
+  it('skips unknown flag whose next token starts with -', () => {
+    const cmd = `curl --unknown -X POST https://api.example.com`;
+    const result = parseCurlCommand(cmd);
+    expect(result).not.toBeNull();
+    expect(result!.method).toBe('POST');
+  });
+});
+
+describe('parseCurlCommand — URL without protocol', () => {
+  it('assumes https for URL with a dot but no protocol', () => {
+    const cmd = `curl api.example.com/users`;
+    const result = parseCurlCommand(cmd);
+    expect(result).not.toBeNull();
+    expect(result!.url).toContain('https://api.example.com');
+  });
+
+  it('handles URL without a dot and no protocol', () => {
+    const cmd = `curl localhost:3000/api`;
+    const result = parseCurlCommand(cmd);
+    expect(result).not.toBeNull();
+  });
+});
+
+describe('parseCurlCommand — XML and plain text body', () => {
+  it('parses XML body with Content-Type text/xml', () => {
+    const cmd = `curl -X POST -H 'Content-Type: text/xml' -d '<root><item/></root>' https://api.example.com`;
+    const result = parseCurlCommand(cmd);
+    expect(result!.body.type).toBe('raw');
+    expect(result!.body.raw).toBe('<root><item/></root>');
+  });
+
+  it('parses XML body with Content-Type application/xml', () => {
+    const cmd = `curl -X POST -H 'Content-Type: application/xml' -d '<data>test</data>' https://api.example.com`;
+    const result = parseCurlCommand(cmd);
+    expect(result!.body.type).toBe('raw');
+  });
+
+  it('parses plain text body with Content-Type text/plain', () => {
+    const cmd = `curl -X POST -H 'Content-Type: text/plain' -d 'hello world' https://api.example.com`;
+    const result = parseCurlCommand(cmd);
+    expect(result!.body.type).toBe('raw');
+    expect(result!.body.raw).toBe('hello world');
+  });
+});
+
+describe('parseCurlCommand — Basic auth from Authorization header', () => {
+  it('decodes base64 Basic auth from Authorization header', () => {
+    // base64("admin:secret") = "YWRtaW46c2VjcmV0"
+    const cmd = `curl -H 'Authorization: Basic YWRtaW46c2VjcmV0' https://api.example.com`;
+    const result = parseCurlCommand(cmd);
+    expect(result!.auth.type).toBe('basic');
+    expect(result!.auth.basic!.username).toBe('admin');
+    expect(result!.auth.basic!.password).toBe('secret');
+    // Authorization header should be removed
+    expect(result!.headers.find(h => h.key === 'Authorization')).toBeUndefined();
+  });
+
+  it('handles Basic auth with only username (no colon)', () => {
+    // base64("admin") = "YWRtaW4="
+    const cmd = `curl -H 'Authorization: Basic YWRtaW4=' https://api.example.com`;
+    const result = parseCurlCommand(cmd);
+    expect(result!.auth.type).toBe('basic');
+    expect(result!.auth.basic!.username).toBe('admin');
+    expect(result!.auth.basic!.password).toBe('');
+  });
+});
+
+describe('parseCurlCommand — API key detection', () => {
+  it('detects X-API-Key header as api-key auth', () => {
+    const cmd = `curl -H 'X-API-Key: my-key-123' https://api.example.com`;
+    const result = parseCurlCommand(cmd);
+    expect(result!.auth.type).toBe('api-key');
+    expect(result!.auth.apiKey!.key).toBe('X-API-Key');
+    expect(result!.auth.apiKey!.value).toBe('my-key-123');
+    expect(result!.auth.apiKey!.addTo).toBe('header');
+  });
+
+  it('detects api_key query param as api-key auth', () => {
+    const cmd = `curl "https://api.example.com/data?api_key=abc123"`;
+    const result = parseCurlCommand(cmd);
+    expect(result!.auth.type).toBe('api-key');
+    expect(result!.auth.apiKey!.key).toBe('api_key');
+    expect(result!.auth.apiKey!.value).toBe('abc123');
+    expect(result!.auth.apiKey!.addTo).toBe('query');
+  });
+
+  it('does not detect API key when -u auth is present', () => {
+    const cmd = `curl -u admin:pass -H 'X-API-Key: extra' https://api.example.com`;
+    const result = parseCurlCommand(cmd);
+    // -u sets basic auth, so API key header stays as regular header
+    expect(result!.auth.type).toBe('basic');
+  });
+});
+
+describe('parseCurlCommand — auto-detect body type', () => {
+  it('auto-detects form data from key=value without content type', () => {
+    const cmd = `curl -X POST -d 'username=admin&password=secret' https://api.example.com`;
+    const result = parseCurlCommand(cmd);
+    expect(result!.body.type).toBe('x-www-form-urlencoded');
+  });
+
+  it('falls back to raw body for non-JSON non-form data', () => {
+    const cmd = `curl -X POST -d 'just some plain text here' https://api.example.com`;
+    const result = parseCurlCommand(cmd);
+    expect(result!.body.type).toBe('raw');
+    expect(result!.body.raw).toBe('just some plain text here');
+  });
+
+  it('handles invalid JSON that looks like JSON but has errors → falls back', () => {
+    const cmd = `curl -X POST -d '{invalid json here}' https://api.example.com`;
+    const result = parseCurlCommand(cmd);
+    // Starts with { and ends with }, but fails JSON.parse, so tries form detection
+    expect(result!.body).toBeDefined();
+  });
+
+  it('urlencoded body with item that has no = sign treats as key-only', () => {
+    const cmd = `curl -X POST -H 'Content-Type: application/x-www-form-urlencoded' -d 'standalone' https://api.example.com`;
+    const result = parseCurlCommand(cmd);
+    expect(result!.body.type).toBe('x-www-form-urlencoded');
+    expect(result!.body.urlencoded!.some(p => p.key === 'standalone' && p.value === '')).toBe(true);
+  });
+});
+
+describe('parseCurlCommand — --compressed duplicate check', () => {
+  it('does not duplicate Accept-Encoding if already present before --compressed', () => {
+    // Header is processed before --compressed in token order
+    const cmd = `curl -H 'Accept-Encoding: gzip' --compressed https://api.example.com`;
+    const result = parseCurlCommand(cmd);
+    const aeHeaders = result!.headers.filter(h => h.key.toLowerCase() === 'accept-encoding');
+    expect(aeHeaders).toHaveLength(1);
+  });
+});
+
+describe('parseCurlCommand — --data-binary and --data-ascii', () => {
+  it('handles --data-binary as body data', () => {
+    const cmd = `curl -X POST --data-binary '{"test":true}' -H 'Content-Type: application/json' https://api.example.com`;
+    const result = parseCurlCommand(cmd);
+    expect(result!.body.type).toBe('json');
+  });
+
+  it('handles --data-ascii as body data', () => {
+    const cmd = `curl -X POST --data-ascii 'hello' -H 'Content-Type: text/plain' https://api.example.com`;
+    const result = parseCurlCommand(cmd);
+    expect(result!.body.type).toBe('raw');
+  });
+});

@@ -242,4 +242,85 @@ describe('CollectionConfigPanel', () => {
       description: 'Initial description',
     });
   });
+
+  // ─── Additional coverage tests ──────────────────────────────────────────────
+
+  it('renders and saves bearer auth', () => {
+    render(<CollectionConfigPanel collectionId='col-1' />);
+
+    fireEvent.click(screen.getByRole('button', { name: /^auth$/i }));
+    fireEvent.click(screen.getByRole('button', { name: /bearer token/i }));
+    fireEvent.change(screen.getByPlaceholderText('Enter bearer token'), {
+      target: { value: 'my-bearer-token' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /save collection settings/i }));
+
+    expect(updateCollection).toHaveBeenCalledWith('col-1', expect.objectContaining({
+      auth: expect.objectContaining({
+        type: 'bearer',
+        bearer: { token: 'my-bearer-token' },
+      }),
+    }));
+  });
+
+  it('renders and saves basic auth', () => {
+    render(<CollectionConfigPanel collectionId='col-1' />);
+
+    fireEvent.click(screen.getByRole('button', { name: /^auth$/i }));
+    fireEvent.click(screen.getByRole('button', { name: /basic auth/i }));
+    fireEvent.change(screen.getByPlaceholderText('Enter username'), {
+      target: { value: 'admin' },
+    });
+    fireEvent.change(screen.getByPlaceholderText('Enter password'), {
+      target: { value: 'pass123' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /save collection settings/i }));
+
+    expect(updateCollection).toHaveBeenCalledWith('col-1', expect.objectContaining({
+      auth: expect.objectContaining({
+        type: 'basic',
+        basic: { username: 'admin', password: 'pass123' },
+      }),
+    }));
+  });
+
+  it('shows "No auth" message when auth type is none', () => {
+    render(<CollectionConfigPanel collectionId='col-1' />);
+
+    fireEvent.click(screen.getByRole('button', { name: /^auth$/i }));
+    expect(screen.getByText(/No authentication configured/)).toBeTruthy();
+  });
+
+  it('save button is disabled when not modified', () => {
+    render(<CollectionConfigPanel collectionId='col-1' />);
+
+    const saveBtn = screen.getByRole('button', { name: /save collection settings/i });
+    expect(saveBtn.hasAttribute('disabled')).toBe(true);
+  });
+
+  it('shows badge on auth tab when auth is configured', () => {
+    mockStore({ auth: { type: 'bearer', bearer: { token: 'abc' } } });
+    render(<CollectionConfigPanel collectionId='col-1' />);
+
+    // The auth tab should show a badge with the auth type
+    expect(screen.getByText('bearer')).toBeTruthy();
+  });
+
+  it('shows dot indicator on pre-script tab when script exists', () => {
+    mockStore({ preScript: 'console.log("hi");' });
+    render(<CollectionConfigPanel collectionId='col-1' />);
+
+    // The pre-script tab should have a dot indicator (w-2 h-2 rounded-full)
+    const preTab = screen.getByRole('button', { name: /pre-script/i });
+    const dot = preTab.querySelector('.rounded-full');
+    expect(dot).toBeTruthy();
+  });
+
+  it('displays collection name and stats', () => {
+    render(<CollectionConfigPanel collectionId='col-1' />);
+
+    expect(screen.getByText('Main Collection')).toBeTruthy();
+    expect(screen.getByText(/1 requests/)).toBeTruthy();
+    expect(screen.getByText(/1 folders/)).toBeTruthy();
+  });
 });

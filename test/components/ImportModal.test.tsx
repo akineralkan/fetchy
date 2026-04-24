@@ -174,4 +174,293 @@ describe('ImportModal', () => {
     fireEvent.click(closeButtons[0]);
     expect(onClose).toHaveBeenCalled();
   });
+
+  // ── Additional coverage tests ──────────────────────────────────────────
+
+  it('imports an OpenAPI spec from pasted content', async () => {
+    mockStores();
+    render(<ImportModal onClose={onClose} initialImportType="openapi" />);
+    const textarea = screen.getByPlaceholderText(/Paste your OpenAPI spec/i);
+    fireEvent.change(textarea, { target: { value: '{"openapi":"3.0.0","info":{"title":"Test"},"paths":{}}' } });
+    const importBtn = screen.getAllByRole('button').find(b => b.textContent?.includes('Import') && !b.textContent?.includes('Cancel') && !b.textContent?.includes('AI'));
+    fireEvent.click(importBtn!);
+    await waitFor(() => expect(importCollection).toHaveBeenCalled());
+  });
+
+  it('imports a Hoppscotch collection', async () => {
+    mockStores();
+    render(<ImportModal onClose={onClose} initialImportType="hoppscotch" />);
+    const textarea = screen.getByPlaceholderText(/Paste your Hoppscotch collection JSON/i);
+    fireEvent.change(textarea, { target: { value: '{"v":1,"name":"test","requests":[]}' } });
+    const importBtn = screen.getAllByRole('button').find(b => b.textContent?.includes('Import') && !b.textContent?.includes('Cancel') && !b.textContent?.includes('AI'));
+    fireEvent.click(importBtn!);
+    await waitFor(() => expect(importCollection).toHaveBeenCalled());
+  });
+
+  it('imports a Bruno collection', async () => {
+    mockStores();
+    render(<ImportModal onClose={onClose} initialImportType="bruno" />);
+    const textarea = screen.getByPlaceholderText(/Paste your Bruno collection JSON/i);
+    fireEvent.change(textarea, { target: { value: '{"name":"bruno","requests":[]}' } });
+    const importBtn = screen.getAllByRole('button').find(b => b.textContent?.includes('Import') && !b.textContent?.includes('Cancel') && !b.textContent?.includes('AI'));
+    fireEvent.click(importBtn!);
+    await waitFor(() => expect(importCollection).toHaveBeenCalled());
+  });
+
+  it('imports a Postman environment', async () => {
+    mockStores();
+    render(<ImportModal onClose={onClose} initialImportType="postman-env" />);
+    const textarea = screen.getByPlaceholderText(/Paste your Postman environment JSON/i);
+    fireEvent.change(textarea, { target: { value: '{"name":"env","values":[]}' } });
+    const importBtn = screen.getAllByRole('button').find(b => b.textContent?.includes('Import') && !b.textContent?.includes('Cancel') && !b.textContent?.includes('AI'));
+    fireEvent.click(importBtn!);
+    await waitFor(() => expect(importEnvironment).toHaveBeenCalled());
+  });
+
+  it('imports a Hoppscotch environment', async () => {
+    mockStores();
+    render(<ImportModal onClose={onClose} initialImportType="hoppscotch-env" />);
+    const textarea = screen.getByPlaceholderText(/Paste your Hoppscotch environment JSON/i);
+    fireEvent.change(textarea, { target: { value: '{"name":"test","variables":[]}' } });
+    const importBtn = screen.getAllByRole('button').find(b => b.textContent?.includes('Import') && !b.textContent?.includes('Cancel') && !b.textContent?.includes('AI'));
+    fireEvent.click(importBtn!);
+    await waitFor(() => expect(importEnvironment).toHaveBeenCalled());
+  });
+
+  it('imports a Bruno environment', async () => {
+    mockStores();
+    render(<ImportModal onClose={onClose} initialImportType="bruno-env" />);
+    const textarea = screen.getByPlaceholderText(/Paste your Bruno environment JSON/i);
+    fireEvent.change(textarea, { target: { value: '{"name":"test","variables":[]}' } });
+    const importBtn = screen.getAllByRole('button').find(b => b.textContent?.includes('Import') && !b.textContent?.includes('Cancel') && !b.textContent?.includes('AI'));
+    fireEvent.click(importBtn!);
+    await waitFor(() => expect(importEnvironment).toHaveBeenCalled());
+  });
+
+  it('shows error when collection import fails', async () => {
+    mockStores();
+    const { importPostmanCollection } = await import('../../src/utils/helpers');
+    vi.mocked(importPostmanCollection).mockReturnValueOnce(null as any);
+    render(<ImportModal onClose={onClose} initialImportType="postman" />);
+    const textarea = screen.getByPlaceholderText(/Paste your Postman collection JSON/i);
+    fireEvent.change(textarea, { target: { value: 'invalid json' } });
+    const importBtn = screen.getAllByRole('button').find(b => b.textContent?.includes('Import') && !b.textContent?.includes('Cancel') && !b.textContent?.includes('AI'));
+    fireEvent.click(importBtn!);
+    await waitFor(() => expect(screen.getByText(/Failed to parse/i)).toBeDefined());
+  });
+
+  it('shows error when OpenAPI import fails', async () => {
+    mockStores();
+    const { importOpenAPISpec } = await import('../../src/utils/helpers');
+    vi.mocked(importOpenAPISpec).mockReturnValueOnce(null as any);
+    render(<ImportModal onClose={onClose} initialImportType="openapi" />);
+    const textarea = screen.getByPlaceholderText(/Paste your OpenAPI spec/i);
+    fireEvent.change(textarea, { target: { value: 'bad yaml' } });
+    const importBtn = screen.getAllByRole('button').find(b => b.textContent?.includes('Import') && !b.textContent?.includes('Cancel') && !b.textContent?.includes('AI'));
+    fireEvent.click(importBtn!);
+    await waitFor(() => expect(screen.getByText(/Failed to parse/i)).toBeDefined());
+  });
+
+  it('creates a new collection when cURL imported and no collections exist', async () => {
+    mockStores();
+    render(<ImportModal onClose={onClose} />);
+    fireEvent.click(screen.getByText('Request'));
+    const textarea = screen.getByPlaceholderText(/curl -X POST/i);
+    fireEvent.change(textarea, { target: { value: 'curl https://api.example.com' } });
+    const importBtn = screen.getAllByRole('button').find(b => b.textContent?.includes('Import') && !b.textContent?.includes('Cancel') && !b.textContent?.includes('AI'));
+    fireEvent.click(importBtn!);
+    await waitFor(() => expect(addCollection).toHaveBeenCalledWith('My Collection'));
+  });
+
+  it('shows error when cURL input is empty', async () => {
+    mockStores();
+    render(<ImportModal onClose={onClose} />);
+    fireEvent.click(screen.getByText('Request'));
+    // Leave textarea empty but force import attempt
+    const importBtn = screen.getAllByRole('button').find(b => b.textContent?.includes('Import') && !b.textContent?.includes('Cancel') && !b.textContent?.includes('AI'));
+    expect(importBtn!.hasAttribute('disabled')).toBe(true);
+  });
+
+  it('shows error when file/paste content is empty for collection import', async () => {
+    mockStores();
+    render(<ImportModal onClose={onClose} initialImportType="postman" />);
+    const importBtn = screen.getAllByRole('button').find(b => b.textContent?.includes('Import') && !b.textContent?.includes('Cancel') && !b.textContent?.includes('AI'));
+    expect(importBtn!.hasAttribute('disabled')).toBe(true);
+  });
+
+  it('switching source resets file content and error', () => {
+    mockStores();
+    render(<ImportModal onClose={onClose} initialImportType="postman" />);
+    // Paste some content
+    const textarea = screen.getByPlaceholderText(/Paste your Postman collection JSON/i);
+    fireEvent.change(textarea, { target: { value: 'some content' } });
+    // Switch to OpenAPI
+    fireEvent.click(screen.getByText('OpenAPI'));
+    const newTextarea = screen.getByPlaceholderText(/Paste your OpenAPI spec/i);
+    expect((newTextarea as HTMLTextAreaElement).value).toBe('');
+  });
+
+  it('switching category resets state', () => {
+    mockStores();
+    render(<ImportModal onClose={onClose} initialImportType="postman" />);
+    const textarea = screen.getByPlaceholderText(/Paste your Postman collection JSON/i);
+    fireEvent.change(textarea, { target: { value: 'some content' } });
+    fireEvent.click(screen.getByText('Request'));
+    // Switch back to collection
+    fireEvent.click(screen.getByText('Collection'));
+    const newTextarea = screen.getByPlaceholderText(/Paste your Postman collection JSON/i);
+    expect((newTextarea as HTMLTextAreaElement).value).toBe('');
+  });
+
+  it('handles drag and drop events on file zone', () => {
+    mockStores();
+    render(<ImportModal onClose={onClose} initialImportType="postman" />);
+    const dropZone = screen.getByText('Click to import or drag and drop').closest('div')!;
+    // drag events should not crash
+    fireEvent.dragOver(dropZone, { preventDefault: vi.fn(), stopPropagation: vi.fn() });
+    fireEvent.dragEnter(dropZone, { preventDefault: vi.fn(), stopPropagation: vi.fn() });
+    fireEvent.dragLeave(dropZone, { preventDefault: vi.fn(), stopPropagation: vi.fn() });
+    fireEvent.drop(dropZone, { preventDefault: vi.fn(), stopPropagation: vi.fn(), dataTransfer: { files: [], items: [] } });
+    expect(dropZone).toBeDefined();
+  });
+
+  it('shows AI-assisted import checkbox when AI is enabled', () => {
+    vi.mocked(useAppStore).mockReturnValue({
+      importCollection,
+      importEnvironment,
+      collections: [],
+      addCollection,
+      addRequest,
+      openTab,
+    } as ReturnType<typeof useAppStore>);
+    vi.mocked(usePreferencesStore).mockReturnValue({
+      aiSettings: { enabled: true, apiKey: 'key', baseUrl: '', provider: 'gemini', model: 'gemini-pro' },
+    } as ReturnType<typeof usePreferencesStore>);
+    render(<ImportModal onClose={onClose} />);
+    expect(screen.getByText('AI-Assisted Import')).toBeDefined();
+  });
+
+  it('AI-assisted collection import calls aiConvertCollection', async () => {
+    const { aiConvertCollection } = await import('../../src/utils/aiImport');
+    vi.mocked(aiConvertCollection).mockResolvedValue({
+      collection: { id: 'ai-col', name: 'AI Collection', requests: [], folders: [], variables: [] } as any,
+      error: null,
+    });
+    vi.mocked(useAppStore).mockReturnValue({
+      importCollection,
+      importEnvironment,
+      collections: [],
+      addCollection,
+      addRequest,
+      openTab,
+    } as ReturnType<typeof useAppStore>);
+    vi.mocked(usePreferencesStore).mockReturnValue({
+      aiSettings: { enabled: true, apiKey: 'key', baseUrl: '', provider: 'gemini', model: 'gemini-pro' },
+    } as ReturnType<typeof usePreferencesStore>);
+    render(<ImportModal onClose={onClose} initialImportType="postman" />);
+    // Enable AI toggle
+    const checkbox = screen.getByRole('checkbox');
+    fireEvent.click(checkbox);
+    // Paste content
+    const textarea = screen.getByPlaceholderText(/Paste your Postman collection JSON/i);
+    fireEvent.change(textarea, { target: { value: '{"some":"data"}' } });
+    const importBtn = screen.getAllByRole('button').find(b => b.textContent?.includes('AI Import'));
+    fireEvent.click(importBtn!);
+    await waitFor(() => expect(aiConvertCollection).toHaveBeenCalled());
+  });
+
+  it('AI-assisted request import calls aiConvertRequest', async () => {
+    const { aiConvertRequest } = await import('../../src/utils/aiImport');
+    vi.mocked(aiConvertRequest).mockResolvedValue({
+      request: { id: 'ai-r1', name: 'AI Request', method: 'GET', url: 'https://test.com', headers: [], params: [], body: { type: 'none' }, auth: { type: 'none' } } as any,
+      error: null,
+    });
+    vi.mocked(useAppStore).mockReturnValue({
+      importCollection,
+      importEnvironment,
+      collections: [{ id: 'c1', name: 'Col', requests: [], folders: [] }],
+      addCollection,
+      addRequest,
+      openTab,
+    } as any);
+    vi.mocked(usePreferencesStore).mockReturnValue({
+      aiSettings: { enabled: true, apiKey: 'key', baseUrl: '', provider: 'gemini', model: 'gemini-pro' },
+    } as ReturnType<typeof usePreferencesStore>);
+    render(<ImportModal onClose={onClose} />);
+    fireEvent.click(screen.getByText('Request'));
+    // Enable AI toggle
+    const checkbox = screen.getByRole('checkbox');
+    fireEvent.click(checkbox);
+    const textarea = screen.getByPlaceholderText(/curl -X POST/i);
+    fireEvent.change(textarea, { target: { value: 'some raw request text' } });
+    const importBtn = screen.getAllByRole('button').find(b => b.textContent?.includes('AI Import'));
+    fireEvent.click(importBtn!);
+    await waitFor(() => expect(aiConvertRequest).toHaveBeenCalled());
+  });
+
+  it('AI-assisted environment import calls aiConvertEnvironment', async () => {
+    const { aiConvertEnvironment } = await import('../../src/utils/aiImport');
+    vi.mocked(aiConvertEnvironment).mockResolvedValue({
+      environment: { id: 'ai-env', name: 'AI Env', variables: [] } as any,
+      error: null,
+    });
+    vi.mocked(useAppStore).mockReturnValue({
+      importCollection,
+      importEnvironment,
+      collections: [],
+      addCollection,
+      addRequest,
+      openTab,
+    } as ReturnType<typeof useAppStore>);
+    vi.mocked(usePreferencesStore).mockReturnValue({
+      aiSettings: { enabled: true, apiKey: 'key', baseUrl: '', provider: 'gemini', model: 'gemini-pro' },
+    } as ReturnType<typeof usePreferencesStore>);
+    render(<ImportModal onClose={onClose} initialImportType="postman-env" />);
+    // Enable AI toggle
+    const checkbox = screen.getByRole('checkbox');
+    fireEvent.click(checkbox);
+    const textarea = screen.getByPlaceholderText(/Paste your Postman environment JSON/i);
+    fireEvent.change(textarea, { target: { value: '{"some":"env data"}' } });
+    const importBtn = screen.getAllByRole('button').find(b => b.textContent?.includes('AI Import'));
+    fireEvent.click(importBtn!);
+    await waitFor(() => expect(aiConvertEnvironment).toHaveBeenCalled());
+  });
+
+  it('AI-assisted import shows error on failure', async () => {
+    const { aiConvertCollection } = await import('../../src/utils/aiImport');
+    vi.mocked(aiConvertCollection).mockResolvedValue({
+      collection: null,
+      error: 'AI conversion failed',
+    });
+    vi.mocked(useAppStore).mockReturnValue({
+      importCollection,
+      importEnvironment,
+      collections: [],
+      addCollection,
+      addRequest,
+      openTab,
+    } as ReturnType<typeof useAppStore>);
+    vi.mocked(usePreferencesStore).mockReturnValue({
+      aiSettings: { enabled: true, apiKey: 'key', baseUrl: '', provider: 'gemini', model: 'gemini-pro' },
+    } as ReturnType<typeof usePreferencesStore>);
+    render(<ImportModal onClose={onClose} initialImportType="postman" />);
+    const checkbox = screen.getByRole('checkbox');
+    fireEvent.click(checkbox);
+    const textarea = screen.getByPlaceholderText(/Paste your Postman collection JSON/i);
+    fireEvent.change(textarea, { target: { value: '{"bad":"data"}' } });
+    const importBtn = screen.getAllByRole('button').find(b => b.textContent?.includes('AI Import'));
+    fireEvent.click(importBtn!);
+    await waitFor(() => expect(screen.getByText(/AI conversion failed/i)).toBeDefined());
+  });
+
+  it('uses filename for environment name when importing single env via paste', async () => {
+    mockStores();
+    render(<ImportModal onClose={onClose} initialImportType="postman-env" />);
+    // Paste content directly and verify import works
+    const textarea = screen.getByPlaceholderText(/Paste your Postman environment JSON/i);
+    fireEvent.change(textarea, { target: { value: '{"name":"env","values":[]}' } });
+    const importBtn = screen.getAllByRole('button').find(b => b.textContent?.includes('Import') && !b.textContent?.includes('Cancel') && !b.textContent?.includes('AI'));
+    fireEvent.click(importBtn!);
+    await waitFor(() => expect(importEnvironment).toHaveBeenCalled());
+  });
 });

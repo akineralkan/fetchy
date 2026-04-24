@@ -172,4 +172,157 @@ describe('TabBar', () => {
     fireEvent.doubleClick(document.querySelector('.tab-item')!);
     expect(screen.queryByRole('textbox')).toBeNull();
   });
+
+  // ─── Additional coverage tests ──────────────────────────────────────────────
+
+  it('middle-click closes a tab', () => {
+    mockStore([makeTab()]);
+    render(<TabBar />);
+    const tabEl = document.querySelector('.tab-item') as HTMLElement;
+    fireEvent.mouseDown(tabEl, { button: 1 });
+    expect(closeTab).toHaveBeenCalledWith('tab-1');
+  });
+
+  it('"Close Tabs to Right" closes only tabs after the target', () => {
+    mockStore([
+      makeTab({ id: 'tab-1', title: 'First' }),
+      makeTab({ id: 'tab-2', title: 'Second' }),
+      makeTab({ id: 'tab-3', title: 'Third' }),
+    ]);
+    render(<TabBar />);
+    // Right-click the first tab
+    const firstTab = document.querySelectorAll('.tab-item')[0];
+    fireEvent.contextMenu(firstTab);
+    fireEvent.click(screen.getByText('Close Tabs to Right'));
+    // Should close tab-2 and tab-3
+    expect(closeTab).toHaveBeenCalledTimes(2);
+    expect(closeTab).toHaveBeenCalledWith('tab-2');
+    expect(closeTab).toHaveBeenCalledWith('tab-3');
+  });
+
+  it('"Close Tabs to Left" closes only tabs before the target', () => {
+    mockStore([
+      makeTab({ id: 'tab-1', title: 'First' }),
+      makeTab({ id: 'tab-2', title: 'Second' }),
+      makeTab({ id: 'tab-3', title: 'Third' }),
+    ]);
+    render(<TabBar />);
+    // Right-click the last tab
+    const lastTab = document.querySelectorAll('.tab-item')[2];
+    fireEvent.contextMenu(lastTab);
+    fireEvent.click(screen.getByText('Close Tabs to Left'));
+    expect(closeTab).toHaveBeenCalledTimes(2);
+    expect(closeTab).toHaveBeenCalledWith('tab-1');
+    expect(closeTab).toHaveBeenCalledWith('tab-2');
+  });
+
+  it('"Close Other Tabs" closes all tabs except the target', () => {
+    mockStore([
+      makeTab({ id: 'tab-1', title: 'First' }),
+      makeTab({ id: 'tab-2', title: 'Second' }),
+      makeTab({ id: 'tab-3', title: 'Third' }),
+    ]);
+    render(<TabBar />);
+    const secondTab = document.querySelectorAll('.tab-item')[1];
+    fireEvent.contextMenu(secondTab);
+    fireEvent.click(screen.getByText('Close Other Tabs'));
+    expect(closeTab).toHaveBeenCalledTimes(2);
+    expect(closeTab).toHaveBeenCalledWith('tab-1');
+    expect(closeTab).toHaveBeenCalledWith('tab-3');
+  });
+
+  it('shows collection badge for collection tabs', () => {
+    mockStore([makeTab({ type: 'collection', requestId: null, collectionId: 'col-1' })]);
+    vi.mocked(getRequest).mockReturnValue(null as unknown as ReturnType<typeof getRequest>);
+    render(<TabBar />);
+    const badge = document.querySelector('.bg-yellow-500\\/20') as HTMLElement;
+    expect(badge).toBeDefined();
+  });
+
+  it('commits rename on blur', () => {
+    mockStore([makeTab()]);
+    render(<TabBar />);
+    fireEvent.doubleClick(document.querySelector('.tab-item')!);
+    const input = screen.getByRole('textbox') as HTMLInputElement;
+    fireEvent.change(input, { target: { value: 'Blur Renamed' } });
+    fireEvent.blur(input);
+    expect(updateRequest).toHaveBeenCalledWith('col-1', 'req-1', { name: 'Blur Renamed' });
+  });
+
+  it('does not rename if new name is empty', () => {
+    mockStore([makeTab()]);
+    render(<TabBar />);
+    fireEvent.doubleClick(document.querySelector('.tab-item')!);
+    const input = screen.getByRole('textbox') as HTMLInputElement;
+    fireEvent.change(input, { target: { value: '   ' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(updateRequest).not.toHaveBeenCalled();
+  });
+
+  it('does not rename if name is unchanged', () => {
+    mockStore([makeTab()]);
+    render(<TabBar />);
+    fireEvent.doubleClick(document.querySelector('.tab-item')!);
+    const input = screen.getByRole('textbox') as HTMLInputElement;
+    // Don't change the value, just press Enter
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(updateRequest).not.toHaveBeenCalled();
+  });
+
+  it('renames a collection tab via commitRename', () => {
+    mockStore([makeTab({ type: 'collection', requestId: null })]);
+    vi.mocked(getRequest).mockReturnValue(null as unknown as ReturnType<typeof getRequest>);
+    render(<TabBar />);
+    fireEvent.doubleClick(document.querySelector('.tab-item')!);
+    const input = screen.getByRole('textbox') as HTMLInputElement;
+    fireEvent.change(input, { target: { value: 'New Collection Name' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(updateCollection).toHaveBeenCalledWith('col-1', { name: 'New Collection Name' });
+  });
+
+  it('renames an environment tab via commitRename', () => {
+    mockStore([makeTab({ type: 'environment', requestId: null, collectionId: null, environmentId: 'env-1' })]);
+    vi.mocked(getRequest).mockReturnValue(null as unknown as ReturnType<typeof getRequest>);
+    render(<TabBar />);
+    fireEvent.doubleClick(document.querySelector('.tab-item')!);
+    const input = screen.getByRole('textbox') as HTMLInputElement;
+    fireEvent.change(input, { target: { value: 'New Env Name' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(updateEnvironment).toHaveBeenCalledWith('env-1', { name: 'New Env Name' });
+  });
+
+  it('renames an openapi tab via commitRename', () => {
+    mockStore([makeTab({ type: 'openapi', requestId: null, collectionId: null, openApiDocId: 'doc-1' })]);
+    vi.mocked(getRequest).mockReturnValue(null as unknown as ReturnType<typeof getRequest>);
+    render(<TabBar />);
+    fireEvent.doubleClick(document.querySelector('.tab-item')!);
+    const input = screen.getByRole('textbox') as HTMLInputElement;
+    fireEvent.change(input, { target: { value: 'New Doc Name' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(updateOpenApiDocument).toHaveBeenCalledWith('doc-1', { name: 'New Doc Name' });
+  });
+
+  it('"Close Tabs to Right" is disabled for the last tab', () => {
+    mockStore([makeTab({ id: 'tab-1', title: 'Only' })]);
+    render(<TabBar />);
+    fireEvent.contextMenu(document.querySelector('.tab-item')!);
+    const btn = screen.getByText('Close Tabs to Right');
+    expect(btn.closest('button')!.hasAttribute('disabled')).toBe(true);
+  });
+
+  it('"Close Tabs to Left" is disabled for the first tab', () => {
+    mockStore([makeTab({ id: 'tab-1', title: 'Only' })]);
+    render(<TabBar />);
+    fireEvent.contextMenu(document.querySelector('.tab-item')!);
+    const btn = screen.getByText('Close Tabs to Left');
+    expect(btn.closest('button')!.hasAttribute('disabled')).toBe(true);
+  });
+
+  it('"Close Other Tabs" is disabled when only one tab', () => {
+    mockStore([makeTab({ id: 'tab-1', title: 'Only' })]);
+    render(<TabBar />);
+    fireEvent.contextMenu(document.querySelector('.tab-item')!);
+    const btn = screen.getByText('Close Other Tabs');
+    expect(btn.closest('button')!.hasAttribute('disabled')).toBe(true);
+  });
 });

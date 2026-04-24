@@ -264,3 +264,165 @@ describe('stripConflictMarkersToTheirs', () => {
     expect(stripConflictMarkersToTheirs(clean)).toBe(clean);
   });
 });
+
+// ─── Additional coverage tests ────────────────────────────────────────────────
+
+describe('computeLineDiff — simple diff fallback for large files', () => {
+  it('uses simple diff for very large inputs (m*n > 1_000_000)', () => {
+    // Create inputs with 1001 lines each so m*n > 1_000_000
+    const leftLines = Array.from({ length: 1001 }, (_, i) => `left-line-${i}`);
+    const rightLines = Array.from({ length: 1001 }, (_, i) => `right-line-${i}`);
+    const diff = computeLineDiff(leftLines.join('\n'), rightLines.join('\n'));
+    // All lines differ, so they should be 'modified'
+    expect(diff.length).toBe(1001);
+    expect(diff.every(d => d.type === 'modified')).toBe(true);
+  });
+
+  it('simple diff handles left longer than right', () => {
+    const leftLines = Array.from({ length: 1001 }, (_, i) => `line-${i}`);
+    const rightLines = Array.from({ length: 500 }, (_, i) => `line-${i}`);
+    const diff = computeLineDiff(leftLines.join('\n'), rightLines.join('\n'));
+    const removed = diff.filter(d => d.type === 'removed');
+    expect(removed.length).toBe(501);
+  });
+
+  it('simple diff handles right longer than left', () => {
+    const leftLines = Array.from({ length: 500 }, (_, i) => `line-${i}`);
+    const rightLines = Array.from({ length: 1001 }, (_, i) => `line-${i}`);
+    const diff = computeLineDiff(leftLines.join('\n'), rightLines.join('\n'));
+    const added = diff.filter(d => d.type === 'added');
+    expect(added.length).toBe(501);
+  });
+
+  it('simple diff detects same lines at matching positions', () => {
+    const leftLines = Array.from({ length: 1001 }, (_, i) => `same-${i}`);
+    const rightLines = Array.from({ length: 1001 }, (_, i) => `same-${i}`);
+    const diff = computeLineDiff(leftLines.join('\n'), rightLines.join('\n'));
+    expect(diff.every(d => d.type === 'same')).toBe(true);
+  });
+});
+
+describe('stripConflictMarkersToOurs — diff3 with base section', () => {
+  it('skips base section lines', () => {
+    const content = [
+      '<<<<<<< HEAD',
+      'our content',
+      '||||||| base-ref',
+      'base content',
+      '=======',
+      'their content',
+      '>>>>>>> branch',
+    ].join('\n');
+
+    const result = stripConflictMarkersToOurs(content);
+    expect(result).toContain('our content');
+    expect(result).not.toContain('base content');
+    expect(result).not.toContain('their content');
+  });
+
+  it('handles multiple diff3 conflicts', () => {
+    const content = [
+      'before',
+      '<<<<<<< HEAD',
+      'ours1',
+      '||||||| base',
+      'base1',
+      '=======',
+      'theirs1',
+      '>>>>>>> branch',
+      'middle',
+      '<<<<<<< HEAD',
+      'ours2',
+      '=======',
+      'theirs2',
+      '>>>>>>> branch',
+      'after',
+    ].join('\n');
+
+    const result = stripConflictMarkersToOurs(content);
+    expect(result).toContain('before');
+    expect(result).toContain('ours1');
+    expect(result).toContain('middle');
+    expect(result).toContain('ours2');
+    expect(result).toContain('after');
+    expect(result).not.toContain('base1');
+    expect(result).not.toContain('theirs1');
+    expect(result).not.toContain('theirs2');
+  });
+});
+
+describe('stripConflictMarkersToTheirs — diff3 with base section', () => {
+  it('skips ours and base sections, keeps theirs', () => {
+    const content = [
+      '<<<<<<< HEAD',
+      'our content',
+      '||||||| base-ref',
+      'base content',
+      '=======',
+      'their content',
+      '>>>>>>> branch',
+    ].join('\n');
+
+    const result = stripConflictMarkersToTheirs(content);
+    expect(result).toContain('their content');
+    expect(result).not.toContain('our content');
+    expect(result).not.toContain('base content');
+  });
+
+  it('handles multiple diff3 conflicts for theirs', () => {
+    const content = [
+      'before',
+      '<<<<<<< HEAD',
+      'ours1',
+      '||||||| base',
+      'base1',
+      '=======',
+      'theirs1',
+      '>>>>>>> branch',
+      'middle',
+      '<<<<<<< HEAD',
+      'ours2',
+      '=======',
+      'theirs2',
+      '>>>>>>> branch',
+    ].join('\n');
+
+    const result = stripConflictMarkersToTheirs(content);
+    expect(result).toContain('before');
+    expect(result).toContain('theirs1');
+    expect(result).toContain('middle');
+    expect(result).toContain('theirs2');
+    expect(result).not.toContain('ours1');
+    expect(result).not.toContain('ours2');
+  });
+});
+
+describe('parseConflictMarkers — empty sections', () => {
+  it('handles empty ours section', () => {
+    const content = [
+      '<<<<<<< HEAD',
+      '=======',
+      'theirs only',
+      '>>>>>>> branch',
+    ].join('\n');
+
+    const hunks = parseConflictMarkers(content);
+    expect(hunks).toHaveLength(1);
+    expect(hunks[0].oursLines).toEqual([]);
+    expect(hunks[0].theirsLines).toEqual(['theirs only']);
+  });
+
+  it('handles empty theirs section', () => {
+    const content = [
+      '<<<<<<< HEAD',
+      'ours only',
+      '=======',
+      '>>>>>>> branch',
+    ].join('\n');
+
+    const hunks = parseConflictMarkers(content);
+    expect(hunks).toHaveLength(1);
+    expect(hunks[0].oursLines).toEqual(['ours only']);
+    expect(hunks[0].theirsLines).toEqual([]);
+  });
+});

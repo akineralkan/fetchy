@@ -525,3 +525,263 @@ describe('importBrunoEnvironment — edge cases', () => {
     expect(envs[0].variables[0].key).toBe('key2');
   });
 });
+
+// --------------------------------------------------------------------------
+// Additional coverage — uncovered branches
+// --------------------------------------------------------------------------
+
+describe('importBrunoCollection — additional body/auth coverage', () => {
+  it('should handle .bru file with body:text', () => {
+    const bru = `meta {
+  name: Text Body
+  type: http
+}
+
+post {
+  url: https://example.com/text
+}
+
+body:text {
+  Hello this is plain text content
+}
+`;
+    const collection = importBrunoCollection(bru);
+    const req = collection.requests[0];
+    expect(req.body.type).toBe('raw');
+    expect(req.body.raw).toContain('Hello this is plain text content');
+  });
+
+  it('should handle .bru file with body:xml', () => {
+    const bru = `meta {
+  name: XML Body
+  type: http
+}
+
+post {
+  url: https://example.com/xml
+}
+
+body:xml {
+  <root><item>value</item></root>
+}
+`;
+    const collection = importBrunoCollection(bru);
+    const req = collection.requests[0];
+    expect(req.body.type).toBe('raw');
+    expect(req.body.raw).toContain('<root>');
+  });
+
+  it('should handle .bru file with body:multipart-form', () => {
+    const bru = `meta {
+  name: Multipart
+  type: http
+}
+
+post {
+  url: https://example.com/upload
+}
+
+body:multipart-form {
+  name: John
+  ~age: 30
+}
+`;
+    const collection = importBrunoCollection(bru);
+    const req = collection.requests[0];
+    expect(req.body.type).toBe('form-data');
+    expect(req.body.formData!.length).toBe(2);
+    expect(req.body.formData!.find(f => f.key === 'age')!.enabled).toBe(false);
+  });
+
+  it('should handle .bru file with http block and explicit method', () => {
+    const bru = `meta {
+  name: HTTP Block
+  type: http
+}
+
+http {
+  url: https://example.com/resource
+  method: PATCH
+}
+`;
+    const collection = importBrunoCollection(bru);
+    const req = collection.requests[0];
+    expect(req.method).toBe('PATCH');
+    expect(req.url).toBe('https://example.com/resource');
+  });
+
+  it('should handle .bru file with apikey placement queryparams', () => {
+    const bru = `meta {
+  name: API Key Query
+  type: http
+}
+
+get {
+  url: https://example.com
+}
+
+auth:apikey {
+  key: api_key
+  value: test-value
+  placement: queryparams
+}
+`;
+    const collection = importBrunoCollection(bru);
+    const req = collection.requests[0];
+    expect(req.auth.type).toBe('api-key');
+    expect(req.auth.apiKey?.addTo).toBe('query');
+  });
+});
+
+describe('importBrunoCollection — JSON body modes', () => {
+  it('should handle JSON body with text mode', () => {
+    const json = {
+      name: 'Text Mode',
+      items: [{
+        type: 'http-request',
+        name: 'Req',
+        request: {
+          method: 'POST',
+          url: 'https://example.com',
+          body: { mode: 'text', text: 'plain text content' },
+        },
+      }],
+    };
+    const collection = importBrunoCollection(JSON.stringify(json));
+    expect(collection.requests[0].body.type).toBe('raw');
+    expect(collection.requests[0].body.raw).toBe('plain text content');
+  });
+
+  it('should handle JSON body with xml mode', () => {
+    const json = {
+      name: 'XML Mode',
+      items: [{
+        type: 'http-request',
+        name: 'Req',
+        request: {
+          method: 'POST',
+          url: 'https://example.com',
+          body: { mode: 'xml', xml: '<root/>' },
+        },
+      }],
+    };
+    const collection = importBrunoCollection(JSON.stringify(json));
+    expect(collection.requests[0].body.type).toBe('raw');
+    expect(collection.requests[0].body.raw).toBe('<root/>');
+  });
+
+  it('should handle JSON body with formUrlEncoded mode', () => {
+    const json = {
+      name: 'Form',
+      items: [{
+        type: 'http-request',
+        name: 'Req',
+        request: {
+          method: 'POST',
+          url: 'https://example.com',
+          body: {
+            mode: 'formUrlEncoded',
+            formUrlEncoded: [{ name: 'key', value: 'val', enabled: true }],
+          },
+        },
+      }],
+    };
+    const collection = importBrunoCollection(JSON.stringify(json));
+    expect(collection.requests[0].body.type).toBe('x-www-form-urlencoded');
+    expect(collection.requests[0].body.urlencoded!.length).toBe(1);
+  });
+
+  it('should handle JSON body with multipartForm mode (filters file entries)', () => {
+    const json = {
+      name: 'Multipart',
+      items: [{
+        type: 'http-request',
+        name: 'Req',
+        request: {
+          method: 'POST',
+          url: 'https://example.com',
+          body: {
+            mode: 'multipartForm',
+            multipartForm: [
+              { name: 'field', value: 'text', enabled: true, type: 'text' },
+              { name: 'file', value: '/path', enabled: true, type: 'file' },
+            ],
+          },
+        },
+      }],
+    };
+    const collection = importBrunoCollection(JSON.stringify(json));
+    expect(collection.requests[0].body.type).toBe('form-data');
+    // File entries should be filtered out
+    expect(collection.requests[0].body.formData!.length).toBe(1);
+    expect(collection.requests[0].body.formData![0].key).toBe('field');
+  });
+
+  it('should handle JSON body with no mode but direct json content', () => {
+    const json = {
+      name: 'Direct JSON',
+      items: [{
+        type: 'http-request',
+        name: 'Req',
+        request: {
+          method: 'POST',
+          url: 'https://example.com',
+          body: { json: '{"key":"value"}' },
+        },
+      }],
+    };
+    const collection = importBrunoCollection(JSON.stringify(json));
+    expect(collection.requests[0].body.type).toBe('json');
+    expect(collection.requests[0].body.raw).toBe('{"key":"value"}');
+  });
+
+  it('should handle JSON body with no mode and text content', () => {
+    const json = {
+      name: 'Direct Text',
+      items: [{
+        type: 'http-request',
+        name: 'Req',
+        request: {
+          method: 'POST',
+          url: 'https://example.com',
+          body: { text: 'plain' },
+        },
+      }],
+    };
+    const collection = importBrunoCollection(JSON.stringify(json));
+    expect(collection.requests[0].body.type).toBe('raw');
+  });
+
+  it('should handle JSON item with no request and no raw content', () => {
+    const json = {
+      name: 'No Request',
+      items: [{
+        type: 'http-request',
+        name: 'Empty Item',
+      }],
+    };
+    const collection = importBrunoCollection(JSON.stringify(json));
+    // Item without request or raw returns null, so no requests
+    expect(collection.requests.length).toBe(0);
+  });
+});
+
+describe('importBrunoEnvironment — additional edge cases', () => {
+  it('should throw for empty JSON environments array', () => {
+    expect(() => importBrunoEnvironment('[]')).toThrow('No environments found');
+  });
+
+  it('should throw for invalid environment item (not an object)', () => {
+    expect(() => importBrunoEnvironment(JSON.stringify([42]))).toThrow('not an object');
+  });
+
+  it('should throw for environment item missing both name and variables', () => {
+    expect(() => importBrunoEnvironment(JSON.stringify([{ v: 1 }]))).toThrow('expected');
+  });
+
+  it('should use fallback name for environment without name', () => {
+    const json = { variables: [{ name: 'x', value: 'y' }] };
+    const envs = importBrunoEnvironment(JSON.stringify(json));
+    expect(envs[0].name).toBe('Bruno Environment');
+  });
+});

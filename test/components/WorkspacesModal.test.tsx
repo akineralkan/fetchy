@@ -13,7 +13,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 import WorkspacesModal from '../../src/components/WorkspacesModal';
 import { useWorkspacesStore } from '../../src/store/workspacesStore';
@@ -143,5 +143,240 @@ describe('WorkspacesModal', () => {
     );
     render(<WorkspacesModal isOpen onClose={vi.fn()} />);
     expect(loadWorkspaces).toHaveBeenCalled();
+  });
+
+  // ── Additional coverage tests ──────────────────────────────────────────
+
+  it('shows empty workspace message when no workspaces exist', () => {
+    vi.mocked(useWorkspacesStore).mockReturnValue(
+      baseStore({ workspaces: [] }) as never
+    );
+    render(<WorkspacesModal isOpen onClose={vi.fn()} />);
+    expect(screen.getByText(/no workspaces yet/i)).toBeTruthy();
+  });
+
+  it('shows import button in Electron mode', () => {
+    vi.mocked(useWorkspacesStore).mockReturnValue(
+      baseStore({ isElectron: true }) as never
+    );
+    render(<WorkspacesModal isOpen onClose={vi.fn()} />);
+    expect(screen.getByRole('button', { name: /import/i })).toBeTruthy();
+  });
+
+  it('shows export button for each workspace in Electron mode', () => {
+    vi.mocked(useWorkspacesStore).mockReturnValue(
+      baseStore({ isElectron: true }) as never
+    );
+    render(<WorkspacesModal isOpen onClose={vi.fn()} />);
+    const exportBtns = screen.getAllByTitle(/export/i);
+    expect(exportBtns.length).toBe(2);
+  });
+
+  it('does not show import/export buttons in browser mode', () => {
+    vi.mocked(useWorkspacesStore).mockReturnValue(
+      baseStore({ isElectron: false }) as never
+    );
+    render(<WorkspacesModal isOpen onClose={vi.fn()} />);
+    expect(screen.queryByTitle(/export/i)).toBeNull();
+  });
+
+  it('calls handleExport when export button clicked', async () => {
+    const exportWorkspace = vi.fn().mockResolvedValue({ success: true, filePath: '/tmp/ws.json' });
+    vi.mocked(useWorkspacesStore).mockReturnValue(
+      baseStore({ isElectron: true, exportWorkspace }) as never
+    );
+    render(<WorkspacesModal isOpen onClose={vi.fn()} />);
+    const exportBtns = screen.getAllByTitle(/export/i);
+    fireEvent.click(exportBtns[0]);
+    await waitFor(() => expect(exportWorkspace).toHaveBeenCalledWith('ws-1'));
+  });
+
+  it('calls handleImport when import button clicked', async () => {
+    const importWorkspaceFromFile = vi.fn().mockResolvedValue({ success: true });
+    vi.mocked(useWorkspacesStore).mockReturnValue(
+      baseStore({ isElectron: true, importWorkspaceFromFile }) as never
+    );
+    render(<WorkspacesModal isOpen onClose={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: /import/i }));
+    await waitFor(() => expect(importWorkspaceFromFile).toHaveBeenCalled());
+  });
+
+  it('opens edit form when edit button clicked', () => {
+    vi.mocked(useWorkspacesStore).mockReturnValue(baseStore() as never);
+    render(<WorkspacesModal isOpen onClose={vi.fn()} />);
+    const editBtns = screen.getAllByTitle(/edit/i);
+    fireEvent.click(editBtns[0]);
+    expect(screen.getByText(/edit workspace/i)).toBeTruthy();
+  });
+
+  it('handleEditSave calls updateWorkspace with form data', async () => {
+    const updateWorkspace = vi.fn().mockResolvedValue(undefined);
+    vi.mocked(useWorkspacesStore).mockReturnValue(
+      baseStore({ updateWorkspace }) as never
+    );
+    render(<WorkspacesModal isOpen onClose={vi.fn()} />);
+    // Open edit
+    const editBtns = screen.getAllByTitle(/edit/i);
+    fireEvent.click(editBtns[0]);
+    // Change name
+    const nameInput = screen.getByPlaceholderText(/e\.g\. My Project/i);
+    fireEvent.change(nameInput, { target: { value: 'Updated WS' } });
+    // Save
+    const saveBtn = screen.getByRole('button', { name: /save/i });
+    fireEvent.click(saveBtn);
+    await waitFor(() => expect(updateWorkspace).toHaveBeenCalled());
+  });
+
+  it('shows validation error when add form submitted with empty fields', async () => {
+    vi.mocked(useWorkspacesStore).mockReturnValue(baseStore() as never);
+    render(<WorkspacesModal isOpen onClose={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: /add workspace/i }));
+    const createBtn = screen.getByRole('button', { name: /create workspace/i });
+    fireEvent.click(createBtn);
+    await waitFor(() => expect(screen.getByText(/please fill in all fields/i)).toBeTruthy());
+  });
+
+  it('shows validation error when edit form submitted with empty fields', async () => {
+    vi.mocked(useWorkspacesStore).mockReturnValue(baseStore() as never);
+    render(<WorkspacesModal isOpen onClose={vi.fn()} />);
+    const editBtns = screen.getAllByTitle(/edit/i);
+    fireEvent.click(editBtns[0]);
+    // Clear name
+    const nameInput = screen.getByPlaceholderText(/e\.g\. My Project/i);
+    fireEvent.change(nameInput, { target: { value: '' } });
+    const saveBtn = screen.getByRole('button', { name: /save/i });
+    fireEvent.click(saveBtn);
+    await waitFor(() => expect(screen.getByText(/please fill in all fields/i)).toBeTruthy());
+  });
+
+  it('handles remove workspace with confirmation flow', async () => {
+    const removeWorkspace = vi.fn().mockResolvedValue(undefined);
+    vi.mocked(useWorkspacesStore).mockReturnValue(
+      baseStore({ removeWorkspace }) as never
+    );
+    render(<WorkspacesModal isOpen onClose={vi.fn()} />);
+    // Click remove (trash) button on first workspace
+    const removeBtns = screen.getAllByTitle(/remove/i);
+    fireEvent.click(removeBtns[0]);
+    // Confirm removal
+    const confirmBtn = screen.getByRole('button', { name: /^remove$/i });
+    fireEvent.click(confirmBtn);
+    await waitFor(() => expect(removeWorkspace).toHaveBeenCalledWith('ws-1'));
+  });
+
+  it('cancels remove confirmation', () => {
+    vi.mocked(useWorkspacesStore).mockReturnValue(baseStore() as never);
+    render(<WorkspacesModal isOpen onClose={vi.fn()} />);
+    const removeBtns = screen.getAllByTitle(/remove/i);
+    fireEvent.click(removeBtns[0]);
+    // Should show confirmation text
+    expect(screen.getByText(/remove workspace/i)).toBeTruthy();
+    // Cancel
+    const cancelBtn = screen.getAllByRole('button', { name: /cancel/i }).pop()!;
+    fireEvent.click(cancelBtn);
+    // Confirmation should be hidden
+    expect(screen.queryByText(/does not delete/i)).toBeNull();
+  });
+
+  it('shows error when addWorkspace throws', async () => {
+    const addWorkspace = vi.fn().mockRejectedValue(new Error('Creation failed'));
+    vi.mocked(useWorkspacesStore).mockReturnValue(
+      baseStore({ addWorkspace }) as never
+    );
+    render(<WorkspacesModal isOpen onClose={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: /add workspace/i }));
+    const nameInput = screen.getByPlaceholderText(/e\.g\. My Project/i);
+    fireEvent.change(nameInput, { target: { value: 'Test' } });
+    const homeDirInput = screen.getByPlaceholderText(/\/path\/to\/home/i);
+    fireEvent.change(homeDirInput, { target: { value: '/home/test' } });
+    const secretsDirInput = screen.getByPlaceholderText(/\/path\/to\/secrets/i);
+    fireEvent.change(secretsDirInput, { target: { value: '/secrets/test' } });
+    const createBtn = screen.getByRole('button', { name: /create workspace/i });
+    fireEvent.click(createBtn);
+    await waitFor(() => expect(screen.getByText(/creation failed/i)).toBeTruthy());
+  });
+
+  it('shows error when export fails', async () => {
+    const exportWorkspace = vi.fn().mockResolvedValue({ success: false, error: 'Export failed' });
+    vi.mocked(useWorkspacesStore).mockReturnValue(
+      baseStore({ isElectron: true, exportWorkspace }) as never
+    );
+    render(<WorkspacesModal isOpen onClose={vi.fn()} />);
+    const exportBtns = screen.getAllByTitle(/export/i);
+    fireEvent.click(exportBtns[0]);
+    await waitFor(() => expect(screen.getByText(/export failed/i)).toBeTruthy());
+  });
+
+  it('shows error when removeWorkspace throws', async () => {
+    const removeWorkspace = vi.fn().mockRejectedValue(new Error('Remove failed'));
+    vi.mocked(useWorkspacesStore).mockReturnValue(
+      baseStore({ removeWorkspace }) as never
+    );
+    render(<WorkspacesModal isOpen onClose={vi.fn()} />);
+    const removeBtns = screen.getAllByTitle(/remove/i);
+    fireEvent.click(removeBtns[0]);
+    const confirmBtn = screen.getByRole('button', { name: /^remove$/i });
+    fireEvent.click(confirmBtn);
+    await waitFor(() => expect(screen.getByText(/remove failed/i)).toBeTruthy());
+  });
+
+  it('shows error when import fails', async () => {
+    const importWorkspaceFromFile = vi.fn().mockResolvedValue({ success: false, error: 'Import error' });
+    vi.mocked(useWorkspacesStore).mockReturnValue(
+      baseStore({ isElectron: true, importWorkspaceFromFile }) as never
+    );
+    render(<WorkspacesModal isOpen onClose={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: /import/i }));
+    await waitFor(() => expect(screen.getByText(/import error/i)).toBeTruthy());
+  });
+
+  it('shows workspace count correctly', () => {
+    vi.mocked(useWorkspacesStore).mockReturnValue(baseStore() as never);
+    render(<WorkspacesModal isOpen onClose={vi.fn()} />);
+    expect(screen.getByText(/2 workspaces/)).toBeTruthy();
+  });
+
+  it('shows singular workspace count for one workspace', () => {
+    vi.mocked(useWorkspacesStore).mockReturnValue(
+      baseStore({ workspaces: [sampleWorkspaces[0]] }) as never
+    );
+    render(<WorkspacesModal isOpen onClose={vi.fn()} />);
+    expect(screen.getByText(/1 workspace(?!s)/)).toBeTruthy();
+  });
+
+  it('cancel button in add form returns to list mode', () => {
+    vi.mocked(useWorkspacesStore).mockReturnValue(baseStore() as never);
+    render(<WorkspacesModal isOpen onClose={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: /add workspace/i }));
+    expect(screen.getByPlaceholderText(/e\.g\. My Project/i)).toBeTruthy();
+    const cancelBtn = screen.getByRole('button', { name: /cancel/i });
+    fireEvent.click(cancelBtn);
+    expect(screen.getByText(/2 workspaces/)).toBeTruthy();
+  });
+
+  it('cancel button in edit form returns to list mode', () => {
+    vi.mocked(useWorkspacesStore).mockReturnValue(baseStore() as never);
+    render(<WorkspacesModal isOpen onClose={vi.fn()} />);
+    const editBtns = screen.getAllByTitle(/edit/i);
+    fireEvent.click(editBtns[0]);
+    expect(screen.getByText(/edit workspace/i)).toBeTruthy();
+    const cancelBtn = screen.getByRole('button', { name: /cancel/i });
+    fireEvent.click(cancelBtn);
+    expect(screen.getByText(/2 workspaces/)).toBeTruthy();
+  });
+
+  it('does not show Switch button for active workspace', () => {
+    vi.mocked(useWorkspacesStore).mockReturnValue(baseStore() as never);
+    render(<WorkspacesModal isOpen onClose={vi.fn()} />);
+    const switchBtns = screen.queryAllByRole('button', { name: /^switch$/i });
+    // Only 1 switch button (for the non-active workspace)
+    expect(switchBtns.length).toBe(1);
+  });
+
+  it('shows home and secrets directory paths', () => {
+    vi.mocked(useWorkspacesStore).mockReturnValue(baseStore() as never);
+    render(<WorkspacesModal isOpen onClose={vi.fn()} />);
+    expect(screen.getByText('/home/main')).toBeTruthy();
+    expect(screen.getByText('/home/main/.secrets')).toBeTruthy();
   });
 });

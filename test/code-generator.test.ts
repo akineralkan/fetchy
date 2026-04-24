@@ -20,6 +20,7 @@ import {
   generateDotNet,
   generateGo,
   generateRust,
+  generateCpp,
 } from '../src/utils/codeGenerator';
 import type { ApiRequest, KeyValue } from '../src/types';
 
@@ -401,5 +402,367 @@ describe('generateRust', () => {
     });
     const code = generateRust(req);
     expect(code).toContain('Bearer rtoken');
+  });
+
+  it('adds basic auth credentials to headers', () => {
+    const req = makeRequest({
+      auth: { type: 'basic', basic: { username: 'alice', password: 'pw' } },
+    });
+    const code = generateRust(req);
+    expect(code).toContain('Basic ');
+  });
+
+  it('adds api-key auth to headers', () => {
+    const req = makeRequest({
+      auth: { type: 'api-key', apiKey: { key: 'X-Key', value: 'rust-secret', addTo: 'header' } },
+    });
+    const code = generateRust(req);
+    expect(code).toContain('X-Key');
+    expect(code).toContain('rust-secret');
+  });
+
+  it('adds JSON body with .body()', () => {
+    const req = makeRequest({
+      method: 'POST',
+      body: { type: 'json', raw: '{"x":1}' },
+    });
+    const code = generateRust(req);
+    expect(code).toContain('.body(');
+  });
+
+  it('adds raw body with .body()', () => {
+    const req = makeRequest({
+      method: 'POST',
+      body: { type: 'raw', raw: 'plain text body' },
+    });
+    const code = generateRust(req);
+    expect(code).toContain('.body(');
+    expect(code).toContain('plain text body');
+  });
+
+  it('includes custom headers in HeaderMap', () => {
+    const req = makeRequest({
+      auth: { type: 'none' },
+      headers: [{ id: '1', key: 'X-Custom', value: 'value1', enabled: true }],
+    });
+    const code = generateRust(req);
+    expect(code).toContain('X-Custom');
+    expect(code).toContain('value1');
+  });
+});
+
+// ─── generateJavaScript – additional auth/body coverage ───────────────────
+
+describe('generateJavaScript – additional auth and body', () => {
+  it('adds basic auth credentials to headers', () => {
+    const req = makeRequest({
+      auth: { type: 'basic', basic: { username: 'bob', password: 'secret' } },
+    });
+    const code = generateJavaScript(req);
+    expect(code).toContain('Authorization');
+    expect(code).toContain('Basic ');
+  });
+
+  it('adds api-key auth to headers', () => {
+    const req = makeRequest({
+      auth: { type: 'api-key', apiKey: { key: 'X-API-Key', value: 'js-secret', addTo: 'header' } },
+    });
+    const code = generateJavaScript(req);
+    expect(code).toContain('X-API-Key');
+    expect(code).toContain('js-secret');
+  });
+
+  it('adds x-www-form-urlencoded body', () => {
+    const req = makeRequest({
+      method: 'POST',
+      body: {
+        type: 'x-www-form-urlencoded',
+        urlencoded: [
+          { id: '1', key: 'field1', value: 'val1', enabled: true },
+          { id: '2', key: 'field2', value: 'val2', enabled: true },
+        ],
+      },
+    });
+    const code = generateJavaScript(req);
+    expect(code).toContain('body:');
+    expect(code).toContain('field1');
+    expect(code).toContain('field2');
+  });
+});
+
+// ─── generatePython – additional auth/body coverage ───────────────────────
+
+describe('generatePython – additional auth and body', () => {
+  it('adds basic auth credentials to headers', () => {
+    const req = makeRequest({
+      auth: { type: 'basic', basic: { username: 'bob', password: 'secret' } },
+    });
+    const code = generatePython(req);
+    expect(code).toContain('Authorization');
+    expect(code).toContain('Basic ');
+  });
+
+  it('adds api-key auth to headers', () => {
+    const req = makeRequest({
+      auth: { type: 'api-key', apiKey: { key: 'X-API-Key', value: 'py-secret', addTo: 'header' } },
+    });
+    const code = generatePython(req);
+    expect(code).toContain('X-API-Key');
+    expect(code).toContain('py-secret');
+  });
+
+  it('adds raw body as data= parameter', () => {
+    const req = makeRequest({
+      method: 'POST',
+      body: { type: 'raw', raw: 'raw content' },
+    });
+    const code = generatePython(req);
+    expect(code).toContain(', data=');
+    expect(code).toContain('raw content');
+  });
+
+  it('adds x-www-form-urlencoded body as data dict', () => {
+    const req = makeRequest({
+      method: 'POST',
+      body: {
+        type: 'x-www-form-urlencoded',
+        urlencoded: [{ id: '1', key: 'username', value: 'alice', enabled: true }],
+      },
+    });
+    const code = generatePython(req);
+    expect(code).toContain('data =');
+    expect(code).toContain('username');
+  });
+});
+
+// ─── generateJava – additional auth/body/header coverage ─────────────────
+
+describe('generateJava – additional auth, body, and headers', () => {
+  it('adds basic auth header', () => {
+    const req = makeRequest({
+      auth: { type: 'basic', basic: { username: 'javauser', password: 'javapass' } },
+    });
+    const code = generateJava(req);
+    expect(code).toContain('Authorization');
+    expect(code).toContain('Basic ');
+  });
+
+  it('adds api-key auth header', () => {
+    const req = makeRequest({
+      auth: { type: 'api-key', apiKey: { key: 'X-API-Key', value: 'java-secret', addTo: 'header' } },
+    });
+    const code = generateJava(req);
+    expect(code).toContain('X-API-Key');
+    expect(code).toContain('java-secret');
+  });
+
+  it('adds x-www-form-urlencoded body using ofString', () => {
+    const req = makeRequest({
+      method: 'POST',
+      body: {
+        type: 'x-www-form-urlencoded',
+        urlencoded: [{ id: '1', key: 'k', value: 'v', enabled: true }],
+      },
+    });
+    const code = generateJava(req);
+    expect(code).toContain('ofString(');
+    expect(code).toContain('k=v');
+  });
+
+  it('uses noBody() when json body has no raw content', () => {
+    const req = makeRequest({
+      method: 'POST',
+      body: { type: 'json', raw: '' },
+    });
+    const code = generateJava(req);
+    expect(code).toContain('noBody()');
+  });
+
+  it('includes enabled custom headers', () => {
+    const req = makeRequest({
+      headers: [{ id: '1', key: 'X-Trace', value: 'trace123', enabled: true }],
+    });
+    const code = generateJava(req);
+    expect(code).toContain('X-Trace');
+    expect(code).toContain('trace123');
+  });
+});
+
+// ─── generateDotNet – additional auth/body/header coverage ───────────────
+
+describe('generateDotNet – additional auth, body, and headers', () => {
+  it('adds basic auth header', () => {
+    const req = makeRequest({
+      auth: { type: 'basic', basic: { username: 'dotuser', password: 'dotpass' } },
+    });
+    const code = generateDotNet(req);
+    expect(code).toContain('Authorization');
+    expect(code).toContain('"Basic"');
+  });
+
+  it('adds api-key auth header', () => {
+    const req = makeRequest({
+      auth: { type: 'api-key', apiKey: { key: 'X-API-Key', value: 'dot-secret', addTo: 'header' } },
+    });
+    const code = generateDotNet(req);
+    expect(code).toContain('X-API-Key');
+    expect(code).toContain('dot-secret');
+  });
+
+  it('adds x-www-form-urlencoded body with FormUrlEncodedContent', () => {
+    const req = makeRequest({
+      method: 'POST',
+      body: {
+        type: 'x-www-form-urlencoded',
+        urlencoded: [{ id: '1', key: 'field', value: 'val', enabled: true }],
+      },
+    });
+    const code = generateDotNet(req);
+    expect(code).toContain('FormUrlEncodedContent');
+    expect(code).toContain('field');
+  });
+
+  it('uses simple async call when json body has no raw content', () => {
+    const req = makeRequest({
+      method: 'POST',
+      body: { type: 'json', raw: '' },
+    });
+    const code = generateDotNet(req);
+    // When no raw body, should just call PostAsync without StringContent
+    expect(code).not.toContain('StringContent');
+  });
+
+  it('includes enabled custom headers via DefaultRequestHeaders', () => {
+    const req = makeRequest({
+      headers: [{ id: '1', key: 'X-Req-Id', value: 'abc', enabled: true }],
+    });
+    const code = generateDotNet(req);
+    expect(code).toContain('X-Req-Id');
+    expect(code).toContain('abc');
+  });
+});
+
+// ─── generateGo – additional body/header coverage ────────────────────────
+
+describe('generateGo – additional body and headers', () => {
+  it('adds json body with bytes.NewBuffer', () => {
+    const req = makeRequest({
+      method: 'POST',
+      body: { type: 'json', raw: '{"go":true}' },
+    });
+    const code = generateGo(req);
+    expect(code).toContain('bytes.NewBuffer');
+    expect(code).toContain('jsonData');
+  });
+
+  it('adds raw body with bytes.NewBuffer', () => {
+    const req = makeRequest({
+      method: 'POST',
+      body: { type: 'raw', raw: 'raw-data' },
+    });
+    const code = generateGo(req);
+    expect(code).toContain('bytes.NewBuffer');
+  });
+
+  it('adds x-www-form-urlencoded body as data string', () => {
+    const req = makeRequest({
+      method: 'POST',
+      body: {
+        type: 'x-www-form-urlencoded',
+        urlencoded: [{ id: '1', key: 'k', value: 'v', enabled: true }],
+      },
+    });
+    const code = generateGo(req);
+    expect(code).toContain('bytes.NewBuffer');
+    expect(code).toContain('k=v');
+  });
+
+  it('includes enabled custom headers via req.Header.Set', () => {
+    const req = makeRequest({
+      headers: [{ id: '1', key: 'X-Go-Header', value: 'go-value', enabled: true }],
+    });
+    const code = generateGo(req);
+    expect(code).toContain('X-Go-Header');
+    expect(code).toContain('go-value');
+  });
+
+  it('adds api-key auth header', () => {
+    const req = makeRequest({
+      auth: { type: 'api-key', apiKey: { key: 'X-API-Key', value: 'go-secret', addTo: 'header' } },
+    });
+    const code = generateGo(req);
+    expect(code).toContain('X-API-Key');
+    expect(code).toContain('go-secret');
+  });
+});
+
+// ─── generateCpp ─────────────────────────────────────────────────────────────
+
+describe('generateCpp', () => {
+  it('includes curl/curl.h header', () => {
+    const code = generateCpp(makeRequest());
+    expect(code).toContain('#include <curl/curl.h>');
+  });
+
+  it('includes the URL in curl_easy_setopt', () => {
+    const code = generateCpp(makeRequest());
+    expect(code).toContain('https://api.example.com/users');
+  });
+
+  it('sets the HTTP method via CURLOPT_CUSTOMREQUEST', () => {
+    const code = generateCpp(makeRequest({ method: 'DELETE' }));
+    expect(code).toContain('CURLOPT_CUSTOMREQUEST');
+    expect(code).toContain('"DELETE"');
+  });
+
+  it('adds bearer auth via curl_slist_append', () => {
+    const req = makeRequest({
+      auth: { type: 'bearer', bearer: { token: 'cpp-token' } },
+    });
+    const code = generateCpp(req);
+    expect(code).toContain('Authorization: Bearer cpp-token');
+  });
+
+  it('adds basic auth via curl_slist_append', () => {
+    const req = makeRequest({
+      auth: { type: 'basic', basic: { username: 'cppuser', password: 'cpppass' } },
+    });
+    const code = generateCpp(req);
+    expect(code).toContain('Authorization: Basic ');
+  });
+
+  it('adds api-key auth via curl_slist_append', () => {
+    const req = makeRequest({
+      auth: { type: 'api-key', apiKey: { key: 'X-Key', value: 'cpp-secret', addTo: 'header' } },
+    });
+    const code = generateCpp(req);
+    expect(code).toContain('X-Key: cpp-secret');
+  });
+
+  it('adds custom headers via curl_slist_append', () => {
+    const req = makeRequest({
+      headers: [{ id: '1', key: 'Accept', value: 'application/json', enabled: true }],
+    });
+    const code = generateCpp(req);
+    expect(code).toContain('Accept: application/json');
+  });
+
+  it('sets JSON body via CURLOPT_POSTFIELDS', () => {
+    const req = makeRequest({
+      method: 'POST',
+      body: { type: 'json', raw: '{"cpp":true}' },
+    });
+    const code = generateCpp(req);
+    expect(code).toContain('CURLOPT_POSTFIELDS');
+  });
+
+  it('ends with curl_easy_cleanup', () => {
+    const code = generateCpp(makeRequest());
+    expect(code).toContain('curl_easy_cleanup');
+  });
+
+  it('includes WriteCallback for response reading', () => {
+    const code = generateCpp(makeRequest());
+    expect(code).toContain('WriteCallback');
   });
 });

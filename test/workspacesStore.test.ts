@@ -185,3 +185,191 @@ describe('workspacesStore – updateWorkspace (browser mode)', () => {
     await expect(updateWorkspace('fake', { name: 'X' })).resolves.not.toThrow();
   });
 });
+
+// --------------------------------------------------------------------------
+// workspacesStore – switchWorkspace
+// --------------------------------------------------------------------------
+
+describe('workspacesStore – switchWorkspace (browser mode)', () => {
+  it('switches the active workspace and updates localStorage', async () => {
+    const { addWorkspace, switchWorkspace } = useWorkspacesStore.getState();
+    await addWorkspace('Workspace A');
+    await addWorkspace('Workspace B');
+    const { workspaces } = useWorkspacesStore.getState();
+    const wsA = workspaces[0];
+    const wsB = workspaces[1];
+    await switchWorkspace(wsA.id);
+    expect(useWorkspacesStore.getState().activeWorkspaceId).toBe(wsA.id);
+    await switchWorkspace(wsB.id);
+    expect(useWorkspacesStore.getState().activeWorkspaceId).toBe(wsB.id);
+  });
+
+  it('is a no-op when switching to the already active workspace', async () => {
+    const { addWorkspace, switchWorkspace } = useWorkspacesStore.getState();
+    await addWorkspace('Only Workspace');
+    const { workspaces } = useWorkspacesStore.getState();
+    const ws = workspaces[0];
+    await switchWorkspace(ws.id);
+    const firstActiveId = useWorkspacesStore.getState().activeWorkspaceId;
+    await switchWorkspace(ws.id);
+    expect(useWorkspacesStore.getState().activeWorkspaceId).toBe(firstActiveId);
+  });
+});
+
+// --------------------------------------------------------------------------
+// workspacesStore – exportWorkspace (browser mode)
+// --------------------------------------------------------------------------
+
+describe('workspacesStore – exportWorkspace (browser mode)', () => {
+  it('returns success: false with a user-facing message', async () => {
+    const { addWorkspace } = useWorkspacesStore.getState();
+    await addWorkspace('Export Test');
+    const { workspaces, exportWorkspace } = useWorkspacesStore.getState();
+    const result = await exportWorkspace(workspaces[0].id);
+    expect(result.success).toBe(false);
+    expect(result.error).toBeTruthy();
+  });
+
+  it('returns a message indicating desktop-only availability', async () => {
+    const { addWorkspace } = useWorkspacesStore.getState();
+    await addWorkspace('Export Desktop');
+    const { workspaces, exportWorkspace } = useWorkspacesStore.getState();
+    const result = await exportWorkspace(workspaces[0].id);
+    expect(result.error?.toLowerCase()).toContain('desktop');
+  });
+});
+
+// --------------------------------------------------------------------------
+// workspacesStore – importWorkspaceFromFile (browser mode)
+// --------------------------------------------------------------------------
+
+describe('workspacesStore – importWorkspaceFromFile (browser mode)', () => {
+  it('returns success: false with a user-facing message', async () => {
+    const { importWorkspaceFromFile } = useWorkspacesStore.getState();
+    const result = await importWorkspaceFromFile();
+    expect(result.success).toBe(false);
+    expect(result.error).toBeTruthy();
+  });
+
+  it('returns a message indicating desktop-only availability', async () => {
+    const { importWorkspaceFromFile } = useWorkspacesStore.getState();
+    const result = await importWorkspaceFromFile();
+    expect(result.error?.toLowerCase()).toContain('desktop');
+  });
+});
+
+// --------------------------------------------------------------------------
+// workspacesStore – removeWorkspace activates next workspace
+// --------------------------------------------------------------------------
+
+describe('workspacesStore – removeWorkspace active switch', () => {
+  it('switches to next workspace when active one is removed', async () => {
+    const { addWorkspace, removeWorkspace } = useWorkspacesStore.getState();
+    const wsA = await addWorkspace('A', '/hA', '/sA');
+    await addWorkspace('B', '/hB', '/sB');
+    // wsA is active (first workspace auto-activated)
+    expect(useWorkspacesStore.getState().activeWorkspaceId).toBe(wsA.id);
+    await removeWorkspace(wsA.id);
+    // Should now have workspace B active
+    const remaining = useWorkspacesStore.getState().workspaces;
+    expect(remaining).toHaveLength(1);
+    expect(useWorkspacesStore.getState().activeWorkspaceId).toBe(remaining[0].id);
+  });
+
+  it('sets activeWorkspaceId to null when last workspace is removed', async () => {
+    const { addWorkspace, removeWorkspace } = useWorkspacesStore.getState();
+    const ws = await addWorkspace('Only', '/h', '/s');
+    await removeWorkspace(ws.id);
+    expect(useWorkspacesStore.getState().activeWorkspaceId).toBeNull();
+    expect(useWorkspacesStore.getState().workspaces).toHaveLength(0);
+  });
+
+  it('keeps activeWorkspaceId unchanged when removing non-active workspace', async () => {
+    const { addWorkspace, removeWorkspace } = useWorkspacesStore.getState();
+    const wsA = await addWorkspace('A', '/hA', '/sA');
+    const wsB = await addWorkspace('B', '/hB', '/sB');
+    expect(useWorkspacesStore.getState().activeWorkspaceId).toBe(wsA.id);
+    await removeWorkspace(wsB.id);
+    expect(useWorkspacesStore.getState().activeWorkspaceId).toBe(wsA.id);
+    expect(useWorkspacesStore.getState().workspaces).toHaveLength(1);
+  });
+});
+
+// --------------------------------------------------------------------------
+// workspacesStore – updateWorkspace directory changes
+// --------------------------------------------------------------------------
+
+describe('workspacesStore – updateWorkspace with directory changes', () => {
+  it('updates homeDirectory', async () => {
+    const { addWorkspace, updateWorkspace } = useWorkspacesStore.getState();
+    const ws = await addWorkspace('Test WS', '/old/home', '/secrets');
+    await updateWorkspace(ws.id, { homeDirectory: '/new/home' });
+    expect(useWorkspacesStore.getState().workspaces[0].homeDirectory).toBe('/new/home');
+  });
+
+  it('updates secretsDirectory', async () => {
+    const { addWorkspace, updateWorkspace } = useWorkspacesStore.getState();
+    const ws = await addWorkspace('Test WS', '/home', '/old/secrets');
+    await updateWorkspace(ws.id, { secretsDirectory: '/new/secrets' });
+    expect(useWorkspacesStore.getState().workspaces[0].secretsDirectory).toBe('/new/secrets');
+  });
+
+  it('persists updated workspace to localStorage', async () => {
+    const { addWorkspace, updateWorkspace } = useWorkspacesStore.getState();
+    const ws = await addWorkspace('Persist', '/h', '/s');
+    await updateWorkspace(ws.id, { name: 'Updated' });
+    const stored = JSON.parse(localStorageStore['fetchy-workspaces'] ?? '{}');
+    expect(stored.workspaces[0].name).toBe('Updated');
+  });
+});
+
+// --------------------------------------------------------------------------
+// workspacesStore – addWorkspace generates unique IDs
+// --------------------------------------------------------------------------
+
+describe('workspacesStore – addWorkspace id generation', () => {
+  it('generates unique IDs for each workspace', async () => {
+    const { addWorkspace } = useWorkspacesStore.getState();
+    const ws1 = await addWorkspace('WS1', '/h1', '/s1');
+    const ws2 = await addWorkspace('WS2', '/h2', '/s2');
+    expect(ws1.id).not.toBe(ws2.id);
+  });
+
+  it('sets createdAt timestamp on new workspace', async () => {
+    const { addWorkspace } = useWorkspacesStore.getState();
+    const before = Date.now();
+    const ws = await addWorkspace('Timed', '/h', '/s');
+    const after = Date.now();
+    expect(ws.createdAt).toBeGreaterThanOrEqual(before);
+    expect(ws.createdAt).toBeLessThanOrEqual(after);
+  });
+});
+
+// --------------------------------------------------------------------------
+// workspacesStore – getWorkspace edge cases
+// --------------------------------------------------------------------------
+
+describe('workspacesStore – getWorkspace with multiple workspaces', () => {
+  it('finds correct workspace among many', async () => {
+    const { addWorkspace, getWorkspace } = useWorkspacesStore.getState();
+    await addWorkspace('First', '/h1', '/s1');
+    const ws2 = await addWorkspace('Second', '/h2', '/s2');
+    await addWorkspace('Third', '/h3', '/s3');
+    expect(getWorkspace(ws2.id)?.name).toBe('Second');
+  });
+});
+
+// --------------------------------------------------------------------------
+// workspacesStore – switchWorkspace persists to localStorage
+// --------------------------------------------------------------------------
+
+describe('workspacesStore – switchWorkspace persistence', () => {
+  it('persists the new activeWorkspaceId to localStorage', async () => {
+    const { addWorkspace, switchWorkspace } = useWorkspacesStore.getState();
+    await addWorkspace('A', '/hA', '/sA');
+    const wsB = await addWorkspace('B', '/hB', '/sB');
+    await switchWorkspace(wsB.id);
+    const stored = JSON.parse(localStorageStore['fetchy-workspaces'] ?? '{}');
+    expect(stored.activeWorkspaceId).toBe(wsB.id);
+  });
+});
