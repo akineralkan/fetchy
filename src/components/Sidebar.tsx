@@ -474,6 +474,31 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
       const overData = over.data.current;
 
       if (activeData && overData) {
+        // When dropping over a folder → move request into that folder
+        if (overIdStr.startsWith('folder-')) {
+          moveRequest(
+            activeData.collectionId,
+            activeData.folderId || null,
+            overData.collectionId,
+            overData.folder.id,
+            activeData.request.id
+          );
+          return;
+        }
+
+        // When dropping over a collection header → move to collection root
+        if (overIdStr.startsWith('collection-')) {
+          const targetCollectionId = overIdStr.replace('collection-', '');
+          moveRequest(
+            activeData.collectionId,
+            activeData.folderId || null,
+            targetCollectionId,
+            null,
+            activeData.request.id
+          );
+          return;
+        }
+
         const sourceCollectionId = activeData.collectionId;
         const sourceFolderId = activeData.folderId;
         const targetCollectionId = overData.collectionId;
@@ -509,28 +534,6 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
             requestId
           );
         }
-      } else if (activeData && overIdStr.startsWith('folder-')) {
-        // Dropping request onto a folder
-        const overFolderData = over.data.current;
-        if (overFolderData) {
-          moveRequest(
-            activeData.collectionId,
-            activeData.folderId || null,
-            overFolderData.collectionId,
-            overFolderData.folder.id,
-            activeData.request.id
-          );
-        }
-      } else if (activeData && overIdStr.startsWith('collection-')) {
-        // Dropping request onto a collection (root level)
-        const targetCollectionId = overIdStr.replace('collection-', '');
-        moveRequest(
-          activeData.collectionId,
-          activeData.folderId || null,
-          targetCollectionId,
-          null,
-          activeData.request.id
-        );
       }
     }
   };

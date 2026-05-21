@@ -307,6 +307,23 @@ export default function SidebarContextMenu({
           const canMoveUp = requestIndex > 0;
           const canMoveDown = requestIndex < parent.requests.length - 1;
 
+          const moveDestinations: { key: string; label: string; collectionId: string; folderId: string | null; depth: number }[] = [];
+          const collectMoveDestFolders = (folders: RequestFolder[], colId: string, depth: number) => {
+            for (const folder of folders) {
+              if (folder.id !== contextMenu.folderId) {
+                moveDestinations.push({ key: `f-${colId}-${folder.id}`, label: folder.name, collectionId: colId, folderId: folder.id, depth });
+              }
+              collectMoveDestFolders(folder.folders, colId, depth + 1);
+            }
+          };
+          for (const c of collections) {
+            const isCurrentRoot = c.id === contextMenu.collectionId && !contextMenu.folderId;
+            if (!isCurrentRoot) {
+              moveDestinations.push({ key: `c-${c.id}`, label: c.name, collectionId: c.id, folderId: null, depth: 0 });
+            }
+            collectMoveDestFolders(c.folders, c.id, 1);
+          }
+
           return (
             <>
               {canMoveUp && (
@@ -370,7 +387,7 @@ export default function SidebarContextMenu({
               >
                 <Edit2 size={14} /> Rename
               </button>
-              {collections.length > 1 && (
+              {moveDestinations.length > 0 && (
                 <div className="relative">
                   <button
                     className="w-full px-3 py-2 text-left text-sm hover:bg-fetchy-border flex items-center gap-2 justify-between"
@@ -382,28 +399,27 @@ export default function SidebarContextMenu({
                     <ChevronRight size={14} />
                   </button>
                   {showMoveToMenu && (
-                    <div className="absolute left-full top-0 ml-1 bg-fetchy-dropdown border border-fetchy-border rounded-lg shadow-xl py-1 min-w-[160px] z-50">
-                      {collections
-                        .filter(c => c.id !== contextMenu.collectionId)
-                        .map(targetCollection => (
-                          <button
-                            key={targetCollection.id}
-                            className="w-full px-3 py-2 text-left text-sm hover:bg-fetchy-border flex items-center gap-2"
-                            onClick={() => {
-                              moveRequest(
-                                contextMenu.collectionId,
-                                contextMenu.folderId || null,
-                                targetCollection.id,
-                                null,
-                                contextMenu.requestId!
-                              );
-                              closeContextMenu();
-                            }}
-                          >
-                            <Folder size={14} className="text-yellow-400" />
-                            <span className="truncate">{targetCollection.name}</span>
-                          </button>
-                        ))}
+                    <div className="absolute left-full top-0 ml-1 bg-fetchy-dropdown border border-fetchy-border rounded-lg shadow-xl py-1 min-w-[180px] z-50 max-h-64 overflow-y-auto">
+                      {moveDestinations.map(dest => (
+                        <button
+                          key={dest.key}
+                          className="w-full py-2 pr-3 text-left text-sm hover:bg-fetchy-border flex items-center gap-2"
+                          style={{ paddingLeft: `${12 + dest.depth * 12}px` }}
+                          onClick={() => {
+                            moveRequest(
+                              contextMenu.collectionId,
+                              contextMenu.folderId || null,
+                              dest.collectionId,
+                              dest.folderId,
+                              contextMenu.requestId!
+                            );
+                            closeContextMenu();
+                          }}
+                        >
+                          <Folder size={14} className="text-yellow-400" />
+                          <span className="truncate">{dest.label}</span>
+                        </button>
+                      ))}
                     </div>
                   )}
                 </div>
