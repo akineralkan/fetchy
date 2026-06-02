@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { HelpCircle, Settings, RefreshCw, PanelLeftClose, PanelLeftOpen, Rows, Columns, BookOpen, Star, Github, Keyboard, Info } from 'lucide-react';
+import { Settings, RefreshCw, PanelLeftClose, PanelLeftOpen, Rows, Columns, BookOpen, Star, Github, Keyboard, Info } from 'lucide-react';
 import ImportModal, { type ImportSource } from './components/ImportModal';
 import ImportRequestModal from './components/ImportRequestModal';
 import ExportModal from './components/ExportModal';

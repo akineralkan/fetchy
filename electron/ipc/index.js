@@ -11,6 +11,7 @@ const httpHandler = require('./httpHandler');
 const aiHandler = require('./aiHandler');
 const workspaceHandler = require('./workspaceHandler');
 const jiraHandler = require('./jiraHandler');
+const grpcHandler = require('./grpcHandler');
 
 module.exports = {
   fileHandlers,
@@ -19,4 +20,5 @@ module.exports = {
   aiHandler,
   workspaceHandler,
   jiraHandler,
+  grpcHandler,
 };

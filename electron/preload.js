@@ -78,4 +78,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Post-update info (shown after restart)
   getPostUpdateInfo: () => ipcRenderer.invoke('get-post-update-info'),
   clearPostUpdateInfo: () => ipcRenderer.invoke('clear-post-update-info'),
+
+  // gRPC support
+  grpc: {
+    loadProto: (filePath) => ipcRenderer.invoke('grpc:load-proto', filePath),
+    invoke: (params) => ipcRenderer.invoke('grpc:invoke', params),
+  },
 });

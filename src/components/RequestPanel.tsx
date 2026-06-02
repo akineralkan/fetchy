@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Save, Plus, Trash2, FileText, X, Terminal, Check } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
-import { ApiRequest, ApiResponse, KeyValue } from '../types';
+import { ApiRequest, ApiResponse, KeyValue, GrpcRequestData } from '../types';
 import { executeRequest } from '../utils/httpClient';
 import { resolveRequestVariables, generateCurl, generateJavaScript, generatePython, generateJava, generateDotNet, generateGo, generateRust, generateCpp } from '../utils/helpers';
 import { resolveInheritedAuth } from '../utils/authInheritance';
@@ -15,6 +15,7 @@ import BodyEditor from './request/BodyEditor';
 import AuthEditor from './request/AuthEditor';
 import ScriptsEditor from './request/ScriptsEditor';
 import UrlBar from './request/UrlBar';
+import GrpcEditor from './request/GrpcEditor';
 
 interface RequestPanelProps {
   setResponse: (response: ApiResponse | null) => void;
@@ -23,6 +24,16 @@ interface RequestPanelProps {
   isLoading: boolean;
   urlBarContainer?: HTMLDivElement | null;
 }
+
+const DEFAULT_GRPC_DATA: GrpcRequestData = {
+  serverAddress: 'localhost:50051',
+  protoFilePath: '',
+  serviceName: '',
+  methodName: '',
+  payload: '{}',
+  metadata: [],
+  useTls: false,
+};
 
 export default function RequestPanel({ setResponse, setSentRequest, setIsLoading, isLoading, urlBarContainer }: RequestPanelProps) {
   const {
@@ -44,7 +55,7 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
   const [batchEditModal, setBatchEditModal] = useState<{ open: boolean; field: 'headers' | 'params' | null }>({ open: false, field: null });
   const [batchEditText, setBatchEditText] = useState('');
   const [codeModal, setCodeModal] = useState<{ open: boolean; activeLanguage: string; copied: boolean }>({ open: false, activeLanguage: 'curl', copied: false });
-  const [showAIGenerateModal, setShowAIGenerateModal] = useState(false);
+
   const [curlImportFlash, setCurlImportFlash] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   // Tracks the previously-loaded tab identity so we can detect real tab switches versus
@@ -297,6 +308,99 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
     setIsLoading(false);
   }, [setIsLoading]);
 
+  // ─── gRPC invoke ───────────────────────────────────────────────────────────
+
+  const handleGrpcSend = useCallback(async () => {
+    if (!request || isLoading) return;
+    const grpcData = request.grpc ?? DEFAULT_GRPC_DATA;
+
+    if (!grpcData.serverAddress || !grpcData.protoFilePath || !grpcData.serviceName || !grpcData.methodName) {
+      setResponse({
+        status: 0,
+        statusText: 'Error',
+        headers: {},
+        body: JSON.stringify({ error: 'gRPC: server address, proto file, service, and method are all required' }),
+        time: 0,
+        size: 0,
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    setResponse(null);
+
+    const api = (window as any).electronAPI;
+    if (!api?.grpc) {
+      setResponse({
+        status: 0,
+        statusText: 'Error',
+        headers: {},
+        body: JSON.stringify({ error: 'gRPC API is not available in this context' }),
+        time: 0,
+        size: 0,
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const result = await api.grpc.invoke({
+        serverAddress: grpcData.serverAddress,
+        protoFilePath: grpcData.protoFilePath,
+        serviceName: grpcData.serviceName,
+        methodName: grpcData.methodName,
+        payload: grpcData.payload || '{}',
+        metadata: grpcData.metadata || [],
+        useTls: grpcData.useTls || false,
+      });
+
+      const elapsed = result.time ?? 0;
+      const bodyStr = result.success
+        ? (result.response ?? 'null')
+        : JSON.stringify({ error: result.error, code: result.code });
+
+      const response: ApiResponse = {
+        status: result.success ? 200 : 0,
+        statusText: result.success ? 'OK' : 'gRPC Error',
+        headers: { 'content-type': 'application/json' },
+        body: bodyStr,
+        time: elapsed,
+        size: new TextEncoder().encode(bodyStr).length,
+      };
+
+      setResponse(response);
+      addToHistory({ request, response });
+    } catch (err: any) {
+      setResponse({
+        status: 0,
+        statusText: 'Error',
+        headers: {},
+        body: JSON.stringify({ error: err?.message ?? 'Unknown gRPC error' }),
+        time: 0,
+        size: 0,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [request, isLoading, setIsLoading, setResponse, addToHistory]);
+
+  // ─── gRPC data helpers ─────────────────────────────────────────────────────
+
+  const handleGrpcChange = useCallback((updates: Partial<GrpcRequestData>) => {
+    if (!request) return;
+    const current = request.grpc ?? { ...DEFAULT_GRPC_DATA };
+    handleChange({ grpc: { ...current, ...updates } });
+  }, [request, handleChange]);
+
+  const handleModeChange = useCallback((mode: 'rest' | 'grpc') => {
+    if (!request) return;
+    const updates: Partial<ApiRequest> = { appMode: mode };
+    if (mode === 'grpc' && !request.grpc) {
+      updates.grpc = { ...DEFAULT_GRPC_DATA };
+    }
+    handleChange(updates);
+  }, [request, handleChange]);
+
   // Keyboard shortcuts for save (Ctrl+S) and send (Ctrl+Enter)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -481,6 +585,8 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
     );
   };
 
+  const isGrpcMode = request.appMode === 'grpc';
+
   const urlBar = (
     <UrlBar
       method={request.method}
@@ -493,8 +599,30 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
       onSend={handleSend}
       onCancel={handleCancel}
       onShowCode={handleShowCode}
+      appMode={request.appMode}
+      onModeChange={handleModeChange}
+      serverAddress={request.grpc?.serverAddress}
+      onServerAddressChange={(address) => handleGrpcChange({ serverAddress: address })}
     />
   );
+
+  // In gRPC mode, the entire body section is replaced by the GrpcEditor
+  if (isGrpcMode) {
+    return (
+      <div className="h-full flex flex-col bg-fetchy-bg">
+        {urlBarContainer ? createPortal(urlBar, urlBarContainer) : urlBar}
+        <div className="flex-1 overflow-hidden">
+          <GrpcEditor
+            grpc={request.grpc ?? { ...DEFAULT_GRPC_DATA }}
+            onChange={handleGrpcChange}
+            isLoading={isLoading}
+            onInvoke={handleGrpcSend}
+            onCancel={handleCancel}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full flex flex-col bg-fetchy-bg">
