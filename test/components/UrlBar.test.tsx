@@ -195,4 +195,61 @@ describe('UrlBar', () => {
     render(<UrlBar {...defaultProps} curlImportFlash />);
     expect(screen.getByText(/curl imported successfully/i)).toBeTruthy();
   });
+
+  // ── GH-82: gRPC mode behaviour ────────────────────────────────────────────
+
+  it('renders gRPC server address input when appMode is grpc (GH-82)', () => {
+    vi.mocked(useAppStore).mockReturnValue(baseStore() as never);
+    render(<UrlBar {...defaultProps} appMode="grpc" serverAddress="localhost:50051" onServerAddressChange={vi.fn()} />);
+    const input = screen.getByPlaceholderText(/host:port/i) as HTMLInputElement;
+    expect(input).toBeTruthy();
+    expect(input.value).toBe('localhost:50051');
+  });
+
+  it('calls onServerAddressChange when server address input changes (GH-82)', () => {
+    const onServerAddressChange = vi.fn();
+    vi.mocked(useAppStore).mockReturnValue(baseStore() as never);
+    render(<UrlBar {...defaultProps} appMode="grpc" serverAddress="" onServerAddressChange={onServerAddressChange} />);
+    const input = screen.getByPlaceholderText(/host:port/i);
+    fireEvent.change(input, { target: { value: '0.0.0.0:9090' } });
+    expect(onServerAddressChange).toHaveBeenCalledWith('0.0.0.0:9090');
+  });
+
+  it('does not render HTTP method selector in gRPC mode (GH-82)', () => {
+    vi.mocked(useAppStore).mockReturnValue(baseStore() as never);
+    render(<UrlBar {...defaultProps} appMode="grpc" />);
+    expect(screen.queryByRole('combobox')).toBeNull();
+  });
+
+  it('does not render URL input in gRPC mode (GH-82)', () => {
+    vi.mocked(useAppStore).mockReturnValue(baseStore() as never);
+    render(<UrlBar {...defaultProps} appMode="grpc" />);
+    expect(screen.queryByTestId('url-input')).toBeNull();
+  });
+
+  it('does not render Send button in gRPC mode (GH-82)', () => {
+    vi.mocked(useAppStore).mockReturnValue(baseStore() as never);
+    render(<UrlBar {...defaultProps} appMode="grpc" />);
+    expect(screen.queryByRole('button', { name: /^send$/i })).toBeNull();
+  });
+
+  it('does not render Code button in gRPC mode (GH-82)', () => {
+    vi.mocked(useAppStore).mockReturnValue(baseStore() as never);
+    render(<UrlBar {...defaultProps} appMode="grpc" />);
+    expect(screen.queryByRole('button', { name: /code/i })).toBeNull();
+  });
+
+  it('does not render cURL import flash in gRPC mode (GH-82)', () => {
+    vi.mocked(useAppStore).mockReturnValue(baseStore() as never);
+    render(<UrlBar {...defaultProps} appMode="grpc" curlImportFlash />);
+    // Flash indicator is suppressed in gRPC mode
+    expect(screen.queryByText(/curl imported successfully/i)).toBeNull();
+  });
+
+  it('renders HTTP method selector when appMode is rest (not grpc) (GH-82)', () => {
+    vi.mocked(useAppStore).mockReturnValue(baseStore() as never);
+    render(<UrlBar {...defaultProps} appMode="rest" />);
+    const select = screen.getByRole('combobox') as HTMLSelectElement;
+    expect(select).toBeTruthy();
+  });
 });

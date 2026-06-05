@@ -31,8 +31,6 @@ interface UrlBarProps {
   onShowCode: (langId: string) => void;
   /** Current application mode (defaults to 'rest'). */
   appMode?: AppMode;
-  /** Callback fired when the user switches between HTTP and gRPC mode. */
-  onModeChange?: (mode: 'rest' | 'grpc') => void;
   /** gRPC server address (host:port). Only used when appMode === 'grpc'. */
   serverAddress?: string;
   /** Callback fired when the server address changes. */
@@ -51,7 +49,6 @@ export default function UrlBar({
   onCancel,
   onShowCode,
   appMode,
-  onModeChange,
   serverAddress,
   onServerAddressChange,
 }: UrlBarProps) {
@@ -87,18 +84,6 @@ export default function UrlBar({
 
   return (
     <div className="px-4 py-3 border-b border-fetchy-border flex items-center gap-2 bg-fetchy-bg relative">
-      {/* Mode selector (HTTP vs gRPC) */}
-      {onModeChange && (
-        <select
-          value={isGrpc ? 'grpc' : 'rest'}
-          onChange={(e) => onModeChange(e.target.value as 'rest' | 'grpc')}
-          className="w-20 font-medium text-xs"
-          title="Request type"
-        >
-          <option value="rest">HTTP</option>
-          <option value="grpc">gRPC</option>
-        </select>
-      )}
 
       {isGrpc ? (
         /* gRPC server address */

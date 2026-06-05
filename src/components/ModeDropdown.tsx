@@ -13,7 +13,7 @@ interface ModeDefinition {
 const MODES: ModeDefinition[] = [
   { id: 'rest',      label: 'REST API',             description: 'HTTP request/response',         icon: Globe,           available: true  },
   { id: 'graphql',   label: 'GraphQL',              description: 'Query & mutation API',          icon: Braces,          available: false },
-  { id: 'grpc',      label: 'gRPC',                 description: 'Remote procedure calls',        icon: Server,          available: false },
+  { id: 'grpc',      label: 'gRPC',                 description: 'Remote procedure calls',        icon: Server,          available: true  },
   { id: 'websocket', label: 'WebSocket',            description: 'Full-duplex connections',       icon: Radio,           available: false },
   { id: 'socketio',  label: 'Socket.io',            description: 'Event-driven real-time',        icon: Zap,             available: false },
   { id: 'mqtt',      label: 'MQTT',                 description: 'Publish / subscribe messaging', icon: Rss,             available: false },

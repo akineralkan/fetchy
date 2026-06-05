@@ -23,6 +23,8 @@ interface RequestPanelProps {
   setIsLoading: (loading: boolean) => void;
   isLoading: boolean;
   urlBarContainer?: HTMLDivElement | null;
+  /** When set, forces the panel to operate in this mode regardless of the request's appMode. */
+  forcedAppMode?: 'rest' | 'grpc';
 }
 
 const DEFAULT_GRPC_DATA: GrpcRequestData = {
@@ -35,7 +37,7 @@ const DEFAULT_GRPC_DATA: GrpcRequestData = {
   useTls: false,
 };
 
-export default function RequestPanel({ setResponse, setSentRequest, setIsLoading, isLoading, urlBarContainer }: RequestPanelProps) {
+export default function RequestPanel({ setResponse, setSentRequest, setIsLoading, isLoading, urlBarContainer, forcedAppMode }: RequestPanelProps) {
   const {
     tabs,
     activeTabId,
@@ -392,15 +394,6 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
     handleChange({ grpc: { ...current, ...updates } });
   }, [request, handleChange]);
 
-  const handleModeChange = useCallback((mode: 'rest' | 'grpc') => {
-    if (!request) return;
-    const updates: Partial<ApiRequest> = { appMode: mode };
-    if (mode === 'grpc' && !request.grpc) {
-      updates.grpc = { ...DEFAULT_GRPC_DATA };
-    }
-    handleChange(updates);
-  }, [request, handleChange]);
-
   // Keyboard shortcuts for save (Ctrl+S) and send (Ctrl+Enter)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -585,7 +578,7 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
     );
   };
 
-  const isGrpcMode = request.appMode === 'grpc';
+  const isGrpcMode = (forcedAppMode ?? request.appMode) === 'grpc';
 
   const urlBar = (
     <UrlBar
@@ -599,8 +592,7 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
       onSend={handleSend}
       onCancel={handleCancel}
       onShowCode={handleShowCode}
-      appMode={request.appMode}
-      onModeChange={handleModeChange}
+      appMode={isGrpcMode ? 'grpc' : 'rest'}
       serverAddress={request.grpc?.serverAddress}
       onServerAddressChange={(address) => handleGrpcChange({ serverAddress: address })}
     />
