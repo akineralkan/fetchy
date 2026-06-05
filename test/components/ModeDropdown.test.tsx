@@ -60,4 +60,27 @@ describe('ModeDropdown', () => {
     expect(screen.getByText('WebSocket')).toBeDefined();
     expect(screen.getByText('MQTT')).toBeDefined();
   });
+
+  // GH-82: gRPC is now an available (enabled) mode
+  it('gRPC option is enabled and not disabled (GH-82)', () => {
+    render(<ModeDropdown activeMode="rest" onModeChange={vi.fn()} />);
+    fireEvent.click(screen.getByTitle('Switch Mode'));
+    const grpcButton = screen.getAllByRole('button').find(b => b.textContent?.includes('gRPC'));
+    expect(grpcButton).toBeDefined();
+    expect((grpcButton as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it('clicking gRPC calls onModeChange with grpc (GH-82)', () => {
+    const onModeChange = vi.fn();
+    render(<ModeDropdown activeMode="rest" onModeChange={onModeChange} />);
+    fireEvent.click(screen.getByTitle('Switch Mode'));
+    const grpcButton = screen.getAllByRole('button').find(b => b.textContent?.includes('gRPC'));
+    fireEvent.click(grpcButton!);
+    expect(onModeChange).toHaveBeenCalledWith('grpc');
+  });
+
+  it('renders gRPC as the active mode label when activeMode is grpc (GH-82)', () => {
+    render(<ModeDropdown activeMode="grpc" onModeChange={vi.fn()} />);
+    expect(screen.getByText('gRPC')).toBeDefined();
+  });
 });

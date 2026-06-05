@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { HelpCircle, Settings, RefreshCw, PanelLeftClose, PanelLeftOpen, Rows, Columns, BookOpen, Star, Github, Keyboard, Info } from 'lucide-react';
+import { Settings, RefreshCw, PanelLeftClose, PanelLeftOpen, Rows, Columns, BookOpen, Star, Github, Keyboard, Info } from 'lucide-react';
 import ImportModal, { type ImportSource } from './components/ImportModal';
 import ImportRequestModal from './components/ImportRequestModal';
 import ExportModal from './components/ExportModal';
@@ -18,6 +18,7 @@ import Tooltip from './components/Tooltip';
 import ModeDropdown from './components/ModeDropdown';
 import ComingSoonView from './components/ComingSoonView';
 import RestModeView from './components/RestModeView';
+import GrpcModeView from './components/GrpcModeView';
 import { useAppStore, rehydrateWorkspace } from './store/appStore';
 import { invalidateWriteCache } from './store/persistence';
 import { usePreferencesStore } from './store/preferencesStore';
@@ -254,6 +255,8 @@ function App() {
             onImportCollection={handleImportCollection}
             onImportEnvironment={handleImportEnvironment}
           />
+        ) : activeMode === 'grpc' ? (
+          <GrpcModeView />
         ) : (
           <ComingSoonView mode={activeMode} />
         )}
@@ -261,7 +264,7 @@ function App() {
 
       {/* Bottom bar with toggle buttons */}
       <div className="h-10 bg-fetchy-sidebar border-t border-fetchy-border flex items-center px-4 gap-2 shrink-0">
-        {activeMode === 'rest' && (
+        {(activeMode === 'rest' || activeMode === 'grpc') && (
           <Tooltip content={sidebarCollapsed ? "Show Sidebar" : "Hide Sidebar"}>
             <button
               onClick={toggleSidebar}

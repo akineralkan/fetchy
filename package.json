@@ -1,6 +1,6 @@
 {
   "name": "fetchy",
-  "version": "1.5.75",
+  "version": "1.5.77",
   "description": "Fetchy - Local by design. Reliable by nature.",
   "main": "electron/main.js",
   "scripts": {
@@ -82,6 +82,8 @@
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
+    "@grpc/grpc-js": "^1.14.4",
+    "@grpc/proto-loader": "^0.8.1",
     "@vitejs/plugin-react": "^4.7.0",
     "autoprefixer": "^10.4.19",
     "codemirror": "^6.0.1",

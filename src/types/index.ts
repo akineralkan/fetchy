@@ -15,6 +15,37 @@ export interface KeyValue {
   isSecret?: boolean;
 }
 
+// ─── gRPC types ────────────────────────────────────────────────────────────
+
+export interface GrpcMetadataEntry {
+  id: string;
+  key: string;
+  value: string;
+  enabled: boolean;
+}
+
+export interface GrpcMethodInfo {
+  name: string;
+  path: string;
+  requestStream: boolean;
+  responseStream: boolean;
+}
+
+export interface GrpcServiceInfo {
+  name: string;
+  methods: GrpcMethodInfo[];
+}
+
+export interface GrpcRequestData {
+  serverAddress: string;
+  protoFilePath: string;
+  serviceName: string;
+  methodName: string;
+  payload: string;
+  metadata: GrpcMetadataEntry[];
+  useTls: boolean;
+}
+
 export interface RequestAuth {
   type: 'none' | 'inherit' | 'basic' | 'bearer' | 'api-key';
   basic?: {
@@ -51,6 +82,10 @@ export interface ApiRequest {
   script?: string;
   /** When false, TLS certificate verification is skipped for this request. Default: true */
   sslVerification?: boolean;
+  /** Application mode — 'rest' (default) or 'grpc'. Backward compatible: absent means 'rest'. */
+  appMode?: AppMode;
+  /** gRPC-specific request data. Only present when appMode === 'grpc'. */
+  grpc?: GrpcRequestData;
   /** Runtime-only: ID of the parent container (folder or collection). Not persisted. */
   parentId?: string;
   /** Runtime-only: type of the parent container. Not persisted. */
@@ -540,6 +575,19 @@ export interface ElectronAPI {
   // Storage file change events
   onStorageFileChanged: (callback: () => void) => (() => void);
   offStorageFileChanged?: (listener: () => void) => void;
+  // gRPC support
+  grpc: {
+    loadProto: (filePath: string) => Promise<{ success: boolean; services?: GrpcServiceInfo[]; error?: string }>;
+    invoke: (params: {
+      serverAddress: string;
+      protoFilePath: string;
+      serviceName: string;
+      methodName: string;
+      payload: string;
+      metadata: GrpcMetadataEntry[];
+      useTls: boolean;
+    }) => Promise<{ success: boolean; response?: string; error?: string; code?: number; time?: number }>;
+  };
 }
 
 // Extend Window interface globally

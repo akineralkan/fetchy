@@ -4,7 +4,7 @@ const fs = require('fs');
 const { initUpdater } = require('./updater');
 
 // IPC handler modules (decomposed from this file – #13)
-const { fileHandlers, secretsHandler, httpHandler, aiHandler, workspaceHandler, jiraHandler } = require('./ipc');
+const { fileHandlers, secretsHandler, httpHandler, aiHandler, workspaceHandler, jiraHandler, grpcHandler } = require('./ipc');
 
 /**
  * Atomic file write: writes content to a temporary file in the same directory,
@@ -368,6 +368,7 @@ httpHandler.register(ipcMain, ipcDeps);
 aiHandler.register(ipcMain, ipcDeps);
 workspaceHandler.register(ipcMain, ipcDeps);
 jiraHandler.register(ipcMain, ipcDeps);
+grpcHandler.register(ipcMain);
 
 // Open URL in the system's default browser
 ipcMain.handle('open-external-url', async (_event, url) => {
