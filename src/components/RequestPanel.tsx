@@ -394,6 +394,8 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
     handleChange({ grpc: { ...current, ...updates } });
   }, [request, handleChange]);
 
+  const isGrpcMode = (forcedAppMode ?? request?.appMode) === 'grpc';
+
   // Keyboard shortcuts for save (Ctrl+S) and send (Ctrl+Enter)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -403,7 +405,7 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
       }
       if ((e.ctrlKey || e.shiftKey) && e.key === 'Enter') {
         e.preventDefault();
-        handleSend();
+        isGrpcMode ? handleGrpcSend() : handleSend();
       }
       if (e.key === 'Escape' && isLoading) {
         e.preventDefault();
@@ -413,7 +415,7 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleSave, handleSend, handleCancel, isLoading]);
+  }, [handleSave, handleSend, handleGrpcSend, handleCancel, isLoading, isGrpcMode]);
 
   const addKeyValue = (field: 'headers' | 'params') => {
     if (!request) return;
@@ -577,8 +579,6 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
       </div>
     );
   };
-
-  const isGrpcMode = (forcedAppMode ?? request.appMode) === 'grpc';
 
   const urlBar = (
     <UrlBar

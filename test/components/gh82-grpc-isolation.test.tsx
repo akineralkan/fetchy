@@ -16,6 +16,7 @@ import { cleanup, render, screen } from '@testing-library/react';
 import RequestPanel from '../../src/components/RequestPanel';
 import GrpcModeView from '../../src/components/GrpcModeView';
 import { useAppStore } from '../../src/store/appStore';
+import { executeRequest } from '../../src/utils/httpClient';
 
 // ─── Store mock ───────────────────────────────────────────────────────────────
 
@@ -275,5 +276,61 @@ describe('GrpcModeView (GH-82)', () => {
     expect(screen.getByTestId('grpc-editor')).toBeDefined();
     expect(screen.queryByText('Params')).toBeNull();
     expect(screen.queryByText('Headers')).toBeNull();
+  });
+});
+
+// ─── RequestPanel — Ctrl+Enter keyboard shortcut dispatch ────────────────────
+
+describe('RequestPanel — Ctrl+Enter keyboard shortcut dispatch (GH-82)', () => {
+  function dispatchCtrlEnter() {
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Enter', ctrlKey: true, bubbles: true, cancelable: true })
+    );
+  }
+
+  it('dispatches to handleGrpcSend (not handleSend) on Ctrl+Enter when forcedAppMode="grpc" (GH-82)', () => {
+    const grpcInvoke = vi.fn().mockResolvedValue({ success: true, response: '{}', time: 10 });
+    (window as any).electronAPI = { grpc: { invoke: grpcInvoke } };
+
+    mockStore({
+      request: makeRequest({
+        grpc: {
+          serverAddress: 'localhost:50051',
+          protoFilePath: '/app/service.proto',
+          serviceName: 'EchoService',
+          methodName: 'Echo',
+          payload: '{}',
+          metadata: [],
+          useTls: false,
+        },
+      }),
+    });
+    renderPanel({ forcedAppMode: 'grpc' });
+
+    dispatchCtrlEnter();
+
+    expect(grpcInvoke).toHaveBeenCalledOnce();
+    expect(vi.mocked(executeRequest)).not.toHaveBeenCalled();
+
+    delete (window as any).electronAPI;
+  });
+
+  it('dispatches to handleSend (not handleGrpcSend) on Ctrl+Enter when forcedAppMode="rest" (GH-82)', () => {
+    const grpcInvoke = vi.fn();
+    (window as any).electronAPI = { grpc: { invoke: grpcInvoke } };
+
+    vi.mocked(executeRequest).mockResolvedValue({
+      status: 200, statusText: 'OK', headers: {}, body: '{}', time: 10, size: 2,
+    } as any);
+
+    mockStore({ request: makeRequest() });
+    renderPanel({ forcedAppMode: 'rest' });
+
+    dispatchCtrlEnter();
+
+    expect(vi.mocked(executeRequest)).toHaveBeenCalledOnce();
+    expect(grpcInvoke).not.toHaveBeenCalled();
+
+    delete (window as any).electronAPI;
   });
 });
