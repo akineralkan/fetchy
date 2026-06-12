@@ -18,8 +18,6 @@ import {
 } from '@dnd-kit/sortable';
 import {
   FilePlus,
-  ChevronDown,
-  ChevronUp,
   Folder,
   Plus,
   Clock,
@@ -548,40 +546,6 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
     return null;
   };
 
-  const expandAllFolders = (folders: RequestFolder[]): RequestFolder[] => {
-    return folders.map(folder => ({
-      ...folder,
-      expanded: true,
-      folders: expandAllFolders(folder.folders),
-    }));
-  };
-
-  const collapseAllFolders = (folders: RequestFolder[]): RequestFolder[] => {
-    return folders.map(folder => ({
-      ...folder,
-      expanded: false,
-      folders: collapseAllFolders(folder.folders),
-    }));
-  };
-
-  const handleExpandAll = () => {
-    collections.forEach(collection => {
-      updateCollection(collection.id, {
-        expanded: true,
-        folders: expandAllFolders(collection.folders),
-      });
-    });
-  };
-
-  const handleCollapseAll = () => {
-    collections.forEach(collection => {
-      updateCollection(collection.id, {
-        expanded: false,
-        folders: collapseAllFolders(collection.folders),
-      });
-    });
-  };
-
   const renderFolder = (collectionId: string, folder: RequestFolder, depth: number) => {
     const folderRequests = folder.requests;
     const folderFolders = folder.folders;
@@ -830,32 +794,14 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
               )}
             </div>
             {activeTab === 'collections' && (
-              <>
-                <Tooltip content="Expand All">
-                  <button
-                    onClick={handleExpandAll}
-                    className="p-1.5 rounded border border-fetchy-border text-fetchy-text-muted hover:text-fetchy-text hover:bg-fetchy-border"
-                  >
-                    <ChevronDown size={14} />
-                  </button>
-                </Tooltip>
-                <Tooltip content="Collapse All">
-                  <button
-                    onClick={handleCollapseAll}
-                    className="p-1.5 rounded border border-fetchy-border text-fetchy-text-muted hover:text-fetchy-text hover:bg-fetchy-border"
-                  >
-                    <ChevronUp size={14} />
-                  </button>
-                </Tooltip>
-                <Tooltip content="Import Collection">
-                  <button
-                    onClick={onImport}
-                    className="p-1.5 rounded border border-fetchy-border text-fetchy-text-muted hover:text-fetchy-text hover:bg-fetchy-border"
-                  >
-                    <Download size={14} />
-                  </button>
-                </Tooltip>
-              </>
+              <Tooltip content="Import Collection">
+                <button
+                  onClick={onImport}
+                  className="p-1.5 rounded border border-fetchy-border text-fetchy-text-muted hover:text-fetchy-text hover:bg-fetchy-border"
+                >
+                  <Download size={14} />
+                </button>
+              </Tooltip>
             )}
             <div className="relative">
               <Tooltip content="Filter & Sort">

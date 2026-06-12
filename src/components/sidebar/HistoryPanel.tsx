@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Clock, Search } from 'lucide-react';
+import { Clock, X, Filter, ArrowUpDown } from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
 import { RequestHistoryItem } from '../../types';
 import { getMethodBgColor } from '../../utils/helpers';
@@ -7,6 +7,9 @@ import { getMethodBgColor } from '../../utils/helpers';
 interface HistoryPanelProps {
   onHistoryItemClick?: (item: RequestHistoryItem) => void;
 }
+
+type HistorySortOption = 'date-desc' | 'date-asc';
+type HistoryFilterMethod = 'all' | 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
 function formatHistoryTime(timestamp: number): string {
   const now = Date.now();
@@ -32,17 +35,26 @@ export default function HistoryPanel({ onHistoryItemClick }: HistoryPanelProps) 
   const history = useAppStore(s => s.history);
   const clearHistory = useAppStore(s => s.clearHistory);
   const [search, setSearch] = useState('');
+  const [sortOption, setSortOption] = useState<HistorySortOption>('date-desc');
+  const [filterMethod, setFilterMethod] = useState<HistoryFilterMethod>('all');
+  const [showFilterMenu, setShowFilterMenu] = useState(false);
 
-  const filtered = search.trim()
-    ? history.filter(item => {
-        const q = search.toLowerCase();
-        return (
-          item.request.url.toLowerCase().includes(q) ||
-          (item.request.name || '').toLowerCase().includes(q) ||
-          item.request.method.toLowerCase().includes(q)
-        );
-      })
-    : history;
+  const hasActiveFilters = filterMethod !== 'all' || sortOption !== 'date-desc';
+
+  let filtered = history.filter(item => {
+    const q = search.toLowerCase().trim();
+    const matchesSearch = !q || (
+      item.request.url.toLowerCase().includes(q) ||
+      (item.request.name || '').toLowerCase().includes(q) ||
+      item.request.method.toLowerCase().includes(q)
+    );
+    const matchesMethod = filterMethod === 'all' || item.request.method === filterMethod;
+    return matchesSearch && matchesMethod;
+  });
+
+  filtered = [...filtered].sort((a, b) =>
+    sortOption === 'date-asc' ? a.timestamp - b.timestamp : b.timestamp - a.timestamp
+  );
 
   if (history.length === 0) {
     return (
@@ -56,15 +68,86 @@ export default function HistoryPanel({ onHistoryItemClick }: HistoryPanelProps) 
 
   return (
     <div>
-      <div className="relative mb-2">
-        <Search size={13} className="absolute left-2 top-1/2 -translate-y-1/2 text-fetchy-text-muted pointer-events-none" />
-        <input
-          type="text"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Search history..."
-          className="w-full pl-7 pr-2 py-1.5 text-xs bg-fetchy-card border border-fetchy-border rounded text-fetchy-text placeholder-fetchy-text-muted focus:outline-none focus:border-fetchy-accent"
-        />
+      <div className="flex items-center gap-2 mb-2">
+        <div className="flex-1 relative">
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search history..."
+            className="w-full pl-3 pr-7 py-1.5 text-sm bg-fetchy-bg border border-fetchy-border rounded focus:outline-none focus:border-fetchy-accent"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-fetchy-text-muted hover:text-fetchy-text"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
+        <div className="relative">
+          <button
+            onClick={() => setShowFilterMenu(v => !v)}
+            className={`p-1.5 rounded border ${
+              hasActiveFilters
+                ? 'bg-fetchy-accent/20 border-fetchy-accent text-fetchy-accent'
+                : 'border-fetchy-border text-fetchy-text-muted hover:text-fetchy-text hover:bg-fetchy-border'
+            }`}
+          >
+            <Filter size={14} />
+          </button>
+          {showFilterMenu && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setShowFilterMenu(false)} />
+              <div className="absolute right-0 top-full mt-1 z-50 bg-fetchy-dropdown border border-fetchy-border rounded-lg shadow-xl py-2 min-w-[180px]">
+                <div className="px-3 py-1 text-xs font-medium text-fetchy-text-muted uppercase">Filter by Method</div>
+                {(['all', 'GET', 'POST', 'PUT', 'PATCH', 'DELETE'] as const).map(method => (
+                  <button
+                    key={method}
+                    className={`w-full px-3 py-1.5 text-left text-sm hover:bg-fetchy-border flex items-center gap-2 ${filterMethod === method ? 'text-fetchy-accent' : ''}`}
+                    onClick={() => setFilterMethod(method)}
+                  >
+                    {method === 'all' ? 'All Methods' : method}
+                    {filterMethod === method && <span className="ml-auto">✓</span>}
+                  </button>
+                ))}
+                <hr className="my-2 border-fetchy-border" />
+                <div className="px-3 py-1 text-xs font-medium text-fetchy-text-muted uppercase flex items-center gap-1">
+                  <ArrowUpDown size={12} /> Sort by
+                </div>
+                {([
+                  { value: 'date-desc', label: 'Date (Newest First)' },
+                  { value: 'date-asc',  label: 'Date (Oldest First)' },
+                ] as const).map(option => (
+                  <button
+                    key={option.value}
+                    className={`w-full px-3 py-1.5 text-left text-sm hover:bg-fetchy-border flex items-center gap-2 ${sortOption === option.value ? 'text-fetchy-accent' : ''}`}
+                    onClick={() => setSortOption(option.value)}
+                  >
+                    {option.label}
+                    {sortOption === option.value && <span className="ml-auto">✓</span>}
+                  </button>
+                ))}
+                {hasActiveFilters && (
+                  <>
+                    <hr className="my-2 border-fetchy-border" />
+                    <button
+                      className="w-full px-3 py-1.5 text-left text-sm hover:bg-fetchy-border text-red-400"
+                      onClick={() => {
+                        setFilterMethod('all');
+                        setSortOption('date-desc');
+                        setShowFilterMenu(false);
+                      }}
+                    >
+                      Clear All Filters
+                    </button>
+                  </>
+                )}
+              </div>
+            </>
+          )}
+        </div>
       </div>
       <div className="flex items-center justify-between mb-2 px-1">
         <span className="text-xs text-fetchy-text-muted">{filtered.length} request{filtered.length !== 1 ? 's' : ''}</span>

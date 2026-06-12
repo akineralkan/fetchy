@@ -321,27 +321,6 @@ describe('Sidebar', () => {
     expect(screen.getByText('Clear All Filters')).toBeDefined();
   });
 
-  // 10. Expand all / collapse all collections
-  it('calls updateCollection for expand all', () => {
-    const col = makeCollection();
-    mockStores({ collections: [col] });
-    render(<Sidebar onImport={onImport} />);
-    const expandBtn = screen.getAllByRole('button').find(b => b.querySelector('[data-testid="icon-chevron-down"]'));
-    expect(expandBtn).toBeDefined();
-    fireEvent.click(expandBtn!);
-    expect(updateCollection).toHaveBeenCalledWith('col-1', expect.objectContaining({ expanded: true }));
-  });
-
-  it('calls updateCollection for collapse all', () => {
-    const col = makeCollection();
-    mockStores({ collections: [col] });
-    render(<Sidebar onImport={onImport} />);
-    const collapseBtn = screen.getAllByRole('button').find(b => b.querySelector('[data-testid="icon-chevron-up"]'));
-    expect(collapseBtn).toBeDefined();
-    fireEvent.click(collapseBtn!);
-    expect(updateCollection).toHaveBeenCalledWith('col-1', expect.objectContaining({ expanded: false }));
-  });
-
   // 11. Click on a request opens a tab
   it('opens tab when request is clicked', () => {
     const req = makeRequest();

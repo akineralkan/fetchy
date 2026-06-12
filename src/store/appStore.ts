@@ -365,6 +365,7 @@ export const useAppStore = create<AppStore>()(
         set(state => {
           const collection = state.collections.find(c => c.id === collectionId);
           if (!collection) return;
+          collection.expanded = expanded;
           const recurse = (folders: RequestFolder[]) => {
             for (const folder of folders) {
               folder.expanded = expanded;

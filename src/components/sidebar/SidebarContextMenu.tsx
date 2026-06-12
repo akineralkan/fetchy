@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   FilePlus,
   FolderPlus,
@@ -78,6 +79,21 @@ export default function SidebarContextMenu({
     name: string;
   } | null>(null);
 
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
+
+  useEffect(() => {
+    const el = menuRef.current;
+    if (!el) return;
+    const { offsetWidth: w, offsetHeight: h } = el;
+    const margin = 6;
+    let left = contextMenu.x;
+    let top = contextMenu.y;
+    if (left + w + margin > window.innerWidth)  left = Math.max(margin, left - w);
+    if (top  + h + margin > window.innerHeight) top  = Math.max(margin, top  - h);
+    setPos({ left, top });
+  }, [contextMenu.x, contextMenu.y]);
+
   const handleExportCollection = (collectionId: string) => {
     const collection = collections.find(c => c.id === collectionId);
     if (!collection) return;
@@ -94,12 +110,16 @@ export default function SidebarContextMenu({
     URL.revokeObjectURL(url);
   };
 
-  return (
+  return createPortal(
     <>
       <div className="fixed inset-0 z-40" onClick={closeContextMenu} />
       <div
+        ref={menuRef}
         className="context-menu fixed z-50 bg-fetchy-dropdown border border-fetchy-border rounded-lg shadow-xl py-1 min-w-[160px]"
-        style={{ left: contextMenu.x, top: contextMenu.y }}
+        style={pos
+          ? { left: pos.left, top: pos.top }
+          : { left: contextMenu.x, top: contextMenu.y, visibility: 'hidden' }
+        }
       >
         {contextMenu.type === 'collection' && (
           <>
@@ -497,5 +517,5 @@ export default function SidebarContextMenu({
         </div>
       )}
     </>
-  );
+  , document.body);
 }
