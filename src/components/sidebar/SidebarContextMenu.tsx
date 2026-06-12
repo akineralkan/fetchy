@@ -5,6 +5,8 @@ import {
   ChevronRight,
   ChevronDown,
   ChevronUp,
+  ChevronsDownUp,
+  ChevronsUpDown,
   Folder,
   Trash2,
   Edit2,
@@ -66,6 +68,7 @@ export default function SidebarContextMenu({
     moveFolder,
     reorderRequests,
     openTab,
+    setAllFoldersExpanded,
   } = useAppStore();
 
   const [pendingDelete, setPendingDelete] = useState<{
@@ -172,6 +175,25 @@ export default function SidebarContextMenu({
               }}
             >
               <Settings size={14} /> Configure
+            </button>
+            <hr className="my-1 border-fetchy-border" />
+            <button
+              className="w-full px-3 py-2 text-left text-sm hover:bg-fetchy-border flex items-center gap-2"
+              onClick={() => {
+                setAllFoldersExpanded(contextMenu.collectionId, true);
+                closeContextMenu();
+              }}
+            >
+              <ChevronsUpDown size={14} /> Expand All
+            </button>
+            <button
+              className="w-full px-3 py-2 text-left text-sm hover:bg-fetchy-border flex items-center gap-2"
+              onClick={() => {
+                setAllFoldersExpanded(contextMenu.collectionId, false);
+                closeContextMenu();
+              }}
+            >
+              <ChevronsDownUp size={14} /> Collapse All
             </button>
             <hr className="my-1 border-fetchy-border" />
             <button

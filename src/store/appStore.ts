@@ -61,6 +61,7 @@ interface AppStore {
   updateFolder: (collectionId: string, folderId: string, updates: Partial<RequestFolder>) => void;
   deleteFolder: (collectionId: string, folderId: string) => void;
   toggleFolderExpanded: (collectionId: string, folderId: string) => void;
+  setAllFoldersExpanded: (collectionId: string, expanded: boolean) => void;
   reorderFolders: (collectionId: string, parentFolderId: string | null, fromIndex: number, toIndex: number) => void;
   moveFolder: (
     sourceCollectionId: string,
@@ -357,6 +358,20 @@ export const useAppStore = create<AppStore>()(
               state.collections[collectionIndex].folders
             );
           }
+        });
+      },
+
+      setAllFoldersExpanded: (collectionId: string, expanded: boolean) => {
+        set(state => {
+          const collection = state.collections.find(c => c.id === collectionId);
+          if (!collection) return;
+          const recurse = (folders: RequestFolder[]) => {
+            for (const folder of folders) {
+              folder.expanded = expanded;
+              recurse(folder.folders);
+            }
+          };
+          recurse(collection.folders);
         });
       },
 

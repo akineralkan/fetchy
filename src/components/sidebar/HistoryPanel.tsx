@@ -1,4 +1,5 @@
-import { Clock } from 'lucide-react';
+import { useState } from 'react';
+import { Clock, Search } from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
 import { RequestHistoryItem } from '../../types';
 import { getMethodBgColor } from '../../utils/helpers';
@@ -30,6 +31,18 @@ function formatResponseSize(bytes: number): string {
 export default function HistoryPanel({ onHistoryItemClick }: HistoryPanelProps) {
   const history = useAppStore(s => s.history);
   const clearHistory = useAppStore(s => s.clearHistory);
+  const [search, setSearch] = useState('');
+
+  const filtered = search.trim()
+    ? history.filter(item => {
+        const q = search.toLowerCase();
+        return (
+          item.request.url.toLowerCase().includes(q) ||
+          (item.request.name || '').toLowerCase().includes(q) ||
+          item.request.method.toLowerCase().includes(q)
+        );
+      })
+    : history;
 
   if (history.length === 0) {
     return (
@@ -43,8 +56,18 @@ export default function HistoryPanel({ onHistoryItemClick }: HistoryPanelProps) 
 
   return (
     <div>
+      <div className="relative mb-2">
+        <Search size={13} className="absolute left-2 top-1/2 -translate-y-1/2 text-fetchy-text-muted pointer-events-none" />
+        <input
+          type="text"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Search history..."
+          className="w-full pl-7 pr-2 py-1.5 text-xs bg-fetchy-card border border-fetchy-border rounded text-fetchy-text placeholder-fetchy-text-muted focus:outline-none focus:border-fetchy-accent"
+        />
+      </div>
       <div className="flex items-center justify-between mb-2 px-1">
-        <span className="text-xs text-fetchy-text-muted">{history.length} request{history.length !== 1 ? 's' : ''}</span>
+        <span className="text-xs text-fetchy-text-muted">{filtered.length} request{filtered.length !== 1 ? 's' : ''}</span>
         <button
           onClick={clearHistory}
           className="text-xs text-red-400 hover:text-red-300"
@@ -52,7 +75,7 @@ export default function HistoryPanel({ onHistoryItemClick }: HistoryPanelProps) 
           Clear All
         </button>
       </div>
-      {history.map(item => (
+      {filtered.map(item => (
         <div
           key={item.id}
           className="tree-item px-2 py-2 cursor-pointer group rounded hover:bg-fetchy-border mb-1 border border-transparent hover:border-fetchy-border"

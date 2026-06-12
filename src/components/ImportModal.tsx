@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { X, Download, FileJson, AlertCircle, Check, Globe, FolderOpen, Braces, Terminal, Sparkles, Loader2, Info } from 'lucide-react';
 import { getFirstDroppedFile } from '../utils/fileUtils';
 import { useAppStore } from '../store/appStore';
