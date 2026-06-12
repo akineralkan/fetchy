@@ -71,6 +71,15 @@ Use collection variables with `<<variable_name>>` in requests.
 
 ---
 
+## Expand / Collapse All
+
+To quickly expand or collapse all folders in a collection, right-click the collection header and choose:
+
+- **Expand All** — opens the collection and all nested folders
+- **Collapse All** — collapses the collection and all nested folders
+
+---
+
 ## Collection Runner
 
 Run all requests in a collection automatically:
