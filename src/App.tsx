@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { HelpCircle, Settings, RefreshCw, PanelLeftClose, PanelLeftOpen, Rows, Columns, BookOpen, Star, Github, Keyboard, Info } from 'lucide-react';
+import { Settings, RefreshCw, PanelLeftClose, PanelLeftOpen, Rows, Columns, BookOpen, Star, Github, Keyboard, Info } from 'lucide-react';
 import ImportModal, { type ImportSource } from './components/ImportModal';
 import ImportRequestModal from './components/ImportRequestModal';
 import ExportModal from './components/ExportModal';
@@ -22,7 +22,7 @@ import { useAppStore, rehydrateWorkspace } from './store/appStore';
 import { invalidateWriteCache } from './store/persistence';
 import { usePreferencesStore } from './store/preferencesStore';
 import { useWorkspacesStore } from './store/workspacesStore';
-import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
+import { useKeyboardShortcuts, getEffectiveBinding, ShortcutHandler } from './hooks/useKeyboardShortcuts';
 import { AppMode } from './types';
 
 function App() {
@@ -38,7 +38,7 @@ function App() {
     panelLayout,
     togglePanelLayout,
   } = useAppStore();
-  const { loadPreferences, loadAISecrets, loadJiraSecrets } = usePreferencesStore();
+  const { loadPreferences, loadAISecrets, loadJiraSecrets, preferences } = usePreferencesStore();
   const { workspaces, activeWorkspaceId, isLoading: workspacesLoading, loadWorkspaces } = useWorkspacesStore();
   const activeWorkspace = workspaces.find((w) => w.id === activeWorkspaceId) ?? null;
   const [showImportModal, setShowImportModal] = useState(false);
@@ -172,33 +172,26 @@ function App() {
     setShowImportModal(true);
   }, []);
 
-  // Set up keyboard shortcuts
-  useKeyboardShortcuts([
-    {
-      key: 'n',
-      ctrl: true,
-      handler: handleNewRequest,
-      description: 'New request',
-    },
-    {
-      key: 'i',
-      ctrl: true,
-      handler: () => handleImport(),
-      description: 'Import',
-    },
-    {
-      key: 'e',
-      ctrl: true,
-      handler: () => setShowEnvironmentModal(true),
-      description: 'Environments',
-    },
-    {
-      key: '/',
-      ctrl: true,
-      handler: () => setShowShortcutsModal(true),
-      description: 'Keyboard shortcuts',
-    },
-  ]);
+  // Set up keyboard shortcuts using configured bindings from preferences
+  const customBindings = preferences.keyboardShortcuts;
+
+  function buildShortcut(
+    binding: ReturnType<typeof getEffectiveBinding>,
+    handler: () => void,
+    description: string
+  ): ShortcutHandler | null {
+    if (!binding) return null;
+    return { key: binding.key, ctrl: binding.ctrl, shift: binding.shift, alt: binding.alt, handler, description };
+  }
+
+  useKeyboardShortcuts(
+    [
+      buildShortcut(getEffectiveBinding('new-request', customBindings), handleNewRequest, 'New request'),
+      buildShortcut(getEffectiveBinding('import', customBindings), () => handleImport(), 'Import'),
+      buildShortcut(getEffectiveBinding('open-environments', customBindings), () => setShowEnvironmentModal(true), 'Environments'),
+      buildShortcut(getEffectiveBinding('show-shortcuts', customBindings), () => setShowShortcutsModal(true), 'Keyboard shortcuts'),
+    ].filter((s): s is ShortcutHandler => s !== null)
+  );
 
   // ── Workspace gate (after all hooks) ────────────────────────────────────────
   // Block the UI while workspaces are loading or until one is created/selected.

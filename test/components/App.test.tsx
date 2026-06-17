@@ -60,7 +60,13 @@ vi.mock('../../src/components/WorkspaceDropdown', () => ({ default: () => <div d
 vi.mock('../../src/components/ThemeToggle', () => ({ default: () => <div data-testid="theme-toggle" /> }));
 vi.mock('../../src/components/Tooltip', () => ({ default: ({ children }: any) => <>{children}</> }));
 vi.mock('../../src/components/ModeDropdown', () => ({ default: () => <div data-testid="mode-dropdown" /> }));
-vi.mock('../../src/hooks/useKeyboardShortcuts', () => ({ useKeyboardShortcuts: vi.fn() }));
+vi.mock('../../src/hooks/useKeyboardShortcuts', async (importOriginal) => {
+  const actual = await importOriginal() as Record<string, unknown>;
+  return {
+    ...actual,
+    useKeyboardShortcuts: vi.fn(),
+  };
+});
 
 afterEach(() => {
   cleanup();

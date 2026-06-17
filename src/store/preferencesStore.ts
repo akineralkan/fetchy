@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { AppPreferences, AISettings, AISecretsStorage, JiraSettings, JiraSecretsStorage } from '../types';
+import { AppPreferences, AISettings, AISecretsStorage, JiraSettings, JiraSecretsStorage, KeyboardShortcutsConfig } from '../types';
 import { defaultAISettings } from '../utils/aiProvider';
 
 // ElectronAPI type is declared in ../types/index.ts
@@ -20,6 +20,7 @@ interface PreferencesStore {
   loadJiraSecrets: () => Promise<void>;
   updateJiraSettings: (updates: Partial<JiraSettings>) => Promise<void>;
   updateJiraPat: (pat: string) => Promise<void>;
+  updateKeyboardShortcuts: (config: KeyboardShortcutsConfig) => Promise<void>;
   selectHomeDirectory: () => Promise<string | null>;
   setHomeDirectory: (directory: string, migrateData?: boolean) => Promise<boolean>;
   getHomeDirectory: () => Promise<string>;
@@ -287,6 +288,10 @@ export const usePreferencesStore = create<PreferencesStore>()((set, get) => ({
         return false;
       }
     }
+  },
+
+  updateKeyboardShortcuts: async (config: KeyboardShortcutsConfig) => {
+    await get().savePreferences({ keyboardShortcuts: config });
   },
 
   selectHomeDirectory: async () => {
