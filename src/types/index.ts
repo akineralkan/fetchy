@@ -250,6 +250,26 @@ export interface JiraCreateIssueResult {
   error?: string;
 }
 
+export type ShortcutActionId =
+  | 'close-tab'
+  | 'next-tab'
+  | 'prev-tab'
+  | 'new-request'
+  | 'import'
+  | 'open-environments'
+  | 'show-shortcuts'
+  | 'save-request'
+  | 'send-request';
+
+export interface ShortcutBinding {
+  ctrl?: boolean;
+  shift?: boolean;
+  alt?: boolean;
+  key: string;
+}
+
+export type KeyboardShortcutsConfig = Partial<Record<ShortcutActionId, ShortcutBinding | null>>;
+
 export interface AppPreferences {
   homeDirectory: string | null; // Legacy – kept for backward compat
   theme: BuiltinTheme | string; // string for custom theme IDs
@@ -261,6 +281,8 @@ export interface AppPreferences {
   proxy?: ProxySettings;
   /** Jira integration settings (PAT stored separately in secrets) */
   jiraSettings?: JiraSettings;
+  /** User-defined keyboard shortcut overrides (null = disabled) */
+  keyboardShortcuts?: KeyboardShortcutsConfig;
 }
 
 // OpenAPI types

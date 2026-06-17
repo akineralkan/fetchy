@@ -1,5 +1,5 @@
 import { useState, useRef, useMemo } from 'react';
-import { X, Plus, Trash2, Check, Edit2, Lock, Unlock, Download, Upload, Copy, GripVertical, Zap, Sparkles, Loader2, Info } from 'lucide-react';
+import { X, Plus, Trash2, Check, Edit2, Lock, Unlock, Download, Upload, Copy, GripVertical, Zap, Sparkles, Loader2 } from 'lucide-react';
 import {
   DndContext,
   closestCenter,

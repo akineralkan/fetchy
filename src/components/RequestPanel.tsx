@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Save, Plus, Trash2, FileText, X, Terminal, Check } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
+import { usePreferencesStore } from '../store/preferencesStore';
 import { ApiRequest, ApiResponse, KeyValue } from '../types';
 import { executeRequest } from '../utils/httpClient';
 import { resolveRequestVariables, generateCurl, generateJavaScript, generatePython, generateJava, generateDotNet, generateGo, generateRust, generateCpp } from '../utils/helpers';
@@ -9,6 +10,7 @@ import { resolveInheritedAuth } from '../utils/authInheritance';
 import { v4 as uuidv4 } from 'uuid';
 import { parseCurlCommand } from '../utils/curlParser';
 import { computeKeyColWidth } from '../utils/kvTableUtils';
+import { getEffectiveBinding, matchesBinding } from '../hooks/useKeyboardShortcuts';
 import VariableInput from './VariableInput';
 import Tooltip from './Tooltip';
 import BodyEditor from './request/BodyEditor';
@@ -38,13 +40,14 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
     addRequest,
   } = useAppStore();
 
+  const { preferences } = usePreferencesStore();
+
   const activeTab = tabs.find(t => t.id === activeTabId);
   const [request, setLocalRequest] = useState<ApiRequest | null>(null);
   const [activeSection, setActiveSection] = useState<'params' | 'headers' | 'body' | 'auth' | 'preScript' | 'script'>('params');
   const [batchEditModal, setBatchEditModal] = useState<{ open: boolean; field: 'headers' | 'params' | null }>({ open: false, field: null });
   const [batchEditText, setBatchEditText] = useState('');
   const [codeModal, setCodeModal] = useState<{ open: boolean; activeLanguage: string; copied: boolean }>({ open: false, activeLanguage: 'curl', copied: false });
-  const [showAIGenerateModal, setShowAIGenerateModal] = useState(false);
   const [curlImportFlash, setCurlImportFlash] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   // Tracks the previously-loaded tab identity so we can detect real tab switches versus
@@ -297,16 +300,23 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
     setIsLoading(false);
   }, [setIsLoading]);
 
-  // Keyboard shortcuts for save (Ctrl+S) and send (Ctrl+Enter)
+  // Keyboard shortcuts for save (configurable) and send (configurable + Shift+Enter alias)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.key === 's') {
+      const customBindings = preferences.keyboardShortcuts;
+      const saveBinding = getEffectiveBinding('save-request', customBindings);
+      const sendBinding = getEffectiveBinding('send-request', customBindings);
+
+      if (saveBinding && matchesBinding(e, saveBinding)) {
         e.preventDefault();
         handleSave();
+        return;
       }
-      if ((e.ctrlKey || e.shiftKey) && e.key === 'Enter') {
+      // Primary configurable send binding or fixed Shift+Enter alias
+      if ((sendBinding && matchesBinding(e, sendBinding)) || (e.shiftKey && !e.ctrlKey && !e.altKey && e.key === 'Enter')) {
         e.preventDefault();
         handleSend();
+        return;
       }
       if (e.key === 'Escape' && isLoading) {
         e.preventDefault();
@@ -316,7 +326,7 @@ export default function RequestPanel({ setResponse, setSentRequest, setIsLoading
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleSave, handleSend, handleCancel, isLoading]);
+  }, [handleSave, handleSend, handleCancel, isLoading, preferences.keyboardShortcuts]);
 
   const addKeyValue = (field: 'headers' | 'params') => {
     if (!request) return;
