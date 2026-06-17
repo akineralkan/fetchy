@@ -69,6 +69,8 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
     openApiDocuments,
   } = useAppStore();
 
+  const history = useAppStore(s => s.history);
+
   // Determine which request is currently active based on the open tab
   const activeStoreTab = tabs.find(t => t.id === activeTabId);
   const activeRequestId = activeStoreTab?.requestId ?? null;
@@ -98,6 +100,12 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
   const [apiSearchQuery, setApiSearchQuery] = useState('');
   const [apiSortOption, setApiSortOption] = useState<'name-asc' | 'name-desc' | 'format' | 'created'>('created');
   const [showApiFilterMenu, setShowApiFilterMenu] = useState(false);
+
+  // History filter and sort states
+  const [historySearch, setHistorySearch] = useState('');
+  const [historyFilterMethod, setHistoryFilterMethod] = useState<'all' | 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'>('all');
+  const [historySortOption, setHistorySortOption] = useState<'date-desc' | 'date-asc' | 'name-asc' | 'name-desc' | 'method'>('date-desc');
+  const [showHistoryFilterMenu, setShowHistoryFilterMenu] = useState(false);
   const [apiFilterFormat, setApiFilterFormat] = useState<'all' | 'yaml' | 'json'>('all');
 
   // Move to submenu state
@@ -741,6 +749,7 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
   const collectionIds = filteredCollections.map(c => `collection-${c.id}`);
 
   const hasActiveFilters = searchQuery || filterMethod !== 'all' || sortOption !== 'created';
+  const hasActiveHistoryFilters = historySearch || historyFilterMethod !== 'all' || historySortOption !== 'date-desc';
 
   return (
     <div ref={sidebarRef} className="h-full bg-fetchy-sidebar flex flex-col border-r border-fetchy-border">
@@ -795,30 +804,34 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
         </div>
       </div>
 
-      {/* Filter/Search Bar - Only for collections and API tabs */}
-      {(activeTab === 'collections' && collections.length > 0) || (activeTab === 'api' && openApiDocuments.length > 0) ? (
+      {/* Filter/Search Bar - Collections, API, and History tabs */}
+      {(activeTab === 'collections' && collections.length > 0) || (activeTab === 'api' && openApiDocuments.length > 0) || (activeTab === 'history' && history.length > 0) ? (
         <div className={`p-2 border-b border-fetchy-border transition-colors duration-150 ${isFocused ? 'sidebar-focused' : ''}`}>
           <div className="flex items-center gap-2">
             <div className="flex-1 relative">
               <input
                 ref={activeTab === 'collections' ? searchInputRef : undefined}
                 type="text"
-                placeholder={activeTab === 'collections' ? "Search requests..." : "Search API specs..."}
-                value={activeTab === 'collections' ? searchQuery : apiSearchQuery}
+                placeholder={activeTab === 'collections' ? "Search requests..." : activeTab === 'history' ? "Search history..." : "Search API specs..."}
+                value={activeTab === 'collections' ? searchQuery : activeTab === 'history' ? historySearch : apiSearchQuery}
                 onChange={(e) => {
                   if (activeTab === 'collections') {
                     setSearchQuery(e.target.value);
+                  } else if (activeTab === 'history') {
+                    setHistorySearch(e.target.value);
                   } else {
                     setApiSearchQuery(e.target.value);
                   }
                 }}
                 className="w-full pl-3 pr-7 py-1.5 text-sm bg-fetchy-bg border border-fetchy-border rounded focus:outline-none focus:border-fetchy-accent"
               />
-              {((activeTab === 'collections' && searchQuery) || (activeTab === 'api' && apiSearchQuery)) && (
+              {((activeTab === 'collections' && searchQuery) || (activeTab === 'api' && apiSearchQuery) || (activeTab === 'history' && historySearch)) && (
                 <button
                   onClick={() => {
                     if (activeTab === 'collections') {
                       setSearchQuery('');
+                    } else if (activeTab === 'history') {
+                      setHistorySearch('');
                     } else {
                       setApiSearchQuery('');
                     }
@@ -863,12 +876,15 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
                   onClick={() => {
                     if (activeTab === 'collections') {
                       setShowFilterMenu(!showFilterMenu);
+                    } else if (activeTab === 'history') {
+                      setShowHistoryFilterMenu(!showHistoryFilterMenu);
                     } else {
                       setShowApiFilterMenu(!showApiFilterMenu);
                     }
                   }}
                   className={`p-1.5 rounded border ${
                     (activeTab === 'collections' && hasActiveFilters) ||
+                    (activeTab === 'history' && hasActiveHistoryFilters) ||
                     (activeTab === 'api' && (apiSearchQuery || apiFilterFormat !== 'all' || apiSortOption !== 'created'))
                       ? 'bg-fetchy-accent/20 border-fetchy-accent text-fetchy-accent'
                       : 'border-fetchy-border text-fetchy-text-muted hover:text-fetchy-text hover:bg-fetchy-border'
@@ -991,6 +1007,60 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
                   </div>
                 </>
               )}
+              {activeTab === 'history' && showHistoryFilterMenu && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowHistoryFilterMenu(false)} />
+                  <div className="absolute right-0 top-full mt-1 z-50 bg-fetchy-dropdown border border-fetchy-border rounded-lg shadow-xl py-2 min-w-[180px]">
+                    <div className="px-3 py-1 text-xs font-medium text-fetchy-text-muted uppercase">Filter by Method</div>
+                    {(['all', 'GET', 'POST', 'PUT', 'PATCH', 'DELETE'] as const).map((method) => (
+                      <button
+                        key={method}
+                        className={`w-full px-3 py-1.5 text-left text-sm hover:bg-fetchy-border flex items-center gap-2 ${historyFilterMethod === method ? 'text-fetchy-accent' : ''}`}
+                        onClick={() => setHistoryFilterMethod(method)}
+                      >
+                        {method === 'all' ? 'All Methods' : method}
+                        {historyFilterMethod === method && <span className="ml-auto">✓</span>}
+                      </button>
+                    ))}
+                    <hr className="my-2 border-fetchy-border" />
+                    <div className="px-3 py-1 text-xs font-medium text-fetchy-text-muted uppercase flex items-center gap-1">
+                      <ArrowUpDown size={12} /> Sort by
+                    </div>
+                    {([
+                      { value: 'date-desc', label: 'Newest First' },
+                      { value: 'date-asc', label: 'Oldest First' },
+                      { value: 'name-asc', label: 'Name (A-Z)' },
+                      { value: 'name-desc', label: 'Name (Z-A)' },
+                      { value: 'method', label: 'Method' },
+                    ] as const).map((option) => (
+                      <button
+                        key={option.value}
+                        className={`w-full px-3 py-1.5 text-left text-sm hover:bg-fetchy-border flex items-center gap-2 ${historySortOption === option.value ? 'text-fetchy-accent' : ''}`}
+                        onClick={() => setHistorySortOption(option.value)}
+                      >
+                        {option.label}
+                        {historySortOption === option.value && <span className="ml-auto">✓</span>}
+                      </button>
+                    ))}
+                    {hasActiveHistoryFilters && (
+                      <>
+                        <hr className="my-2 border-fetchy-border" />
+                        <button
+                          className="w-full px-3 py-1.5 text-left text-sm hover:bg-fetchy-border text-red-400"
+                          onClick={() => {
+                            setHistorySearch('');
+                            setHistoryFilterMethod('all');
+                            setHistorySortOption('date-desc' as const);
+                            setShowHistoryFilterMenu(false);
+                          }}
+                        >
+                          Clear All Filters
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -1062,7 +1132,12 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
             onResetSort={() => setApiSortOption('created')}
           />
         ) : activeTab === 'history' ? (
-          <HistoryPanel onHistoryItemClick={onHistoryItemClick} />
+          <HistoryPanel
+            onHistoryItemClick={onHistoryItemClick}
+            search={historySearch}
+            filterMethod={historyFilterMethod}
+            sortOption={historySortOption}
+          />
         ) : null}
       </div>
 
