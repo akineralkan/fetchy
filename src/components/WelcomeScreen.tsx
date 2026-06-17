@@ -38,7 +38,7 @@ export default function WelcomeScreen({ onImportRequest, onImportCollection, onI
           />
         </div>
         <h1 className="text-2xl font-bold text-fetchy-text mb-1">
-          Welcome to Fetchy
+          Welcome to Kechy
         </h1>
         <p className="text-fetchy-accent italic mb-2 text-sm">Local by design. Reliable by nature.</p>
         <p className="text-fetchy-text-muted mb-5 text-sm">
