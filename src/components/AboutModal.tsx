@@ -91,34 +91,28 @@ export default function AboutModal({ onClose }: AboutModalProps) {
           <div className="px-6 py-4 border-b border-fetchy-border">
             <h3 className="text-sm font-semibold text-fetchy-text mb-3">Links</h3>
             <div className="flex flex-wrap gap-2">
-              <a
-                href="https://github.com/akineralkan/fetchy"
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                onClick={() => window.electronAPI?.openExternalUrl('https://github.com/akineralkan/fetchy')}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-fetchy-sidebar border border-fetchy-border rounded text-sm text-fetchy-text hover:border-fetchy-accent hover:text-fetchy-accent transition-colors"
               >
                 <Github size={14} />
                 GitHub Repository
                 <ExternalLink size={12} className="text-fetchy-text-muted" />
-              </a>
-              <a
-                href="https://akineralkan.github.io/fetchy/"
-                target="_blank"
-                rel="noopener noreferrer"
+              </button>
+              <button
+                onClick={() => window.electronAPI?.openExternalUrl('https://akineralkan.github.io/fetchy/')}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-fetchy-sidebar border border-fetchy-border rounded text-sm text-fetchy-text hover:border-fetchy-accent hover:text-fetchy-accent transition-colors"
               >
                 Documentation
                 <ExternalLink size={12} className="text-fetchy-text-muted" />
-              </a>
-              <a
-                href="https://github.com/AkinerAlkan94/fetchy/blob/main/LICENSE"
-                target="_blank"
-                rel="noopener noreferrer"
+              </button>
+              <button
+                onClick={() => window.electronAPI?.openExternalUrl('https://github.com/AkinerAlkan94/fetchy/blob/main/LICENSE')}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-fetchy-sidebar border border-fetchy-border rounded text-sm text-fetchy-text hover:border-fetchy-accent hover:text-fetchy-accent transition-colors"
               >
                 MIT License
                 <ExternalLink size={12} className="text-fetchy-text-muted" />
-              </a>
+              </button>
             </div>
           </div>
 
@@ -132,15 +126,13 @@ export default function AboutModal({ onClose }: AboutModalProps) {
               Built with love by the Fetchy community. Special thanks to all contributors who help
               make Fetchy better.
             </p>
-            <a
-              href="https://github.com/AkinerAlkan94/fetchy/graphs/contributors"
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              onClick={() => window.electronAPI?.openExternalUrl('https://github.com/AkinerAlkan94/fetchy/graphs/contributors')}
               className="inline-flex items-center gap-1.5 mt-2 text-sm text-fetchy-accent hover:underline"
             >
               View all contributors
               <ExternalLink size={12} />
-            </a>
+            </button>
           </div>
 
           {/* Open Source Packages */}
@@ -152,15 +144,13 @@ export default function AboutModal({ onClose }: AboutModalProps) {
                   key={dep.name}
                   className="flex items-center justify-between py-1.5 border-b border-fetchy-border/40 last:border-0"
                 >
-                  <a
-                    href={dep.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button
+                    onClick={() => window.electronAPI?.openExternalUrl(dep.url)}
                     className="flex items-center gap-1.5 text-sm text-fetchy-text hover:text-fetchy-accent transition-colors"
                   >
                     {dep.name}
                     <ExternalLink size={11} className="text-fetchy-text-muted" />
-                  </a>
+                  </button>
                   <span className="text-xs font-mono text-fetchy-text-muted px-2 py-0.5 bg-fetchy-sidebar border border-fetchy-border rounded">
                     {dep.version}
                   </span>
