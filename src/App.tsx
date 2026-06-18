@@ -294,7 +294,7 @@ function App() {
 
         <Tooltip content="Documentation">
           <button
-            onClick={() => window.open('https://akineralkan.github.io/fetchy/', '_blank')}
+            onClick={() => window.electronAPI?.openExternalUrl('https://akineralkan.github.io/fetchy/')}
             className="p-2 hover:bg-fetchy-border rounded text-fetchy-text-muted hover:text-fetchy-text"
           >
             <BookOpen size={18} />
@@ -303,7 +303,7 @@ function App() {
 
         <Tooltip content="GitHub">
           <button
-            onClick={() => window.open('https://github.com/akineralkan/fetchy', '_blank')}
+            onClick={() => window.electronAPI?.openExternalUrl('https://github.com/akineralkan/fetchy')}
             className="flex items-center gap-1.5 px-2 py-1.5 hover:bg-fetchy-border rounded text-fetchy-text-muted hover:text-fetchy-text"
           >
             <Github size={18} />

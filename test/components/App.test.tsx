@@ -16,7 +16,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 import App from '../../src/App';
 import { useAppStore } from '../../src/store/appStore';
@@ -241,5 +241,75 @@ describe('App', () => {
     render(<App />);
     expect(screen.queryByTestId('mode-dropdown')).toBeNull();
     expect(screen.queryByTestId('rest-mode-view')).toBeNull();
+  });
+
+  // ── GH-88: External URL buttons open in OS default browser ───────────────
+  describe('GH-88: external URL buttons open in OS default browser', () => {
+    let openExternalUrl: ReturnType<typeof vi.fn>;
+
+    beforeEach(() => {
+      openExternalUrl = vi.fn().mockResolvedValue({ success: true });
+      (window as typeof window & { electronAPI?: { openExternalUrl: ReturnType<typeof vi.fn> } }).electronAPI = {
+        openExternalUrl,
+      };
+    });
+
+    afterEach(() => {
+      delete (window as typeof window & { electronAPI?: unknown }).electronAPI;
+    });
+
+    it('Documentation button calls openExternalUrl with the docs URL', () => {
+      render(<App />);
+      const docsBtn = document.querySelector('.lucide-book-open')?.closest('button') as HTMLElement | null;
+      expect(docsBtn).toBeTruthy();
+      fireEvent.click(docsBtn!);
+      expect(openExternalUrl).toHaveBeenCalledWith('https://akineralkan.github.io/fetchy/');
+    });
+
+    it('GitHub button calls openExternalUrl with the GitHub repo URL', () => {
+      render(<App />);
+      const githubBtn = document.querySelector('.lucide-github')?.closest('button') as HTMLElement | null;
+      expect(githubBtn).toBeTruthy();
+      fireEvent.click(githubBtn!);
+      expect(openExternalUrl).toHaveBeenCalledWith('https://github.com/akineralkan/fetchy');
+    });
+
+    it('Documentation button calls openExternalUrl exactly once per click', () => {
+      render(<App />);
+      const docsBtn = document.querySelector('.lucide-book-open')?.closest('button') as HTMLElement | null;
+      fireEvent.click(docsBtn!);
+      fireEvent.click(docsBtn!);
+      expect(openExternalUrl).toHaveBeenCalledTimes(2);
+      expect(openExternalUrl).toHaveBeenNthCalledWith(1, 'https://akineralkan.github.io/fetchy/');
+      expect(openExternalUrl).toHaveBeenNthCalledWith(2, 'https://akineralkan.github.io/fetchy/');
+    });
+
+    it('Documentation and GitHub buttons each use openExternalUrl, not window.open', () => {
+      const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+      render(<App />);
+      const docsBtn = document.querySelector('.lucide-book-open')?.closest('button') as HTMLElement | null;
+      const githubBtn = document.querySelector('.lucide-github')?.closest('button') as HTMLElement | null;
+      fireEvent.click(docsBtn!);
+      fireEvent.click(githubBtn!);
+      expect(openExternalUrl).toHaveBeenCalledTimes(2);
+      expect(windowOpenSpy).not.toHaveBeenCalled();
+      windowOpenSpy.mockRestore();
+    });
+
+    it('Documentation button does not throw when electronAPI is unavailable', () => {
+      delete (window as typeof window & { electronAPI?: unknown }).electronAPI;
+      render(<App />);
+      const docsBtn = document.querySelector('.lucide-book-open')?.closest('button') as HTMLElement | null;
+      expect(docsBtn).toBeTruthy();
+      expect(() => fireEvent.click(docsBtn!)).not.toThrow();
+    });
+
+    it('GitHub button does not throw when electronAPI is unavailable', () => {
+      delete (window as typeof window & { electronAPI?: unknown }).electronAPI;
+      render(<App />);
+      const githubBtn = document.querySelector('.lucide-github')?.closest('button') as HTMLElement | null;
+      expect(githubBtn).toBeTruthy();
+      expect(() => fireEvent.click(githubBtn!)).not.toThrow();
+    });
   });
 });
