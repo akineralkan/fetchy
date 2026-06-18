@@ -38,9 +38,18 @@ Thoroughly read `instructions/pantheon-system.instructions.md`, `.github/pantheo
 - Detect the default branch: `git symbolic-ref refs/remotes/origin/HEAD 2>$null` (extract branch name; fallback to `main`, then `master`).
 - Pull latest from the detected default branch. Resolve conflicts if present.
 
+**Log intermediate progress** *(append each entry to `.github/pantheon-temp/communications.md`)*:
+- `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Charon - GitMaster: Detecting default branch via git symbolic-ref...`
+- `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Charon - GitMaster: Default branch detected: [branch-name]. Pulling latest changes from [branch-name]...`
+- `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Charon - GitMaster: Git pull complete. Repository is up to date.`
+
 ### 4. Branch Creation
 Create and switch to a feature branch:
 - Format: `feature/[task-name-kebab-case]`
+
+**Log intermediate progress** *(append each entry to `.github/pantheon-temp/communications.md`)*:
+- `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Charon - GitMaster: Creating and checking out feature branch: feature/[task-name-kebab-case]...`
+- `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Charon - GitMaster: Feature branch created and checked out: feature/[task-name-kebab-case].`
 
 ### 5. Commit
 - Stage all relevant changes.
@@ -54,6 +63,11 @@ Create and switch to a feature branch:
   - `chore: [description]` for maintenance tasks
 - Choose the primary commit type based on the task's main nature.
 
+**Log intermediate progress** *(append each entry to `.github/pantheon-temp/communications.md`)*:
+- `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Charon - GitMaster: Staging all relevant changes...`
+- `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Charon - GitMaster: [N] file(s) staged. Committing with message: [commit-type]: [description]...`
+- `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Charon - GitMaster: Commit complete.`
+
 ### 6. Push & Merge Request
 - Push feature branch to remote.
 - **Detect platform** and create MR/PR accordingly:
@@ -63,6 +77,12 @@ Create and switch to a feature branch:
   - **Detection heuristic:** Check `git remote -v` for `github.com`, `gitlab.com`/`gitlab`.
   - **Fallback:** If platform cannot be detected, log a warning and provide manual instructions with branch name and target branch.
 - MR/PR description: change summary, task ID(s), test status, and Jira reference.
+
+**Log intermediate progress** *(append each entry to `.github/pantheon-temp/communications.md`)*:
+- `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Charon - GitMaster: Pushing feature branch to remote...`
+- `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Charon - GitMaster: Branch pushed successfully. Detecting SCM platform from git remote...`
+- `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Charon - GitMaster: Platform detected: [GitHub|GitLab|Azure DevOps]. Creating merge request...`
+- `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Charon - GitMaster: Merge request created successfully: [MR URL].`
 
 ### 7. Key Decisions
 -- If you encounter any ambiguities or issues during Git operations, document them in `.github/pantheon-temp/key-decisions.md` with the format:

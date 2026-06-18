@@ -43,6 +43,13 @@ Thoroughly read `instructions/pantheon-system.instructions.md`, `.github/pantheo
 - Collect test results and error output.
 - Make sure that failing test is failing due to a valid issue in the implementation, not a test flake, test design issue or environment issue.
 
+**Log intermediate progress** *(append each entry to `.github/pantheon-temp/communications.md`)*:
+- `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Themis - Test Engineer: Reviewing implemented code changes for [Task ID: Task Name]...`
+- `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Themis - Test Engineer: Code review complete. Writing unit tests for [component/module]...`
+- `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Themis - Test Engineer: Unit tests written ([N] new test cases). Running full test suite (new + existing)...`
+- `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Themis - Test Engineer: Running [N] test(s). Collecting results...`
+- `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Themis - Test Engineer: Test execution complete. Evaluating results...`
+
 ### 4. Result Evaluation
 
 **All tests PASS:** Proceed to Finalize Communication with Output Status `TESTED`.
@@ -56,6 +63,11 @@ Thoroughly read `instructions/pantheon-system.instructions.md`, `.github/pantheo
   ```
 - Set task status to `TODO` in `.github/pantheon-temp/jira-items.md` for rework by Prometheus.
 - End message: `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Themis - Test Engineer: Task [Task ID: Task Name] FAILED. [N] issue(s) found. Status reset to TODO for rework.`
+
+**Log intermediate progress** *(append each entry to `.github/pantheon-temp/communications.md`)*:
+- On pass: `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Themis - Test Engineer: All [N] tests passed. No regressions detected. Task ready for Git operations.`
+- On fail (classification): `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Themis - Test Engineer: [N] test(s) failed. Classifying failures as BUG...`
+- On fail (documentation): `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Themis - Test Engineer: Failure details documented in jira-items.md. Task [TASK-ID] status reset to TODO for rework by Prometheus.`
 
 ### 5. Key Decisions
 -- If you encounter any test findings, ambiguities, or edge cases, document them in `.github/pantheon-temp/key-decisions.md` with the format:

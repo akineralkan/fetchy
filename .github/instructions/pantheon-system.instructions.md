@@ -38,6 +38,14 @@ RETRIEVED → TODO → IMPLEMENTING → IMPLEMENTED → TESTING → TESTED → P
 
 ---
 
+## Shared Skills (ALL AGENTS)
+
+### Timestamp
+
+All agents MUST use the `get-timestamp` skill to obtain the current time whenever a timestamp is required. Load the skill by reading `pantheon/skills/get-timestamp/SKILL.md` and follow its instructions. Never guess, hardcode, or infer a timestamp — always retrieve it from the terminal at the moment it is needed.
+
+---
+
 ## Standard Workflow Pattern (ALL AGENTS)
 
 All agents MUST follow this lifecycle:
@@ -46,6 +54,24 @@ All agents MUST follow this lifecycle:
 2. Read agentic files such as `.github/pantheon-temp/communications.md`, `.github/pantheon-temp/key-decisions.md`, `.github/pantheon-temp/jira-items.md`
 3. Do Agent specific work: The unique operations each agent performs.
 4. Update Agent State → IDLE
+
+---
+
+## Granular Logging (ALL AGENTS)
+
+All agents MUST log progress to `.github/pantheon-temp/communications.md` at **every meaningful sub-step** — not only at start and finish. This ensures real-time pipeline visibility and accurate dashboard monitoring.
+
+**Required logging cadence per workflow step:**
+- **Before starting** a step: `[Agent]: Starting [step name]...`
+- **During** a step, for each meaningful sub-operation: `[Agent]: [Operation being performed] ([relevant detail])...`
+- **After completing** a step: `[Agent]: [Step name] complete. [Outcome/result].`
+- **On error, warning, or decision**: `[Agent]: [Error or decision encountered]. Action taken: [description].`
+
+Never batch multiple sub-steps into a single log message — log each one separately and immediately when it occurs, always appended to `.github/pantheon-temp/communications.md`. Each entry MUST follow the standard format:
+
+`[TIMESTAMP] [PROJECT-NAME] [TASK-ID] [Agent Name]: [Message]`
+
+Agent-specific granular log examples are defined within each agent's workflow steps.
 
 ---
 

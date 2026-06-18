@@ -38,11 +38,25 @@ Thoroughly read `instructions/pantheon-system.instructions.md`, `.github/pantheo
 - Implement the required code changes to meet the task requirements. Follow best practices, maintain code quality, and adhere to the project's coding standards.
 - If the task includes `**Implementation Notes:**`, prioritize those and incorporate them into your implementation.
 
+**Log intermediate progress** *(append each entry to `.github/pantheon-temp/communications.md`)*:
+- `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Prometheus - Developer: Reading task requirements and acceptance criteria for [Task ID: Task Name]...`
+- `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Prometheus - Developer: Searching codebase for relevant files, modules, and existing patterns...`
+- `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Prometheus - Developer: Codebase analysis complete. Architecture understood. Starting implementation...`
+- `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Prometheus - Developer: Implementing [file/component/module]...`
+- `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Prometheus - Developer: [file/component/module] complete. Continuing to next component...`
+- `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Prometheus - Developer: All code changes implemented. [N] file(s) modified/created.`
+
 ### 4. Build & Lint Validation
 - Run build/compile check. Fix any errors before proceeding.
 - Run existing test cases and ensure that existing functionality is not broken. Fix any errors before proceeding.
 - Run linters or static analysis tools if available. Fix any issues before proceeding.
 - **Never mark a task IMPLEMENTED with build errors.**.
+
+**Log intermediate progress** *(append each entry to `.github/pantheon-temp/communications.md`)*:
+- `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Prometheus - Developer: Running build/compile check...`
+- `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Prometheus - Developer: Build check passed. Running existing test suite for regression validation...`
+- `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Prometheus - Developer: Existing tests passed. Running linter/static analysis tools...`
+- `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Prometheus - Developer: All validation checks passed. Implementation is clean and build-verified.`
 
 ### 5. Key Decisions
 - If you encounter any ambiguities, missing information, or edge cases in the task requirements, document them as key decisions in `.github/pantheon-temp/key-decisions.md` with the format:

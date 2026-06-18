@@ -38,11 +38,20 @@ Thoroughly read `instructions/pantheon-system.instructions.md`, `.github/pantheo
 - Read `.github/pantheon-temp/communications.md` to find the MR/PR created by Charon - GitMaster for the `PUSHED` task (branch name, MR/PR URL, or MR/PR ID).
 - **Detect platform** from `git remote -v` (check for `github.com`, `gitlab.com`/`gitlab`, or Azure DevOps host).
 
+**Log intermediate progress** *(append each entry to `.github/pantheon-temp/communications.md`)*:
+- `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Metis - Reviewer: Searching communications log for MR/PR details from Charon - GitMaster...`
+- `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Metis - Reviewer: MR/PR reference found. Detecting SCM platform from git remote...`
+- `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Metis - Reviewer: Platform detected: [GitHub|GitLab|Azure DevOps]. MR/PR located: [MR URL or ID].`
+
 ### 4. Retrieve the Merge Request Diff
 - **GitHub:** `gh pr diff <number>` (or REST API: `GET /repos/{owner}/{repo}/pulls/{number}` with `Accept: application/vnd.github.v3.diff`).
 - **GitLab:** `glab mr diff <id>` (or REST API: `GET /api/v4/projects/{id}/merge_requests/{iid}/changes`).
 - **Azure DevOps:** `az repos pr show --id <id>` (or Azure DevOps REST API for PR iterations/changes).
 - **Fallback:** If the platform/MR cannot be detected, derive the diff locally with `git diff origin/<default-branch>...feature/<task-name-kebab-case>` and log a warning.
+
+**Log intermediate progress** *(append each entry to `.github/pantheon-temp/communications.md`)*:
+- `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Metis - Reviewer: Retrieving merge request diff via [GitHub CLI|GitLab CLI|Azure CLI|git diff fallback]...`
+- `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Metis - Reviewer: Diff retrieved successfully. [N] file(s) changed, [+N/-N] lines.`
 
 ### 5. Review the Diff
 Analyze the diff against the task requirements and produce a structured, objective review. Cover, where relevant:
@@ -55,12 +64,24 @@ Analyze the diff against the task requirements and produce a structured, objecti
 
 Keep findings factual and constructive. The review is a baseline for humans, not a gate.
 
+**Log intermediate progress** *(append each entry to `.github/pantheon-temp/communications.md`)*:
+- `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Metis - Reviewer: Analyzing diff for correctness against task requirements and acceptance criteria...`
+- `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Metis - Reviewer: Reviewing code quality, maintainability, and adherence to project conventions...`
+- `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Metis - Reviewer: Checking for security vulnerabilities (OWASP Top 10, secret exposure, unsafe input handling)...`
+- `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Metis - Reviewer: Evaluating test coverage adequacy for the changed code...`
+- `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Metis - Reviewer: Review analysis complete. Compiling structured AI Review report...`
+
 ### 6. Update the Merge Request Description (AI Review)
 - Append (do not overwrite existing content) an `## 🤖 AI Review` section to the MR/PR description containing the structured review from Step 5, plus the task ID(s) and Jira reference.
 - **GitHub:** `gh pr edit <number> --body "<updated description>"` (or REST API: `PATCH /repos/{owner}/{repo}/pulls/{number}`).
 - **GitLab:** `glab mr update <id> --description "<updated description>"` (or REST API: `PUT /api/v4/projects/{id}/merge_requests/{iid}`).
 - **Azure DevOps:** `az repos pr update --id <id> --description "<updated description>"` (or Azure DevOps REST API).
 - Preserve Charon's original description; the AI Review is appended below it.
+
+**Log intermediate progress** *(append each entry to `.github/pantheon-temp/communications.md`)*:
+- `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Metis - Reviewer: Retrieving current MR description to preserve Charon's original content...`
+- `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Metis - Reviewer: Appending AI Review section to MR description...`
+- `[TIMESTAMP] [PROJECT-NAME] [TASK-ID] Metis - Reviewer: MR description updated successfully with AI Review baseline.`
 
 ### 7. Key Decisions
 -- If you encounter any ambiguities or issues during the review, document them in `.github/pantheon-temp/key-decisions.md` with the format:

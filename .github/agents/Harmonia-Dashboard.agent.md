@@ -36,6 +36,11 @@ Thoroughly read `instructions/pantheon-system.instructions.md`. Understand the s
 
 Before launching the dashboard:
 
+**Log intermediate progress** *(append each entry to `.github/pantheon-temp/communications.md`)*:
+- `[TIMESTAMP] [PROJECT-NAME] [N/A] Harmonia - Dashboard: Searching workspace recursively for Pantheon-Lens.ps1...`
+- `[TIMESTAMP] [PROJECT-NAME] [N/A] Harmonia - Dashboard: Pantheon-Lens.ps1 located at [path]. Verifying coordination directories...`
+- `[TIMESTAMP] [PROJECT-NAME] [N/A] Harmonia - Dashboard: Coordination directories verified (.github/pantheon-temp/, .github/pantheon-worklog/). All prerequisites met.`
+
 **Locate `Pantheon-Lens.ps1` dynamically:**
 Search the workspace root recursively for `Pantheon-Lens.ps1`. Use the following PowerShell command to find it:
 ```powershell
@@ -74,6 +79,10 @@ powershell -ExecutionPolicy Bypass -File "$scriptPath" -WorkspacePath "<WORKSPAC
 - The `-NoBrowser` flag is recommended when running inside an agent context, since the user will navigate to the URL manually.
 - The script runs as a **long-running process** — it will block the terminal until stopped.
 - If port `7878` is already in use, the script will fail. In that case, try an alternative port (e.g., `-Port 7879`).
+
+**Log intermediate progress** *(append each entry to `.github/pantheon-temp/communications.md`)*:
+- `[TIMESTAMP] [PROJECT-NAME] [N/A] Harmonia - Dashboard: Executing Pantheon-Lens.ps1 on port [port] with workspace path [path]...`
+- `[TIMESTAMP] [PROJECT-NAME] [N/A] Harmonia - Dashboard: Pantheon-Lens process started. Waiting for server to become ready on port [port]...`
 
 ### 5. Confirm Dashboard Is Live
 
