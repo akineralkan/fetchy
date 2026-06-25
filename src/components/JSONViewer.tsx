@@ -4,6 +4,7 @@ import JWTTooltip from './JWTTooltip';
 import {
   parseJsonSafely,
   truncateJsonString,
+  isLargeIntegerString,
   STRING_TRUNCATE_MAX,
 } from '../utils/jsonViewerUtils';
 
@@ -24,6 +25,11 @@ function JsonLeaf({ value }: { value: unknown }) {
   if (typeof value === 'boolean') return <span className="json-boolean">{value.toString()}</span>;
   if (typeof value === 'number') return <span className="json-number">{value}</span>;
   if (typeof value === 'string') {
+    // Large integers were preserved from JSON.parse precision loss as plain strings.
+    // Render them without quotes and with number styling so the clipboard copy is exact.
+    if (isLargeIntegerString(value)) {
+      return <span className="json-number">{value}</span>;
+    }
     if (isJWT(value)) {
       const decoded = decodeJWT(value);
       if (decoded) {
