@@ -237,15 +237,25 @@ Variables in the request are resolved before generating the snippet.
 
 ### Download
 
-#### Windows
-Download the latest release for Windows:
+Grab the latest installer for your platform from the Releases page:
 - 📦 [**Fetchy Releases**](https://github.com/AkinerAlkan94/fetchy/releases)
+
+#### Windows
+Download `Fetchy.Setup.x.x.x.exe` and run it.
+
+#### macOS
+Download `Fetchy-x.x.x-arm64.dmg` (Apple Silicon) or `Fetchy-x.x.x-x64.dmg` (Intel), open the DMG, and drag **Fetchy** into your **Applications** folder.
+
+> **First launch note:** Fetchy isn't notarized by Apple (that requires a paid Apple Developer account), so Gatekeeper will initially block it with an *"Apple could not verify..."* warning. To open it anyway (only needed once):
+> 1. In **Applications**, right-click (or Control-click) **Fetchy** and choose **Open**, then confirm **Open** in the dialog — *or*
+> 2. Run in Terminal: `xattr -cr /Applications/Fetchy.app` — *or*
+> 3. Go to **System Settings → Privacy & Security**, scroll down, and click **Open Anyway** next to the Fetchy warning.
 
 ### Distribution
 
 After building, you'll find the installers in the `release` folder:
 - **Windows**: `Fetchy Setup x.x.x.exe` (NSIS installer)
-- **macOS**: `.dmg` file
+- **macOS**: `Fetchy-x.x.x-arm64.dmg` / `Fetchy-x.x.x-x64.dmg` — build both with `npm run electron:build:mac`
 - **Linux**: `.AppImage` file
 
 ---

@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 
 const BUILD_DIR = path.join(__dirname, '..', 'build');
 const ICONS_DIR = path.join(BUILD_DIR, 'icons');
@@ -146,7 +147,24 @@ async function generateMacIcns() {
   }
   console.log(`  Created: icon.iconset directory`);
 
-  // Build a minimal ICNS container around the 1024×1024 transparent PNG
+  // Prefer macOS's native `iconutil` – it produces a proper multi-resolution
+  // ICNS so the app icon looks correct in Finder, the Dock, and the DMG
+  // window at every size. Only available when actually running on macOS
+  // (a local Mac build, or a macOS GitHub Actions runner).
+  if (process.platform === 'darwin') {
+    try {
+      execSync(`iconutil -c icns "${iconsetDir}" -o "${icnsPath}"`, { stdio: 'inherit' });
+      console.log(`  Created: icon.icns (multi-resolution, via iconutil)`);
+      return;
+    } catch (err) {
+      console.warn(`  iconutil failed (${err.message}), falling back to single-size ICNS.`);
+    }
+  }
+
+  // Fallback for non-macOS platforms (e.g. a Windows CI runner building the
+  // Windows installer, where this same script also runs): build a minimal
+  // ICNS container around the 1024×1024 transparent PNG. Functional, but
+  // not multi-resolution.
   const png1024 = path.join(PNG_DIR, '1024x1024.png');
   const icnsHeader = Buffer.from([0x69, 0x63, 0x6e, 0x73]); // 'icns'
   const ic10Type  = Buffer.from([0x69, 0x63, 0x31, 0x30]);  // 'ic10' – 1024×1024 PNG
@@ -161,8 +179,7 @@ async function generateMacIcns() {
   icnsBuffer.writeUInt32BE(ic10Size, offset); offset += 4;
   pngData.copy(icnsBuffer, offset);
   fs.writeFileSync(icnsPath, icnsBuffer);
-  console.log(`  Created: icon.icns`);
-  console.log(`  Note: For best Mac compatibility run 'iconutil -c icns ${iconsetDir}' on macOS`);
+  console.log(`  Created: icon.icns (single-size fallback)`);
 }
 
 async function main() {

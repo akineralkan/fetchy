@@ -1,0 +1,55 @@
+name: Release macOS Installer
+
+# The Windows workflow (release-windows.yml) bumps the version, tags main,
+# and publishes the GitHub Release with the Windows installer. This workflow
+# reacts to that same "release published" event, checks out the exact same
+# tag, builds the macOS DMGs (Apple Silicon + Intel), and attaches them to
+# that already-existing release so both platforms ship together.
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-mac:
+    # Only run for the version-tag releases produced by release-windows.yml
+    if: ${{ !github.event.release.prerelease && startsWith(github.event.release.tag_name, 'v') }}
+    runs-on: macos-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout release tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build macOS installers (Apple Silicon + Intel)
+        run: npm run electron:build:mac
+        env:
+          # There is no Developer ID certificate in this runner's keychain,
+          # and there never will be one (no paid Apple Developer account).
+          # Disabling auto-discovery keeps the build deterministic: it falls
+          # straight to an ad-hoc signature, which is the minimum required
+          # for the app to even launch on Apple Silicon.
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      - name: Upload macOS installers to the release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.release.tag_name }}
+          files: |
+            release/*.dmg
+            release/*.dmg.blockmap
+            release/latest-mac.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

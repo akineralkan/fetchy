@@ -257,6 +257,24 @@ function createWindow() {
     mainWindow.maximize();
   }
 
+  // Native-like right-click menu for editable fields (inputs/textareas).
+  // Electron does not show a context menu on editable elements by default,
+  // so without this, right-click "Paste" is unavailable anywhere in the app.
+  mainWindow.webContents.on('context-menu', (_event, params) => {
+    if (!params.isEditable) return;
+    const editMenu = Menu.buildFromTemplate([
+      { role: 'undo', enabled: params.editFlags.canUndo },
+      { role: 'redo', enabled: params.editFlags.canRedo },
+      { type: 'separator' },
+      { role: 'cut', enabled: params.editFlags.canCut },
+      { role: 'copy', enabled: params.editFlags.canCopy },
+      { role: 'paste', enabled: params.editFlags.canPaste },
+      { type: 'separator' },
+      { role: 'selectAll', enabled: params.editFlags.canSelectAll },
+    ]);
+    editMenu.popup();
+  });
+
   // Persist window state whenever the user moves or resizes the window.
   let saveStateTimer = null;
   const scheduleSaveState = () => {
@@ -296,7 +314,23 @@ function createWindow() {
   }
 }
 
-Menu.setApplicationMenu(null);
+if (process.platform === 'darwin') {
+  // macOS routes standard clipboard/edit shortcuts (Cmd+C, Cmd+V, Cmd+X,
+  // Cmd+A, Cmd+Z) through the application menu's Edit-role items. Without
+  // an Edit menu, these key equivalents are never delivered to the focused
+  // text field, which breaks copy/paste everywhere in the app (e.g. the
+  // cURL import textarea). `appMenu`/`editMenu`/`windowMenu` roles let
+  // Electron auto-populate the standard macOS menu items and labels.
+  Menu.setApplicationMenu(Menu.buildFromTemplate([
+    { role: 'appMenu' },
+    { role: 'editMenu' },
+    { role: 'windowMenu' },
+  ]));
+} else {
+  // Windows/Linux: native OS-level clipboard shortcuts already work inside
+  // text fields without an application menu, so it's hidden for a cleaner UI.
+  Menu.setApplicationMenu(null);
+}
 app.whenReady().then(() => {
   // ─── Content-Security-Policy (#9) ─────────────────────────────────────────
   // Strict CSP applied to all renderer responses.  `blob:` is required for

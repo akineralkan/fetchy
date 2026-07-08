@@ -17,6 +17,7 @@
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\" \"test/**/*.ts\"",
     "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
     "electron:build": "node scripts/generate-icons.js && vite build && electron-builder",
+    "electron:build:mac": "export CSC_IDENTITY_AUTO_DISCOVERY=false && node scripts/generate-icons.js && vite build && electron-builder --mac --arm64 --x64 --publish=never",
     "electron:preview": "vite build && electron ."
   },
   "keywords": [
@@ -65,7 +66,10 @@
     "afterPack": "./scripts/after-pack.js",
     "mac": {
       "target": "dmg",
-      "icon": "build/icons/mac/icon.icns"
+      "icon": "build/icons/mac/icon.icns",
+      "category": "public.app-category.developer-tools",
+      "gatekeeperAssess": false,
+      "artifactName": "${productName}-${version}-${arch}.${ext}"
     },
     "linux": {
       "target": "AppImage",
