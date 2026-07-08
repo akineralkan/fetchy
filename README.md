@@ -246,6 +246,10 @@ Download `Fetchy.Setup.x.x.x.exe` and run it.
 #### macOS
 Download `Fetchy-x.x.x-arm64.dmg` (Apple Silicon) or `Fetchy-x.x.x-x64.dmg` (Intel), open the DMG, and drag **Fetchy** into your **Applications** folder.
 
+> **Not sure which one you need?** Click the  Apple menu → **About This Mac**. Under "Chip" (or "Processor"):
+> - `Apple M1` / `M2` / `M3` / `M4` (or anything starting with "Apple") → download the **arm64** `.dmg`
+> - `Intel Core i5` / `i7` / `i9` → download the **x64** `.dmg`
+
 > **First launch note:** Fetchy isn't notarized by Apple (that requires a paid Apple Developer account), so Gatekeeper will initially block it with an *"Apple could not verify..."* warning. To open it anyway (only needed once):
 > 1. In **Applications**, right-click (or Control-click) **Fetchy** and choose **Open**, then confirm **Open** in the dialog — *or*
 > 2. Run in Terminal: `xattr -cr /Applications/Fetchy.app` — *or*
@@ -254,9 +258,11 @@ Download `Fetchy-x.x.x-arm64.dmg` (Apple Silicon) or `Fetchy-x.x.x-x64.dmg` (Int
 ### Distribution
 
 After building, you'll find the installers in the `release` folder:
-- **Windows**: `Fetchy Setup x.x.x.exe` (NSIS installer)
-- **macOS**: `Fetchy-x.x.x-arm64.dmg` / `Fetchy-x.x.x-x64.dmg` — build both with `npm run electron:build:mac`
+- **Windows**: `Fetchy Setup x.x.x.exe` (NSIS installer, ~size varies with each release)
+- **macOS**: `Fetchy-x.x.x-arm64.dmg` (~130 MB) / `Fetchy-x.x.x-x64.dmg` (~140 MB) — build both locally with `npm run electron:build:mac`
 - **Linux**: `.AppImage` file
+
+Releases are published automatically by CI: pushing to `main` triggers [release-windows.yml](.github/workflows/release-windows.yml), which bumps the version, tags the commit, builds the Windows installer, and publishes a GitHub Release. That release's publication then triggers [release-mac.yml](.github/workflows/release-mac.yml), which checks out the same tag on a macOS runner, builds both the arm64 and x64 DMGs, and attaches them to the same release — so every release ends up with Windows and macOS installers together.
 
 ---
 
