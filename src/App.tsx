@@ -225,7 +225,7 @@ function App() {
 
       {/* Top bar */}
       <div
-        className={`h-12 bg-fetchy-sidebar border-b border-fetchy-border flex items-center pr-4 justify-between shrink-0 app-region-drag ${isMac ? 'pl-20' : 'pl-4'}`}
+        className={`h-12 bg-fetchy-sidebar border-b border-fetchy-border flex items-center pr-4 justify-between shrink-0 app-region-drag ${isMac ? 'pl-24' : 'pl-4'}`}
       >
         <div className="flex items-center gap-3">
           <img src="./logo.jpg" alt="Fetchy" className="h-8 w-8 rounded" />
