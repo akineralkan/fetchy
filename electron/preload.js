@@ -1,6 +1,9 @@
 ﻿const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
+  // Platform info (used to tailor UI/behavior, e.g. the macOS update flow)
+  platform: process.platform,
+
   // File operations
   openFile: (options) => ipcRenderer.invoke('open-file', options),
   saveFile: (data) => ipcRenderer.invoke('save-file', data),
