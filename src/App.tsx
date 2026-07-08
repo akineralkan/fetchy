@@ -26,6 +26,13 @@ import { useWorkspacesStore } from './store/workspacesStore';
 import { useKeyboardShortcuts, getEffectiveBinding, ShortcutHandler } from './hooks/useKeyboardShortcuts';
 import { AppMode } from './types';
 
+// macOS uses titleBarStyle: 'hiddenInset', which floats the traffic light
+// (close/minimize/maximize) buttons over the top-left of the content area
+// instead of reserving their own native title bar row. The top bar below
+// adds extra left padding and a drag region specifically for mac so the
+// logo/title never sits underneath those buttons.
+const isMac = (window as any).electronAPI?.platform === 'darwin';
+
 function App() {
   const {
     tabs,
@@ -217,14 +224,16 @@ function App() {
       )}
 
       {/* Top bar */}
-      <div className="h-12 bg-fetchy-sidebar border-b border-fetchy-border flex items-center px-4 justify-between shrink-0">
+      <div
+        className={`h-12 bg-fetchy-sidebar border-b border-fetchy-border flex items-center pr-4 justify-between shrink-0 app-region-drag ${isMac ? 'pl-20' : 'pl-4'}`}
+      >
         <div className="flex items-center gap-3">
           <img src="./logo.jpg" alt="Fetchy" className="h-8 w-8 rounded" />
           <div className="text-xl font-bold text-fetchy-accent">Fetchy</div>
           <span className="text-xs text-fetchy-text-muted italic">Local by design. Reliable by nature</span>
           <span className="text-xs text-fetchy-text-muted">v{__APP_VERSION__}</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 app-region-no-drag">
           <ModeDropdown activeMode={activeMode} onModeChange={setActiveMode} />
           <div className="w-px h-5 bg-fetchy-border" />
           <EnvironmentDropdown onOpenSettings={() => setShowEnvironmentModal(true)} />
