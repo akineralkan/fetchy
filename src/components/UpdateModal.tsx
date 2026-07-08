@@ -1,4 +1,4 @@
-import { X, Download, AlertCircle, CheckCircle, Loader2, RotateCw, ChevronDown, ChevronUp } from 'lucide-react';
+import { X, Download, AlertCircle, CheckCircle, Loader2, RotateCw, ChevronDown, ChevronUp, FolderOpen } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { compareVersions, parseReleaseEntries, type ReleaseEntry } from '../utils/updateUtils';
 
@@ -35,6 +35,12 @@ const CURRENT_VERSION = __APP_VERSION__;
 // Electron API may not be available in browser dev mode
 const api = (window as any).electronAPI;
 const isElectron = !!api?.updaterCheck;
+// macOS can't silently self-install (ad-hoc signing isn't accepted by
+// Squirrel.Mac across builds), so the UI shows a manual "open installer" step
+// there instead of an automatic restart.
+const isMac = isElectron
+  ? api?.platform === 'darwin'
+  : (typeof navigator !== 'undefined' && /Mac/i.test(navigator.platform));
 
 export default function UpdateModal({ onClose }: UpdateModalProps) {
   const [status, setStatus] = useState<UpdateStatus>('idle');
@@ -156,9 +162,12 @@ export default function UpdateModal({ onClose }: UpdateModalProps) {
     }
   }, []);
 
-  const handleInstall = useCallback(() => {
-    if (isElectron) {
-      api.updaterInstall();
+  const handleInstall = useCallback(async () => {
+    if (!isElectron) return;
+    const result = await api.updaterInstall();
+    if (result && result.success === false) {
+      setError(result.error ?? 'Failed to open the installer');
+      setStatus('error');
     }
   }, []);
 
@@ -271,7 +280,7 @@ export default function UpdateModal({ onClose }: UpdateModalProps) {
                 className="w-full btn btn-primary flex items-center justify-center gap-2"
               >
                 <Download size={18} />
-                Download &amp; Install Update
+                {isMac ? 'Download Update' : 'Download & Install Update'}
               </button>
             </div>
           )}
@@ -308,7 +317,9 @@ export default function UpdateModal({ onClose }: UpdateModalProps) {
                 <div>
                   <p className="font-medium mb-1">Update downloaded!</p>
                   <p className="text-sm">
-                    The update has been downloaded and is ready to install. Fetchy will restart to apply the update.
+                    {isMac
+                      ? 'The installer is ready. Opening it will mount the disk image — drag Fetchy into Applications to replace the old version, then reopen the app.'
+                      : 'The update has been downloaded and is ready to install. Fetchy will restart to apply the update.'}
                   </p>
                 </div>
               </div>
@@ -317,8 +328,8 @@ export default function UpdateModal({ onClose }: UpdateModalProps) {
                 onClick={handleInstall}
                 className="w-full btn btn-primary flex items-center justify-center gap-2"
               >
-                <RotateCw size={18} />
-                Restart &amp; Install
+                {isMac ? <FolderOpen size={18} /> : <RotateCw size={18} />}
+                {isMac ? 'Open Installer' : 'Restart & Install'}
               </button>
             </div>
           )}
