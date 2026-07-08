@@ -1,6 +1,6 @@
 {
   "name": "fetchy",
-  "version": "1.5.84",
+  "version": "1.5.85",
   "description": "Fetchy - Local by design. Reliable by nature.",
   "main": "electron/main.js",
   "scripts": {
@@ -65,7 +65,10 @@
     },
     "afterPack": "./scripts/after-pack.js",
     "mac": {
-      "target": ["dmg", "zip"],
+      "target": [
+        "dmg",
+        "zip"
+      ],
       "icon": "build/icons/mac/icon.icns",
       "category": "public.app-category.developer-tools",
       "gatekeeperAssess": false,
