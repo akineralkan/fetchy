@@ -14,6 +14,22 @@ html, body, #root {
   overflow: hidden;
 }
 
+/*
+ * macOS uses titleBarStyle: 'hiddenInset', which removes the native title
+ * bar but keeps the traffic light buttons floating over the web content.
+ * Since there's no native title bar left to drag the window by, the custom
+ * top bar (see App.tsx) opts itself into being a drag region, while any
+ * interactive controls inside it (buttons, dropdowns) opt back out so they
+ * stay clickable.
+ */
+.app-region-drag {
+  -webkit-app-region: drag;
+}
+
+.app-region-no-drag {
+  -webkit-app-region: no-drag;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   background-color: #1a1a24;

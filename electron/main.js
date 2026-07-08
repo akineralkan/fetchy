@@ -249,6 +249,12 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
     },
     titleBarStyle: 'hiddenInset',
+    // Pin the traffic light (close/minimize/maximize) buttons to a known
+    // position on macOS so the renderer can reserve exactly enough space
+    // for them in the custom top bar and avoid overlapping the logo/title.
+    // This option is a no-op on Windows/Linux, but we guard it anyway for
+    // clarity since it's a macOS-only concept.
+    ...(process.platform === 'darwin' ? { trafficLightPosition: { x: 16, y: 16 } } : {}),
     frame: true,
     backgroundColor: '#1a1a2e',
   });
