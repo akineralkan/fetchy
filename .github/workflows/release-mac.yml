@@ -5,14 +5,26 @@ name: Release macOS Installer
 # reacts to that same "release published" event, checks out the exact same
 # tag, builds the macOS DMGs (Apple Silicon + Intel), and attaches them to
 # that already-existing release so both platforms ship together.
+#
+# `workflow_dispatch` is also provided so a mac installer can be added
+# retroactively to a release that was published *before* this workflow
+# existed on the default branch (GitHub only evaluates `release: published`
+# against workflows already present on the default branch at the time the
+# release was created, so past releases never auto-trigger this).
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Existing release tag to attach the macOS installers to (e.g. v1.5.82)'
+        required: true
+        type: string
 
 jobs:
   build-mac:
     # Only run for the version-tag releases produced by release-windows.yml
-    if: ${{ !github.event.release.prerelease && startsWith(github.event.release.tag_name, 'v') }}
+    if: ${{ github.event_name == 'workflow_dispatch' || (!github.event.release.prerelease && startsWith(github.event.release.tag_name, 'v')) }}
     runs-on: macos-latest
 
     permissions:
@@ -22,7 +34,7 @@ jobs:
       - name: Checkout release tag
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ github.event.inputs.tag_name || github.event.release.tag_name }}
           fetch-depth: 0
 
       - name: Setup Node.js
@@ -46,7 +58,7 @@ jobs:
       - name: Upload macOS installers to the release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.event.release.tag_name }}
+          tag_name: ${{ github.event.inputs.tag_name || github.event.release.tag_name }}
           files: |
             release/*.dmg
             release/*.dmg.blockmap
