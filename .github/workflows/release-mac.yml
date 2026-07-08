@@ -1,16 +1,22 @@
 name: Release macOS Installer
 
 # The Windows workflow (release-windows.yml) bumps the version, tags main,
-# and publishes the GitHub Release with the Windows installer. This workflow
-# reacts to that same "release published" event, checks out the exact same
-# tag, builds the macOS DMGs (Apple Silicon + Intel), and attaches them to
-# that already-existing release so both platforms ship together.
+# publishes the GitHub Release with the Windows installer, and then
+# explicitly dispatches THIS workflow (passing the new tag) so the macOS
+# DMGs (Apple Silicon + Intel) get built and attached to that same release.
 #
-# `workflow_dispatch` is also provided so a mac installer can be added
-# retroactively to a release that was published *before* this workflow
-# existed on the default branch (GitHub only evaluates `release: published`
-# against workflows already present on the default branch at the time the
-# release was created, so past releases never auto-trigger this).
+# Why an explicit dispatch instead of just reacting to `release: published`?
+# Releases/tags created via the API using the default GITHUB_TOKEN do NOT
+# cascade into other workflows' event triggers — GitHub blocks this
+# specifically to prevent infinite recursive workflow runs. `workflow_dispatch`
+# is exempt from that restriction, which is why release-windows.yml calls
+# `gh workflow run release-mac.yml -f tag_name=...` rather than relying on
+# this workflow's `release: published` trigger to fire on its own.
+#
+# The `release: published` trigger is kept as a fallback for releases
+# published manually by a human via the GitHub UI (a real user action isn't
+# subject to the GITHUB_TOKEN cascade restriction). `workflow_dispatch` also
+# doubles as a way to add a mac installer retroactively to any past release.
 on:
   release:
     types: [published]
