@@ -1,0 +1,73 @@
+name: Release macOS Installer
+
+# The Windows workflow (release-windows.yml) bumps the version, tags main,
+# publishes the GitHub Release with the Windows installer, and then
+# explicitly dispatches THIS workflow (passing the new tag) so the macOS
+# DMGs (Apple Silicon + Intel) get built and attached to that same release.
+#
+# Why an explicit dispatch instead of just reacting to `release: published`?
+# Releases/tags created via the API using the default GITHUB_TOKEN do NOT
+# cascade into other workflows' event triggers — GitHub blocks this
+# specifically to prevent infinite recursive workflow runs. `workflow_dispatch`
+# is exempt from that restriction, which is why release-windows.yml calls
+# `gh workflow run release-mac.yml -f tag_name=...` rather than relying on
+# this workflow's `release: published` trigger to fire on its own.
+#
+# The `release: published` trigger is kept as a fallback for releases
+# published manually by a human via the GitHub UI (a real user action isn't
+# subject to the GITHUB_TOKEN cascade restriction). `workflow_dispatch` also
+# doubles as a way to add a mac installer retroactively to any past release.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Existing release tag to attach the macOS installers to (e.g. v1.5.82)'
+        required: true
+        type: string
+
+jobs:
+  build-mac:
+    # Only run for the version-tag releases produced by release-windows.yml
+    if: ${{ github.event_name == 'workflow_dispatch' || (!github.event.release.prerelease && startsWith(github.event.release.tag_name, 'v')) }}
+    runs-on: macos-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout release tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag_name || github.event.release.tag_name }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build macOS installers (Apple Silicon + Intel)
+        run: npm run electron:build:mac
+        env:
+          # There is no Developer ID certificate in this runner's keychain,
+          # and there never will be one (no paid Apple Developer account).
+          # Disabling auto-discovery keeps the build deterministic: it falls
+          # straight to an ad-hoc signature, which is the minimum required
+          # for the app to even launch on Apple Silicon.
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      - name: Upload macOS installers to the release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.tag_name || github.event.release.tag_name }}
+          files: |
+            release/*.dmg
+            release/*.dmg.blockmap
+            release/latest-mac.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

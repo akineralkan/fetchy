@@ -11,6 +11,7 @@ jobs:
 
     permissions:
       contents: write
+      actions: write
 
     steps:
       - name: Checkout repository
@@ -167,3 +168,15 @@ jobs:
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Trigger macOS installer build for this release
+        shell: bash
+        # Releases/tags created using the default GITHUB_TOKEN do NOT cascade
+        # into other workflows' `release: published` triggers (GitHub blocks
+        # this to prevent infinite recursive runs). `workflow_dispatch` is
+        # explicitly exempt from that restriction, so we dispatch the macOS
+        # workflow directly here instead of relying on it to auto-trigger.
+        run: gh workflow run release-mac.yml --ref main -f tag_name=${{ steps.version.outputs.tag }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
