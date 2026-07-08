@@ -65,7 +65,7 @@
     },
     "afterPack": "./scripts/after-pack.js",
     "mac": {
-      "target": "dmg",
+      "target": ["dmg", "zip"],
       "icon": "build/icons/mac/icon.icns",
       "category": "public.app-category.developer-tools",
       "gatekeeperAssess": false,
