@@ -95,7 +95,19 @@ jobs:
             fi
 
             echo "::warning::$tag (${age_minutes} minutes old) is missing a macOS installer -- dispatching release-mac.yml"
-            gh workflow run release-mac.yml --ref main -f tag_name="$tag"
+            # --repo is required here: this job never checks out the
+            # repository (it only needs the GitHub API), so there is no
+            # local git checkout for `gh` to auto-detect the repo from.
+            # Without an explicit --repo, `gh workflow run` fails with
+            # "failed to run git: fatal: not a git repository". Explicitly
+            # naming the repo avoids needing a checkout step at all.
+            # The dispatch failure is intentionally non-fatal (|| true) so
+            # that one bad dispatch (rate limit, transient API error, etc.)
+            # never aborts the loop and skips checking every older release
+            # still waiting behind it in the list.
+            if ! gh workflow run release-mac.yml --repo "${GITHUB_REPOSITORY}" --ref main -f tag_name="$tag"; then
+              echo "::error::Failed to dispatch release-mac.yml for $tag -- will retry on the next run"
+            fi
           done
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
