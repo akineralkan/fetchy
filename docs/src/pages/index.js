@@ -94,37 +94,37 @@ const COMPARISON_TOOLS = [
   {key: 'thunder', label: 'Thunder Client'},
 ];
 
-const YES = {label: 'Yes', variant: 'yes'};
-const NO = {label: 'No', variant: 'no'};
-const cell = (label, variant) => ({label, variant});
+const YES = {label: 'Yes'};
+const NO = {label: 'No'};
+const cell = (label) => ({label});
 
 const COMPARISON_ROWS = [
   {
     feature: 'Price',
-    fetchy: cell('Free', 'yes'),
-    postman: cell('Paid', 'no'),
-    insomnia: cell('Paid', 'no'),
-    bruno: cell('Free', 'yes'),
-    hoppscotch: cell('Free', 'yes'),
-    thunder: cell('Paid', 'no'),
+    fetchy: cell('Free'),
+    postman: cell('Paid'),
+    insomnia: cell('Paid'),
+    bruno: cell('Free'),
+    hoppscotch: cell('Free'),
+    thunder: cell('Paid'),
   },
   {
     feature: 'Account / sign-up required',
     fetchy: NO,
     postman: YES,
-    insomnia: cell('Partial', 'partial'),
+    insomnia: cell('Partial'),
     bruno: NO,
-    hoppscotch: cell('Optional', 'partial'),
+    hoppscotch: cell('Optional'),
     thunder: NO,
   },
   {
     feature: 'Cloud sync forced',
     fetchy: NO,
     postman: YES,
-    insomnia: cell('Partial', 'partial'),
+    insomnia: cell('Partial'),
     bruno: NO,
-    hoppscotch: cell('Partial', 'partial'),
-    thunder: cell('Partial', 'partial'),
+    hoppscotch: cell('Partial'),
+    thunder: cell('Partial'),
   },
   {
     feature: 'Telemetry / tracking',
@@ -132,14 +132,14 @@ const COMPARISON_ROWS = [
     postman: YES,
     insomnia: YES,
     bruno: NO,
-    hoppscotch: cell('Unclear', 'partial'),
-    thunder: cell('Unclear', 'partial'),
+    hoppscotch: cell('Unclear'),
+    thunder: cell('Unclear'),
   },
   {
     feature: 'Fully open source',
     fetchy: YES,
     postman: NO,
-    insomnia: cell('Partial', 'partial'),
+    insomnia: cell('Partial'),
     bruno: YES,
     hoppscotch: YES,
     thunder: NO,
@@ -150,14 +150,14 @@ const COMPARISON_ROWS = [
     postman: YES,
     insomnia: YES,
     bruno: YES,
-    hoppscotch: cell('Partial', 'partial'),
+    hoppscotch: cell('Partial'),
     thunder: NO,
   },
   {
     feature: 'AI Assistant built-in',
     fetchy: YES,
-    postman: cell('Partial', 'partial'),
-    insomnia: cell('Partial', 'partial'),
+    postman: cell('Partial'),
+    insomnia: cell('Partial'),
     bruno: NO,
     hoppscotch: NO,
     thunder: NO,
@@ -165,7 +165,7 @@ const COMPARISON_ROWS = [
   {
     feature: 'Jira integration',
     fetchy: YES,
-    postman: cell('Partial', 'partial'),
+    postman: cell('Partial'),
     insomnia: NO,
     bruno: NO,
     hoppscotch: NO,
@@ -178,53 +178,51 @@ const COMPARISON_ROWS = [
     insomnia: YES,
     bruno: YES,
     hoppscotch: YES,
-    thunder: cell('Basic', 'no'),
+    thunder: cell('Basic'),
   },
   {
     feature: 'Code generation languages',
-    fetchy: cell('Extensive', 'yes'),
-    postman: cell('Limited', 'no'),
-    insomnia: cell('Limited', 'no'),
-    bruno: cell('Limited', 'no'),
-    hoppscotch: cell('Limited', 'no'),
-    thunder: cell('Limited', 'no'),
+    fetchy: cell('Extensive'),
+    postman: cell('Limited'),
+    insomnia: cell('Limited'),
+    bruno: cell('Limited'),
+    hoppscotch: cell('Limited'),
+    thunder: cell('Limited'),
   },
   {
     feature: 'Import Postman / OpenAPI / cURL',
     fetchy: YES,
-    postman: cell('N/A', 'no'),
+    postman: cell('N/A'),
     insomnia: YES,
     bruno: YES,
     hoppscotch: YES,
-    thunder: cell('Partial', 'partial'),
+    thunder: cell('Partial'),
   },
   {
     feature: 'Built-in themes',
-    fetchy: cell('Extensive', 'yes'),
-    postman: cell('Basic', 'no'),
-    insomnia: cell('Basic', 'no'),
-    bruno: cell('Basic', 'no'),
-    hoppscotch: cell('Basic', 'no'),
-    thunder: cell('Basic', 'no'),
+    fetchy: cell('Extensive'),
+    postman: cell('Basic'),
+    insomnia: cell('Basic'),
+    bruno: cell('Basic'),
+    hoppscotch: cell('Basic'),
+    thunder: cell('Basic'),
   },
   {
     feature: 'Unlimited Collection Runner',
-    fetchy: cell('Unlimited', 'yes'),
-    postman: cell('Limited', 'no'),
-    insomnia: cell('Unlimited', 'yes'),
-    bruno: cell('Unlimited', 'yes'),
-    hoppscotch: cell('Unlimited', 'yes'),
-    thunder: cell('Limited', 'no'),
+    fetchy: cell('Unlimited'),
+    postman: cell('Limited'),
+    insomnia: cell('Unlimited'),
+    bruno: cell('Unlimited'),
+    hoppscotch: cell('Unlimited'),
+    thunder: cell('Limited'),
   },
 ];
 
-function ComparisonCell({data, className}) {
+function ComparisonCell({data, isFetchy, className}) {
   if (!data) return <td className={className}>—</td>;
-  const variantClass =
-    data.variant === 'yes' ? styles.cellYes : data.variant === 'no' ? styles.cellNo : styles.cellPartial;
   return (
     <td className={className}>
-      <span className={variantClass}>{data.label}</span>
+      <span className={isFetchy ? styles.cellFetchy : undefined}>{data.label}</span>
     </td>
   );
 }
@@ -260,6 +258,7 @@ function ComparisonSection() {
                     <ComparisonCell
                       key={key}
                       data={row[key]}
+                      isFetchy={key === 'fetchy'}
                       className={key === 'fetchy' ? styles.fetchyColumn : undefined}
                     />
                   ))}
