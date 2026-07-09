@@ -6,7 +6,7 @@ import { describe, it, expect } from 'vitest';
 
 // jiraHandler.js is a CommonJS module
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { validateJiraUrl } = require('../electron/ipc/jiraHandler');
+const { validateJiraUrl, buildAuthHeader } = require('../electron/ipc/jiraHandler');
 
 // ─── validateJiraUrl ─────────────────────────────────────────────────────────
 
@@ -395,6 +395,29 @@ describe('insightKeyExtraction', () => {
 
   it('handles value with multiple parentheses (uses first match)', () => {
     expect(extractInsightKey('A (ABC-1) and (DEF-2)')).toBe('ABC-1');
+  });
+});
+
+// ─── buildAuthHeader (Jira Cloud vs Server/Data Center auth) ────────────────
+// Jira Cloud (*.atlassian.net) requires Basic auth (email + API token); Jira
+// Server/Data Center Personal Access Tokens require Bearer auth. Regression
+// coverage for the 403 bug where Bearer-only auth broke Jira Cloud requests.
+
+describe('buildAuthHeader', () => {
+  it('uses Basic auth (base64 email:token) when an email is provided, for Jira Cloud', () => {
+    const header = buildAuthHeader({ pat: 'my-token', email: 'user@example.com' });
+    const expected = `Basic ${Buffer.from('user@example.com:my-token').toString('base64')}`;
+    expect(header).toBe(expected);
+  });
+
+  it('uses Bearer auth when no email is provided, for Jira Server/Data Center PATs', () => {
+    const header = buildAuthHeader({ pat: 'my-token' });
+    expect(header).toBe('Bearer my-token');
+  });
+
+  it('falls back to Bearer auth when email is an empty string', () => {
+    const header = buildAuthHeader({ pat: 'my-token', email: '' });
+    expect(header).toBe('Bearer my-token');
   });
 });
 

@@ -9,6 +9,7 @@ interface PreferencesStore {
   aiSettings: AISettings; // In-memory AI settings (NOT persisted in preferences.json)
   jiraSettings: JiraSettings; // In-memory Jira settings (PAT stored separately)
   jiraPat: string; // In-memory PAT (never persisted in preferences.json)
+  jiraEmail: string; // In-memory Atlassian account email (never persisted in preferences.json)
   isLoading: boolean;
   isElectron: boolean;
 
@@ -20,6 +21,7 @@ interface PreferencesStore {
   loadJiraSecrets: () => Promise<void>;
   updateJiraSettings: (updates: Partial<JiraSettings>) => Promise<void>;
   updateJiraPat: (pat: string) => Promise<void>;
+  updateJiraEmail: (email: string) => Promise<void>;
   updateKeyboardShortcuts: (config: KeyboardShortcutsConfig) => Promise<void>;
   selectHomeDirectory: () => Promise<string | null>;
   setHomeDirectory: (directory: string, migrateData?: boolean) => Promise<boolean>;
@@ -58,6 +60,7 @@ export const usePreferencesStore = create<PreferencesStore>()((set, get) => ({
   aiSettings: { ...defaultAISettings },
   jiraSettings: { ...defaultJiraSettings },
   jiraPat: '',
+  jiraEmail: '',
   isLoading: true,
   isElectron: typeof window !== 'undefined' && !!window.electronAPI,
 
@@ -191,8 +194,9 @@ export const usePreferencesStore = create<PreferencesStore>()((set, get) => ({
   },
 
   /**
-   * Load Jira PAT from the separate secrets file (jira-secrets).
-   * Called once on app startup, after loadPreferences.
+   * Load Jira PAT (and account email, for Jira Cloud Basic auth) from the
+   * separate secrets file (jira-secrets). Called once on app startup, after
+   * loadPreferences.
    */
   loadJiraSecrets: async () => {
     const { isElectron } = get();
@@ -202,8 +206,8 @@ export const usePreferencesStore = create<PreferencesStore>()((set, get) => ({
         const raw = await window.electronAPI.readJiraSecrets();
         if (raw) {
           const stored: JiraSecretsStorage = JSON.parse(raw);
-          if (stored?.pat) {
-            set({ jiraPat: stored.pat });
+          if (stored?.pat || stored?.email) {
+            set({ jiraPat: stored.pat || '', jiraEmail: stored.email || '' });
             return;
           }
         }
@@ -216,8 +220,8 @@ export const usePreferencesStore = create<PreferencesStore>()((set, get) => ({
         const raw = localStorage.getItem('fetchy-jira-secrets');
         if (raw) {
           const stored: JiraSecretsStorage = JSON.parse(raw);
-          if (stored?.pat) {
-            set({ jiraPat: stored.pat });
+          if (stored?.pat || stored?.email) {
+            set({ jiraPat: stored.pat || '', jiraEmail: stored.email || '' });
             return;
           }
         }
@@ -238,21 +242,46 @@ export const usePreferencesStore = create<PreferencesStore>()((set, get) => ({
   },
 
   /**
-   * Update Jira PAT and persist to the secrets file.
+   * Update Jira PAT and persist to the secrets file (preserving the stored email).
    */
   updateJiraPat: async (pat: string) => {
-    const { isElectron } = get();
+    const { isElectron, jiraEmail } = get();
     set({ jiraPat: pat });
 
-    if (pat) {
-      const storage: JiraSecretsStorage = { version: '1.0', pat };
+    if (pat || jiraEmail) {
+      const storage: JiraSecretsStorage = { version: '1.0', pat, email: jiraEmail };
       if (isElectron && window.electronAPI) {
         await window.electronAPI.writeJiraSecrets({ content: JSON.stringify(storage, null, 2) });
       } else {
         localStorage.setItem('fetchy-jira-secrets', JSON.stringify(storage));
       }
     } else {
-      // PAT cleared – delete the secrets file
+      // PAT cleared and no email set – delete the secrets file
+      if (isElectron && window.electronAPI) {
+        await window.electronAPI.deleteJiraSecrets();
+      } else {
+        localStorage.removeItem('fetchy-jira-secrets');
+      }
+    }
+  },
+
+  /**
+   * Update the Atlassian account email (used for Jira Cloud Basic auth
+   * alongside the API token) and persist to the secrets file.
+   */
+  updateJiraEmail: async (email: string) => {
+    const { isElectron, jiraPat } = get();
+    set({ jiraEmail: email });
+
+    if (jiraPat || email) {
+      const storage: JiraSecretsStorage = { version: '1.0', pat: jiraPat, email };
+      if (isElectron && window.electronAPI) {
+        await window.electronAPI.writeJiraSecrets({ content: JSON.stringify(storage, null, 2) });
+      } else {
+        localStorage.setItem('fetchy-jira-secrets', JSON.stringify(storage));
+      }
+    } else {
+      // Both cleared – delete the secrets file
       if (isElectron && window.electronAPI) {
         await window.electronAPI.deleteJiraSecrets();
       } else {

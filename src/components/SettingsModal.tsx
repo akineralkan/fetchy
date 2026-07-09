@@ -14,7 +14,7 @@ interface SettingsModalProps {
 }
 
 export default function SettingsModal({ isOpen, onClose, onOpenWorkspaces, initialTab }: SettingsModalProps) {
-  const { preferences, savePreferences, aiSettings: ai, updateAISettings, jiraSettings, jiraPat, updateJiraSettings, updateJiraPat } = usePreferencesStore();
+  const { preferences, savePreferences, aiSettings: ai, updateAISettings, jiraSettings, jiraPat, jiraEmail, updateJiraSettings, updateJiraPat, updateJiraEmail } = usePreferencesStore();
   const { panelLayout, setPanelLayout } = useAppStore();
   const { workspaces, activeWorkspaceId } = useWorkspacesStore();
   const activeWorkspace = workspaces.find((w) => w.id === activeWorkspaceId) ?? null;
@@ -73,7 +73,7 @@ export default function SettingsModal({ isOpen, onClose, onOpenWorkspaces, initi
     setJiraTestMessage('');
     try {
       if (window.electronAPI?.jiraTestConnection) {
-        const result = await window.electronAPI.jiraTestConnection({ baseUrl: jiraSettings.baseUrl, pat: jiraPat });
+        const result = await window.electronAPI.jiraTestConnection({ baseUrl: jiraSettings.baseUrl, pat: jiraPat, email: jiraEmail });
         if (result.success) {
           setJiraTestStatus('success');
           setJiraTestMessage(result.message);
@@ -562,22 +562,38 @@ export default function SettingsModal({ isOpen, onClose, onOpenWorkspaces, initi
                 />
               </div>
 
+              {/* Account Email (required by Jira Cloud for Basic auth alongside the API token) */}
+              <div className='space-y-1.5'>
+                <label className='text-sm text-gray-300 font-medium'>Atlassian Account Email</label>
+                <input
+                  type='email'
+                  value={jiraEmail}
+                  onChange={(e) => updateJiraEmail(e.target.value)}
+                  placeholder='you@example.com'
+                  className='w-full px-3 py-2 bg-[#0f0f1a] border border-[#2d2d44] rounded text-white text-sm focus:outline-none focus:border-purple-500 font-mono'
+                />
+                <p className='text-xs text-gray-500'>
+                  Required for Jira Cloud (*.atlassian.net) instances — API tokens authenticate via Basic auth using your account email + token.
+                  Leave blank only for Jira Server/Data Center Personal Access Tokens.
+                </p>
+              </div>
+
               {/* PAT */}
               <div className='space-y-1.5'>
-                <label className='text-sm text-gray-300 font-medium'>Personal Access Token (PAT)</label>
+                <label className='text-sm text-gray-300 font-medium'>API Token / Personal Access Token (PAT)</label>
                 <div className='relative'>
                   <input
                     type={showJiraPat ? 'text' : 'password'}
                     value={jiraPat}
                     onChange={(e) => updateJiraPat(e.target.value)}
-                    placeholder='Enter your Jira PAT'
+                    placeholder='Enter your Jira API token / PAT'
                     className='w-full px-3 py-2 pr-10 bg-[#0f0f1a] border border-[#2d2d44] rounded text-white text-sm focus:outline-none focus:border-purple-500 font-mono'
                   />
                   <button onClick={() => setShowJiraPat(!showJiraPat)} className='absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300'>
                     {showJiraPat ? <EyeOff size={14} /> : <Eye size={14} />}
                   </button>
                 </div>
-                <p className='text-xs text-gray-500'>Your PAT is stored encrypted in the workspace secrets folder</p>
+                <p className='text-xs text-gray-500'>Your token is stored encrypted in the workspace secrets folder</p>
               </div>
 
               {/* Project Key */}

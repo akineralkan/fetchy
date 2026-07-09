@@ -38,6 +38,7 @@ const savePreferences = vi.fn();
 const updateAISettings = vi.fn();
 const updateJiraSettings = vi.fn();
 const updateJiraPat = vi.fn();
+const updateJiraEmail = vi.fn();
 const setPanelLayout = vi.fn();
 const onClose = vi.fn();
 const onOpenWorkspaces = vi.fn();
@@ -65,8 +66,10 @@ function mockStores() {
       fieldMappings: [],
     },
     jiraPat: '',
+    jiraEmail: '',
     updateJiraSettings,
     updateJiraPat,
+    updateJiraEmail,
   } as ReturnType<typeof usePreferencesStore>);
 
   vi.mocked(useAppStore).mockReturnValue({
@@ -307,9 +310,17 @@ describe('SettingsModal', () => {
   it('updates Jira PAT', () => {
     mockStores();
     render(<SettingsModal isOpen={true} onClose={onClose} onOpenWorkspaces={onOpenWorkspaces} initialTab="integrations" />);
-    const input = screen.getByPlaceholderText('Enter your Jira PAT');
+    const input = screen.getByPlaceholderText('Enter your Jira API token / PAT');
     fireEvent.change(input, { target: { value: 'my-pat-token' } });
     expect(updateJiraPat).toHaveBeenCalledWith('my-pat-token');
+  });
+
+  it('updates Jira account email', () => {
+    mockStores();
+    render(<SettingsModal isOpen={true} onClose={onClose} onOpenWorkspaces={onOpenWorkspaces} initialTab="integrations" />);
+    const input = screen.getByPlaceholderText('you@example.com');
+    fireEvent.change(input, { target: { value: 'user@example.com' } });
+    expect(updateJiraEmail).toHaveBeenCalledWith('user@example.com');
   });
 
   it('updates Jira project key', () => {
@@ -323,7 +334,7 @@ describe('SettingsModal', () => {
   it('toggles Jira PAT visibility', () => {
     mockStores();
     render(<SettingsModal isOpen={true} onClose={onClose} onOpenWorkspaces={onOpenWorkspaces} initialTab="integrations" />);
-    const patInput = screen.getByPlaceholderText('Enter your Jira PAT') as HTMLInputElement;
+    const patInput = screen.getByPlaceholderText('Enter your Jira API token / PAT') as HTMLInputElement;
     expect(patInput.type).toBe('password');
     const toggleBtn = patInput.parentElement!.querySelector('button')!;
     fireEvent.click(toggleBtn);

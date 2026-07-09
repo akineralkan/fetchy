@@ -26,17 +26,34 @@ function validateJiraUrl(url) {
 }
 
 /**
+ * Build the Authorization header value for a Jira API request.
+ *
+ * Jira Cloud (*.atlassian.net) requires Basic auth with an account email +
+ * API token. Jira Server/Data Center Personal Access Tokens use Bearer auth
+ * instead. When `email` is provided (non-empty), Basic auth is used;
+ * otherwise falls back to Bearer.
+ *
+ * @param {{pat: string, email?: string}} creds
+ * @returns {string} - The full "Basic ..." or "Bearer ..." header value
+ */
+function buildAuthHeader({ pat, email }) {
+  return email
+    ? `Basic ${Buffer.from(`${email}:${pat}`).toString('base64')}`
+    : `Bearer ${pat}`;
+}
+
+/**
  * Make an HTTPS request to the Jira REST API.
  *
  * @param {URL} baseUrl - Parsed Jira base URL
  * @param {string} apiPath - API path (e.g. '/rest/api/2/issue')
  * @param {string} method - HTTP method
- * @param {string} pat - Personal Access Token
+ * @param {{pat: string, email?: string}} creds - Auth credentials. See `buildAuthHeader`.
  * @param {object|null} body - JSON body to send (null for GET)
  * @param {object} deps - Shared dependencies (loadPreferences for proxy)
  * @returns {Promise<{status: number, body: object}>}
  */
-function jiraRequest(baseUrl, apiPath, method, pat, body, deps) {
+function jiraRequest(baseUrl, apiPath, method, creds, body, deps) {
   return new Promise((resolve, reject) => {
     const jsonBody = body ? JSON.stringify(body) : null;
 
@@ -46,7 +63,7 @@ function jiraRequest(baseUrl, apiPath, method, pat, body, deps) {
       path: apiPath,
       method,
       headers: {
-        'Authorization': `Bearer ${pat}`,
+        'Authorization': buildAuthHeader(creds),
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
@@ -114,9 +131,11 @@ function register(ipcMain, deps) {
         return { success: false, error: 'Jira PAT not configured. Please set it in Settings > Integrations.' };
       }
       let pat;
+      let email;
       try {
         const stored = JSON.parse(raw);
         pat = stored.pat;
+        email = stored.email;
       } catch {
         return { success: false, error: 'Invalid Jira secrets file.' };
       }
@@ -142,7 +161,7 @@ function register(ipcMain, deps) {
         }
       }
 
-      const result = await jiraRequest(parsedUrl, '/rest/api/2/issue', 'POST', pat, { fields }, deps);
+      const result = await jiraRequest(parsedUrl, '/rest/api/2/issue', 'POST', { pat, email }, { fields }, deps);
 
       if (result.status === 201 || result.status === 200) {
         const issueKey = result.body.key;
@@ -178,9 +197,10 @@ function register(ipcMain, deps) {
       requireObject(data, 'data');
       const baseUrl = requireString(data.baseUrl, 'baseUrl', 500);
       const pat = requireString(data.pat, 'pat', 1000);
+      const email = optionalString(data.email, 'email', 320);
 
       const parsedUrl = validateJiraUrl(baseUrl);
-      const result = await jiraRequest(parsedUrl, '/rest/api/2/myself', 'GET', pat, null, deps);
+      const result = await jiraRequest(parsedUrl, '/rest/api/2/myself', 'GET', { pat, email: email || undefined }, null, deps);
 
       if (result.status === 200) {
         const displayName = result.body.displayName || result.body.name || 'Unknown';
@@ -211,9 +231,11 @@ function register(ipcMain, deps) {
         return { success: false, error: 'Jira PAT not configured.' };
       }
       let pat;
+      let email;
       try {
         const stored = JSON.parse(raw);
         pat = stored.pat;
+        email = stored.email;
       } catch {
         return { success: false, error: 'Invalid Jira secrets file.' };
       }
@@ -222,12 +244,12 @@ function register(ipcMain, deps) {
       }
 
       const apiPath = `/rest/api/2/issue/createmeta?projectKeys=${encodeURIComponent(projectKey)}&issuetypeNames=${encodeURIComponent(issueType)}&expand=projects.issuetypes.fields`;
-      let result = await jiraRequest(parsedUrl, apiPath, 'GET', pat, null, deps);
+      let result = await jiraRequest(parsedUrl, apiPath, 'GET', { pat, email }, null, deps);
 
       // Newer Jira versions deprecated the old createmeta endpoint — fall back to the v2 approach
       if (result.status !== 200) {
         // Step 1: Look up issue type ID via project metadata
-        const projectResult = await jiraRequest(parsedUrl, `/rest/api/2/project/${encodeURIComponent(projectKey)}`, 'GET', pat, null, deps);
+        const projectResult = await jiraRequest(parsedUrl, `/rest/api/2/project/${encodeURIComponent(projectKey)}`, 'GET', { pat, email }, null, deps);
         if (projectResult.status !== 200) {
           return { success: false, error: `Project "${projectKey}" not found (HTTP ${projectResult.status})` };
         }
@@ -240,7 +262,7 @@ function register(ipcMain, deps) {
 
         // Step 2: Fetch fields for this issue type using the newer createmeta endpoint
         const fieldsPath = `/rest/api/2/issue/createmeta/${encodeURIComponent(projectKey)}/issuetypes/${matchedType.id}`;
-        result = await jiraRequest(parsedUrl, fieldsPath, 'GET', pat, null, deps);
+        result = await jiraRequest(parsedUrl, fieldsPath, 'GET', { pat, email }, null, deps);
 
         if (result.status === 200) {
           // Newer endpoint returns { values: [...] } array of field objects
@@ -323,9 +345,11 @@ function register(ipcMain, deps) {
         return { success: false, error: 'Jira PAT not configured.' };
       }
       let pat;
+      let email;
       try {
         const stored = JSON.parse(raw);
         pat = stored.pat;
+        email = stored.email;
       } catch {
         return { success: false, error: 'Invalid Jira secrets file.' };
       }
@@ -338,7 +362,7 @@ function register(ipcMain, deps) {
 
       // Try the JQL autocomplete suggestions endpoint first (works for Insight fields)
       const suggestPath = `/rest/api/2/jql/autocompletedata/suggestions?fieldName=cf[${encodeURIComponent(numericId)}]&fieldValue=${encodeURIComponent(query)}`;
-      const suggestResult = await jiraRequest(parsedUrl, suggestPath, 'GET', pat, null, deps);
+      const suggestResult = await jiraRequest(parsedUrl, suggestPath, 'GET', { pat, email }, null, deps);
 
       if (suggestResult.status === 200 && suggestResult.body.results && suggestResult.body.results.length > 0) {
         const objects = suggestResult.body.results.slice(0, 50).map((r) => ({
@@ -351,7 +375,7 @@ function register(ipcMain, deps) {
       // Fallback: try the Insight REST API with IQL
       const iqlQuery = query ? `Name LIKE "${query}"` : '';
       const insightPath = `/rest/insight/1.0/customfield/${encodeURIComponent(customFieldId)}?query=${encodeURIComponent(iqlQuery)}&pageSize=50`;
-      const insightResult = await jiraRequest(parsedUrl, insightPath, 'GET', pat, null, deps);
+      const insightResult = await jiraRequest(parsedUrl, insightPath, 'GET', { pat, email }, null, deps);
 
       if (insightResult.status === 200) {
         const items = insightResult.body.objects || insightResult.body || [];
@@ -375,4 +399,4 @@ function register(ipcMain, deps) {
   });
 }
 
-module.exports = { register, validateJiraUrl };
+module.exports = { register, validateJiraUrl, buildAuthHeader };

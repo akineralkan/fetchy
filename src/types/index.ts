@@ -241,6 +241,8 @@ export interface JiraSettings {
 export interface JiraSecretsStorage {
   version: string;
   pat: string;
+  /** Atlassian account email, required for Jira Cloud Basic auth alongside the API token */
+  email?: string;
 }
 
 export interface JiraCreateIssueResult {
@@ -513,6 +515,7 @@ export interface ElectronAPI {
   jiraTestConnection: (data: {
     baseUrl: string;
     pat: string;
+    email?: string;
   }) => Promise<{ success: boolean; message: string }>;
   jiraGetCreateMeta: (data: {
     baseUrl: string;
