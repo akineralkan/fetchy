@@ -95,6 +95,92 @@
   color: var(--ifm-color-emphasis-700);
 }
 
+/* Comparison Matrix */
+.comparisonSection {
+  padding: 4rem 0;
+}
+
+.comparisonScroll {
+  overflow-x: auto;
+  margin-top: 2rem;
+  border-radius: 12px;
+  border: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.comparisonTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  min-width: 820px;
+}
+
+.comparisonTable th,
+.comparisonTable td {
+  padding: 0.75rem 1rem;
+  text-align: center;
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+  white-space: nowrap;
+}
+
+.comparisonTable thead th {
+  background: var(--ifm-background-surface-color);
+  font-size: 0.95rem;
+  position: sticky;
+  top: 0;
+}
+
+.comparisonTable tbody th {
+  text-align: left;
+  font-weight: 500;
+  white-space: normal;
+  min-width: 220px;
+}
+
+.comparisonTable tbody tr:last-child td,
+.comparisonTable tbody tr:last-child th {
+  border-bottom: none;
+}
+
+.comparisonTable tbody tr:hover td,
+.comparisonTable tbody tr:hover th {
+  background: var(--ifm-color-emphasis-100);
+}
+
+.fetchyColumn {
+  background: rgba(59, 130, 246, 0.08);
+  border-left: 2px solid var(--ifm-color-primary);
+  border-right: 2px solid var(--ifm-color-primary);
+  font-weight: 600;
+}
+
+.winnerBadge {
+  display: inline-block;
+  margin-top: 0.15rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--ifm-color-primary);
+  letter-spacing: 0.03em;
+}
+
+.cellYes {
+  color: #22c55e;
+}
+
+.cellNo {
+  color: var(--ifm-color-emphasis-500);
+}
+
+.cellPartial {
+  color: #eab308;
+}
+
+.comparisonNote {
+  margin-top: 1rem;
+  font-size: 0.8rem;
+  color: var(--ifm-color-emphasis-600);
+  text-align: center;
+}
+
 /* Quick Start */
 .quickStart {
   padding: 4rem 0;
