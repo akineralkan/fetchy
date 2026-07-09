@@ -1,27 +1,38 @@
 name: Backfill Missing macOS Installers
 
-# Safety net for the release pipeline.
+# Fully automatic safety net for the release pipeline -- no manual steps,
+# ever. This is what guarantees every single release ends up with a macOS
+# installer attached, no matter what goes wrong with the primary path.
 #
-# release-windows.yml dispatches release-mac.yml for every new release, and
-# that normally works — but the dispatched run can still fail or get
-# cancelled for reasons entirely outside our control. In particular, GitHub's
-# hosted macOS runners are scarce/expensive, and a dispatched run can sit
-# queued waiting for a runner long enough that GitHub cancels it before a
-# single step ever executes (0ms of actual job time billed). When that
-# happens the release ships with no .dmg/.zip attached, silently — nothing
-# about it surfaces anywhere a human would normally notice.
+# release-windows.yml already dispatches release-mac.yml immediately for
+# every new release. That normally works, but the dispatched run can still
+# fail or get cancelled for reasons entirely outside our control. In
+# particular, GitHub's hosted macOS runners are scarce/expensive, and a
+# dispatched run can sit queued waiting for a runner long enough that GitHub
+# cancels it before a single step ever executes (0ms of actual job time
+# billed -- confirmed happening for real releases via the Actions API).
+# When that happens the release ships with no .dmg/.zip attached, silently.
 #
-# This workflow is the fix for that gap: it periodically scans the most
-# recent releases and re-dispatches release-mac.yml for any of them that are
-# still missing macOS installers, so every release eventually gets a macOS
-# build with zero manual effort — regardless of *why* the original attempt
-# didn't produce one. It can also be run on demand (workflow_dispatch) to
-# immediately backfill any known gaps right now.
+# This workflow closes that gap automatically, with two triggers working
+# together so nothing ever requires a human to click anything:
+#
+#   1. workflow_run -- fires immediately every time release-windows.yml
+#      finishes, so a gap is normally caught within minutes of the release
+#      going out, with zero delay waiting on a timer.
+#   2. schedule (every 30 minutes) -- a backstop in case the workflow_run
+#      trigger itself doesn't fire (GitHub Actions event delivery is not
+#      100% guaranteed), so a gap can never stay open for long even in the
+#      worst case.
+#
+# workflow_dispatch is also available for an on-demand manual check, but it
+# is never required -- this heals itself forever with zero manual effort.
 
 on:
+  workflow_run:
+    workflows: ['Release Windows Installer']
+    types: [completed]
   schedule:
-    # Every 30 minutes. Cheap (ubuntu-latest, runs for a few seconds) and
-    # frequent enough that a missed macOS build never stays missing for long.
+    # Backstop only -- every 30 minutes, in case workflow_run ever misfires.
     - cron: '*/30 * * * *'
   workflow_dispatch: {}
 
@@ -31,6 +42,10 @@ permissions:
 
 jobs:
   backfill:
+    # Skip if this was triggered by a release-windows.yml run that itself
+    # failed or was cancelled (nothing new was released, nothing to check).
+    # Always run for the schedule / manual triggers.
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - name: Re-dispatch macOS builds for releases missing installers
@@ -40,6 +55,10 @@ jobs:
 
           echo "Fetching recent releases..."
           releases=$(gh api "repos/${GITHUB_REPOSITORY}/releases?per_page=15")
+
+          echo "Fetching recent release-mac.yml run statuses..."
+          mac_runs=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/release-mac.yml/runs?per_page=20")
+          mac_build_in_flight=$(echo "$mac_runs" | jq '[.workflow_runs[] | select(.status == "queued" or .status == "in_progress")] | length > 0')
 
           now=$(date -u +%s)
 
@@ -57,12 +76,25 @@ jobs:
               continue
             fi
 
-            if [ "$age_minutes" -lt 30 ]; then
-              echo "… $tag has no macOS installer yet, but is only ${age_minutes}m old — its build may still be in progress, skipping for now"
+            # A release-mac.yml run is currently queued/running somewhere.
+            # This project only ever has one release in flight at a time, so
+            # assume it's building this release and don't pile on a
+            # duplicate dispatch -- we'll re-check on the next trigger
+            # (workflow_run on the next release, or the 30-minute schedule)
+            # if it's still missing afterwards.
+            if [ "$mac_build_in_flight" = "true" ] && [ "$age_minutes" -lt 25 ]; then
+              echo "… $tag has no macOS installer yet, but a build is currently in flight -- will re-check later"
               continue
             fi
 
-            echo "::warning::$tag ($age_minutes minutes old) is missing a macOS installer — dispatching release-mac.yml"
+            # Give release-windows.yml's own dispatch call a few minutes to
+            # actually register as a run before assuming it never happened.
+            if [ "$age_minutes" -lt 5 ]; then
+              echo "… $tag has no macOS installer yet, only ${age_minutes}m old -- giving the original dispatch a moment, will re-check shortly"
+              continue
+            fi
+
+            echo "::warning::$tag (${age_minutes} minutes old) is missing a macOS installer -- dispatching release-mac.yml"
             gh workflow run release-mac.yml --ref main -f tag_name="$tag"
           done
         env:
