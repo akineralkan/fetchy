@@ -27,6 +27,19 @@ on:
         required: true
         type: string
 
+# Guard against two runs building the SAME tag at the same time. This has
+# actually happened in practice: the backfill safety-net workflow can fire
+# from more than one trigger in quick succession (its own workflow_run and
+# schedule triggers overlapping) and dispatch two builds for the same
+# missing tag within a second of each other. Scoping the group by tag name
+# means different tags still build fully in parallel (as before); only a
+# genuine duplicate for the exact same tag gets queued behind the first
+# instead of racing it (which risks two jobs uploading release assets for
+# the same tag at once).
+concurrency:
+  group: release-mac-${{ github.event.inputs.tag_name || github.event.release.tag_name }}
+  cancel-in-progress: false
+
 jobs:
   build-mac:
     # Only run for the version-tag releases produced by release-windows.yml
@@ -43,6 +56,22 @@ jobs:
           ref: ${{ github.event.inputs.tag_name || github.event.release.tag_name }}
           fetch-depth: 0
 
+      - name: Verify checked-out commit can actually build the macOS target
+        # Cheap sanity check that prints exactly what we're building before
+        # spending minutes on a build that's doomed to fail with a confusing
+        # error. If this ever fires, the log tells us immediately whether
+        # the wrong ref was checked out or the script is genuinely missing,
+        # instead of having to reason about it after the fact.
+        run: |
+          echo "Building ref: ${{ github.event.inputs.tag_name || github.event.release.tag_name }}"
+          echo "Resolved commit: $(git rev-parse HEAD)"
+          echo "package.json version: $(node -p "require('./package.json').version")"
+          if ! node -e "process.exit(require('./package.json').scripts['electron:build:mac'] ? 0 : 1)"; then
+            echo "::error::electron:build:mac script is missing from package.json at this commit -- cannot build"
+            exit 1
+          fi
+          echo "electron:build:mac script found, proceeding"
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -52,7 +81,24 @@ jobs:
         run: npm ci
 
       - name: Build macOS installers (Apple Silicon + Intel)
-        run: npm run electron:build:mac
+        # Retries a couple of times before giving up. electron-builder does
+        # real network I/O (downloading Electron/notarization tool binaries,
+        # etc.) that can fail transiently, and we've also observed at least
+        # one build fail for reasons that never recurred on a plain retry.
+        # Automatically retrying here means a transient hiccup gets fixed
+        # within THIS run, in minutes, rather than waiting on the backfill
+        # workflow's next scheduled pass.
+        run: |
+          for attempt in 1 2 3; do
+            echo "Build attempt $attempt/3..."
+            if npm run electron:build:mac; then
+              exit 0
+            fi
+            echo "::warning::Build attempt $attempt failed"
+            sleep 10
+          done
+          echo "::error::All 3 build attempts failed"
+          exit 1
         env:
           # There is no Developer ID certificate in this runner's keychain,
           # and there never will be one (no paid Apple Developer account).

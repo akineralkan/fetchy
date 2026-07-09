@@ -40,6 +40,16 @@ permissions:
   contents: read
   actions: write
 
+# The workflow_run and schedule triggers can fire within moments of each
+# other (e.g. a release lands right as a 30-minute tick occurs). Without
+# this, two overlapping runs of this workflow have been observed doing the
+# same scan at once and each dispatching a build for the same missing tag,
+# wasting a duplicate macOS build. queue-only (no cancel) so every trigger
+# still eventually gets its scan run, just never in parallel with another.
+concurrency:
+  group: backfill-mac-installer
+  cancel-in-progress: false
+
 jobs:
   backfill:
     # Skip if this was triggered by a release-windows.yml run that itself
