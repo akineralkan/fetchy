@@ -153,15 +153,6 @@
   font-weight: 600;
 }
 
-.winnerBadge {
-  display: inline-block;
-  margin-top: 0.15rem;
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--ifm-color-primary);
-  letter-spacing: 0.03em;
-}
-
 .cellYes {
   color: #22c55e;
 }

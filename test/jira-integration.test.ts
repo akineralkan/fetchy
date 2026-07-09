@@ -3,6 +3,7 @@
  * field type formatting, description cleaning, and markdown parsing.
  */
 import { describe, it, expect } from 'vitest';
+import { markdownToJiraWiki } from '../src/utils/jiraFormat';
 
 // jiraHandler.js is a CommonJS module
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -358,6 +359,69 @@ High
   it('preserves content when nothing to clean', () => {
     const md = `## Steps to Reproduce\n1. Do something\n2. Observe result`;
     expect(cleanDescription(md)).toBe(md);
+  });
+});
+
+// ─── Markdown → Jira wiki markup ─────────────────────────────────────────────
+
+describe('markdownToJiraWiki', () => {
+  it('converts ## and ### headings to h2./h3. (prevents Jira nested-list misread)', () => {
+    const md = `## Severity\nHigh\n\n### Response Headers\ncontent-type: json`;
+    const result = markdownToJiraWiki(md);
+    expect(result).toContain('h2. Severity');
+    expect(result).toContain('h3. Response Headers');
+    expect(result).not.toContain('##');
+    expect(result).not.toContain('###');
+  });
+
+  it('never produces doubled numbering like "1. 1."', () => {
+    const md = `## Description\nSomething broke.\n\n### Request Body\n(none)`;
+    expect(markdownToJiraWiki(md)).not.toMatch(/\d+\.\s+\d+\./);
+  });
+
+  it('converts **bold** to *bold*', () => {
+    expect(markdownToJiraWiki('**Tool:** Fetchy')).toBe('*Tool:* Fetchy');
+  });
+
+  it('converts ***bold italic*** to _*bold italic*_', () => {
+    expect(markdownToJiraWiki('***Tool:*** Fetchy')).toBe('_*Tool:*_ Fetchy');
+  });
+
+  it('converts inline `code` to {{code}}', () => {
+    expect(markdownToJiraWiki('Send a `GET` request')).toBe('Send a {{GET}} request');
+  });
+
+  it('converts fenced code blocks with a language to {code:lang}...{code}', () => {
+    const md = '```json\n{"a":1}\n```';
+    expect(markdownToJiraWiki(md)).toBe('{code:json}\n{"a":1}\n{code}');
+  });
+
+  it('converts fenced code blocks without a language to {code}...{code}', () => {
+    const md = '```\nplain text\n```';
+    expect(markdownToJiraWiki(md)).toBe('{code}\nplain text\n{code}');
+  });
+
+  it('does not alter markdown-looking text inside a code block', () => {
+    const md = '```\n## not a heading\n**not bold**\n```';
+    const result = markdownToJiraWiki(md);
+    expect(result).toContain('## not a heading');
+    expect(result).toContain('**not bold**');
+  });
+
+  it('converts "- item" bullet lists to "* item"', () => {
+    const md = '- Tool: Fetchy\n- Date: today';
+    expect(markdownToJiraWiki(md)).toBe('* Tool: Fetchy\n* Date: today');
+  });
+
+  it('converts markdown links to Jira wiki links', () => {
+    expect(markdownToJiraWiki('[JSONPlaceholder](https://jsonplaceholder.typicode.com)')).toBe(
+      '[JSONPlaceholder|https://jsonplaceholder.typicode.com]'
+    );
+  });
+
+  it('leaves plain numbered list items (e.g. "1. Open Fetchy") untouched', () => {
+    const md = '1. Open Fetchy REST Client\n2. Create a new request';
+    expect(markdownToJiraWiki(md)).toBe(md);
   });
 });
 

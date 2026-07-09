@@ -12,6 +12,7 @@ import {
   buildGenerateBugReportPrompt,
   PROVIDER_META,
 } from '../utils/aiProvider';
+import { markdownToJiraWiki } from '../utils/jiraFormat';
 import type { ApiRequest, ApiResponse } from '../types';
 import CodeEditor from './CodeEditor';
 
@@ -836,6 +837,10 @@ export function AIResponseToolbar({ request, response }: AIResponseToolbarProps)
     // 2. Remove "## Title\n<title text>" section (already used as summary)
     // 3. Remove leading/trailing horizontal rules (---)
     // 4. Fix double-indented numbered lists (e.g. "1.   1." → "1.")
+    // 5. Convert remaining Markdown (headings, bold, code, bullets, links) to
+    //    Jira wiki markup — the Jira REST API v2 description field renders wiki
+    //    markup, not Markdown, so raw "##" headings are misread as nested
+    //    numbered-list markers (e.g. rendering as "1. 1. Severity").
     let description = modal.result
       .replace(/^---\s*\n/m, '')
       .replace(/^#{1,3}\s*🐛?\s*Bug Report\s*\n+/im, '')
@@ -843,6 +848,7 @@ export function AIResponseToolbar({ request, response }: AIResponseToolbarProps)
       .replace(/\n---\s*$/m, '')
       .replace(/^(\d+)\.\s+\d+\.\s+/gm, '$1. ')
       .trim();
+    description = markdownToJiraWiki(description);
 
     try {
       const result = await window.electronAPI.jiraCreateIssue({
