@@ -1,0 +1,69 @@
+name: Backfill Missing macOS Installers
+
+# Safety net for the release pipeline.
+#
+# release-windows.yml dispatches release-mac.yml for every new release, and
+# that normally works — but the dispatched run can still fail or get
+# cancelled for reasons entirely outside our control. In particular, GitHub's
+# hosted macOS runners are scarce/expensive, and a dispatched run can sit
+# queued waiting for a runner long enough that GitHub cancels it before a
+# single step ever executes (0ms of actual job time billed). When that
+# happens the release ships with no .dmg/.zip attached, silently — nothing
+# about it surfaces anywhere a human would normally notice.
+#
+# This workflow is the fix for that gap: it periodically scans the most
+# recent releases and re-dispatches release-mac.yml for any of them that are
+# still missing macOS installers, so every release eventually gets a macOS
+# build with zero manual effort — regardless of *why* the original attempt
+# didn't produce one. It can also be run on demand (workflow_dispatch) to
+# immediately backfill any known gaps right now.
+
+on:
+  schedule:
+    # Every 30 minutes. Cheap (ubuntu-latest, runs for a few seconds) and
+    # frequent enough that a missed macOS build never stays missing for long.
+    - cron: '*/30 * * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Re-dispatch macOS builds for releases missing installers
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "Fetching recent releases..."
+          releases=$(gh api "repos/${GITHUB_REPOSITORY}/releases?per_page=15")
+
+          now=$(date -u +%s)
+
+          echo "$releases" | jq -c '.[] | select(.prerelease == false and (.tag_name | startswith("v")))' |
+          while IFS= read -r release; do
+            tag=$(echo "$release" | jq -r '.tag_name')
+            published_at=$(echo "$release" | jq -r '.published_at')
+            published_epoch=$(date -u -d "$published_at" +%s)
+            age_minutes=$(( (now - published_epoch) / 60 ))
+
+            has_dmg=$(echo "$release" | jq '[.assets[] | select(.name | endswith(".dmg"))] | length > 0')
+
+            if [ "$has_dmg" = "true" ]; then
+              echo "✓ $tag already has a macOS installer"
+              continue
+            fi
+
+            if [ "$age_minutes" -lt 30 ]; then
+              echo "… $tag has no macOS installer yet, but is only ${age_minutes}m old — its build may still be in progress, skipping for now"
+              continue
+            fi
+
+            echo "::warning::$tag ($age_minutes minutes old) is missing a macOS installer — dispatching release-mac.yml"
+            gh workflow run release-mac.yml --ref main -f tag_name="$tag"
+          done
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
