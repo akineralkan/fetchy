@@ -31,9 +31,13 @@ const parsePostmanUrl = (url: PostmanUrl | string): { url: string; params: KeyVa
   return { url: url.raw, params };
 };
 
-// Helper to get value from Postman auth field (handles both array and object formats)
+// Helper to get value from Postman auth field (handles array, single key/value object, and plain map formats)
 const getPostmanAuthValue = (
-  authField: Array<{ key: string; value: string }> | Record<string, string> | undefined,
+  authField:
+    | Array<{ key: string; value: string }>
+    | { key: string; value: string; type?: string }
+    | Record<string, string>
+    | undefined,
   key: string
 ): string => {
   if (!authField) return '';
@@ -43,8 +47,14 @@ const getPostmanAuthValue = (
     return authField.find(b => b.key === key)?.value || '';
   }
 
-  // If it is an object, access directly
   if (typeof authField === 'object') {
+    // Single key/value pair object, e.g. { key: "token", value: "{{access_token}}", type: "string" }
+    if ('key' in authField && 'value' in authField) {
+      const single = authField as { key: string; value: string };
+      return single.key === key ? single.value ?? '' : '';
+    }
+
+    // Plain map object, e.g. { token: "<value>" }
     return (authField as Record<string, string>)[key] || '';
   }
 

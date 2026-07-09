@@ -393,9 +393,9 @@ export interface PostmanVariable {
 
 export interface PostmanAuth {
   type: string;
-  basic?: Array<{ key: string; value: string }> | Record<string, string>;
-  bearer?: Array<{ key: string; value: string }> | Record<string, string>;
-  apikey?: Array<{ key: string; value: string }> | Record<string, string>;
+  basic?: Array<{ key: string; value: string }> | { key: string; value: string; type?: string } | Record<string, string>;
+  bearer?: Array<{ key: string; value: string }> | { key: string; value: string; type?: string } | Record<string, string>;
+  apikey?: Array<{ key: string; value: string }> | { key: string; value: string; type?: string } | Record<string, string>;
 }
 
 // OpenAPI Document for storage
