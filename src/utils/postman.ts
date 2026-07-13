@@ -15,20 +15,36 @@ import { convertMustacheVarsDeep } from './helpers';
 import { convertPostmanScript } from './scriptConverter';
 
 // Helper to parse Postman URL
-const parsePostmanUrl = (url: PostmanUrl | string): { url: string; params: KeyValue[] } => {
+const parsePostmanUrl = (url: PostmanUrl | string | undefined | null): { url: string; params: KeyValue[] } => {
+  if (!url) {
+    return { url: '', params: [] };
+  }
+
   if (typeof url === 'string') {
     return { url, params: [] };
   }
 
   const params: KeyValue[] = (url.query || []).map(q => ({
     id: uuidv4(),
-    key: q.key,
-    value: q.value,
+    key: q.key || '',
+    value: q.value || '',
     enabled: !q.disabled,
     description: q.description,
   }));
 
-  return { url: url.raw, params };
+  // "raw" is normally always present in Postman exports, but reconstruct a
+  // best-effort URL from the remaining optional pieces if it is missing.
+  const rawUrl = url.raw || buildUrlFromParts(url);
+
+  return { url: rawUrl, params };
+};
+
+// Reconstruct a URL string from protocol/host/path when "raw" is absent
+const buildUrlFromParts = (url: PostmanUrl): string => {
+  const protocol = url.protocol ? `${url.protocol}://` : '';
+  const host = (url.host || []).join('.');
+  const path = (url.path || []).join('/');
+  return `${protocol}${host}${path ? `/${path}` : ''}`;
 };
 
 // Helper to get value from Postman auth field (handles array, single key/value object, and plain map formats)
@@ -96,8 +112,8 @@ const convertPostmanRequest = (item: PostmanItem): ApiRequest | null => {
 
   const headers: KeyValue[] = (request.header || []).map(h => ({
     id: uuidv4(),
-    key: h.key,
-    value: h.value,
+    key: h.key || '',
+    value: h.value || '',
     enabled: !h.disabled,
     description: h.description,
   }));
@@ -117,8 +133,8 @@ const convertPostmanRequest = (item: PostmanItem): ApiRequest | null => {
           type: 'x-www-form-urlencoded',
           urlencoded: (request.body.urlencoded || []).map(u => ({
             id: uuidv4(),
-            key: u.key,
-            value: u.value,
+            key: u.key || '',
+            value: u.value || '',
             enabled: !u.disabled,
             description: u.description,
           })),
@@ -129,8 +145,8 @@ const convertPostmanRequest = (item: PostmanItem): ApiRequest | null => {
           type: 'form-data',
           formData: (request.body.formdata || []).map(f => ({
             id: uuidv4(),
-            key: f.key,
-            value: f.value,
+            key: f.key || '',
+            value: f.value || '',
             enabled: !f.disabled,
             description: f.description,
           })),
@@ -160,7 +176,7 @@ const convertPostmanRequest = (item: PostmanItem): ApiRequest | null => {
 
   return {
     id: uuidv4(),
-    name: item.name,
+    name: item.name || 'Untitled Request',
     method: (request.method?.toUpperCase() || 'GET') as HttpMethod,
     url,
     headers,
@@ -183,7 +199,7 @@ const convertPostmanItems = (items: PostmanItem[]): { folders: RequestFolder[]; 
       const subResult = convertPostmanItems(item.item);
       folders.push({
         id: uuidv4(),
-        name: item.name,
+        name: item.name || 'Untitled Folder',
         description: item.description,
         folders: subResult.folders,
         requests: subResult.requests,
@@ -225,20 +241,20 @@ export const importPostmanCollection = (content: string): Collection | null => {
       throw new Error('Invalid Postman collection format: missing "item" field');
     }
 
-    const { folders, requests } = convertPostmanItems(postman.item);
+    const { folders, requests } = convertPostmanItems(postman.item || []);
 
     const variables: KeyValue[] = (postman.variable || []).map(v => ({
       id: uuidv4(),
-      key: v.key,
-      value: v.value, // For backward compatibility
-      initialValue: v.value, // Set imported value as initial
+      key: v.key || '',
+      value: v.value || '', // For backward compatibility
+      initialValue: v.value || '', // Set imported value as initial
       currentValue: '', // Start with empty current value
       enabled: !v.disabled,
     }));
 
     return convertMustacheVarsDeep({
       id: uuidv4(),
-      name: postman.info.name,
+      name: postman.info.name || 'Imported Postman Collection',
       description: postman.info.description,
       folders,
       requests,

@@ -750,3 +750,238 @@ describe('exportToPostman', () => {
     expect(parsed.info.schema).toContain('schema.getpostman.com');
   });
 });
+
+// --------------------------------------------------------------------------
+// GH-94: importPostmanCollection – missing optional fields
+// --------------------------------------------------------------------------
+
+describe('importPostmanCollection – GH-94 missing optional fields', () => {
+  it('should default params to an empty array when url.query is omitted', () => {
+    const collection = importPostmanCollection(
+      JSON.stringify({
+        info: { name: 'No Query Test', schema: '' },
+        item: [
+          {
+            name: 'No Query Request',
+            request: {
+              method: 'GET',
+              url: { raw: 'https://api.example.com/users' },
+            },
+          },
+        ],
+      })
+    );
+    expect(collection).not.toBeNull();
+    const req = collection!.requests[0];
+    expect(req.url).toBe('https://api.example.com/users');
+    expect(req.params).toEqual([]);
+  });
+
+  it('should default headers to an empty array when request.header is omitted', () => {
+    const collection = importPostmanCollection(
+      JSON.stringify({
+        info: { name: 'No Header Test', schema: '' },
+        item: [
+          {
+            name: 'No Header Request',
+            request: {
+              method: 'GET',
+              url: { raw: 'https://api.example.com' },
+            },
+          },
+        ],
+      })
+    );
+    expect(collection).not.toBeNull();
+    expect(collection!.requests[0].headers).toEqual([]);
+  });
+
+  it('should default body to type "none" when request.body is omitted', () => {
+    const collection = importPostmanCollection(
+      JSON.stringify({
+        info: { name: 'No Body Test', schema: '' },
+        item: [
+          {
+            name: 'No Body Request',
+            request: {
+              method: 'GET',
+              url: { raw: 'https://api.example.com' },
+            },
+          },
+        ],
+      })
+    );
+    expect(collection).not.toBeNull();
+    expect(collection!.requests[0].body.type).toBe('none');
+  });
+
+  it('should reconstruct the URL from protocol/host/path when url.raw is absent', () => {
+    const collection = importPostmanCollection(
+      JSON.stringify({
+        info: { name: 'No Raw Url Test', schema: '' },
+        item: [
+          {
+            name: 'No Raw Request',
+            request: {
+              method: 'GET',
+              url: {
+                protocol: 'https',
+                host: ['api', 'example', 'com'],
+                path: ['v1', 'users'],
+              },
+            },
+          },
+        ],
+      })
+    );
+    expect(collection).not.toBeNull();
+    const req = collection!.requests[0];
+    expect(req.url).toBe('https://api.example.com/v1/users');
+    expect(req.params).toEqual([]);
+  });
+
+  it('should reconstruct a host-only URL when protocol and path are both absent', () => {
+    const collection = importPostmanCollection(
+      JSON.stringify({
+        info: { name: 'Host Only Test', schema: '' },
+        item: [
+          {
+            name: 'Host Only Request',
+            request: {
+              method: 'GET',
+              url: { host: ['api', 'example', 'com'] },
+            },
+          },
+        ],
+      })
+    );
+    expect(collection).not.toBeNull();
+    expect(collection!.requests[0].url).toBe('api.example.com');
+  });
+
+  it('should default url to an empty string when request.url is entirely missing', () => {
+    const collection = importPostmanCollection(
+      JSON.stringify({
+        info: { name: 'No Url Test', schema: '' },
+        item: [
+          {
+            name: 'No Url Request',
+            request: {
+              method: 'GET',
+            },
+          },
+        ],
+      })
+    );
+    expect(collection).not.toBeNull();
+    const req = collection!.requests[0];
+    expect(req.url).toBe('');
+    expect(req.params).toEqual([]);
+  });
+
+  it('should default url to an empty string when request.url is null', () => {
+    const collection = importPostmanCollection(
+      JSON.stringify({
+        info: { name: 'Null Url Test', schema: '' },
+        item: [
+          {
+            name: 'Null Url Request',
+            request: {
+              method: 'GET',
+              url: null,
+            },
+          },
+        ],
+      })
+    );
+    expect(collection).not.toBeNull();
+    expect(collection!.requests[0].url).toBe('');
+  });
+
+  it('should default a request item name to "Untitled Request" when name is missing', () => {
+    const collection = importPostmanCollection(
+      JSON.stringify({
+        info: { name: 'No Item Name Test', schema: '' },
+        item: [
+          {
+            request: {
+              method: 'GET',
+              url: { raw: 'https://api.example.com' },
+            },
+          },
+        ],
+      })
+    );
+    expect(collection).not.toBeNull();
+    expect(collection!.requests[0].name).toBe('Untitled Request');
+  });
+
+  it('should default a folder name to "Untitled Folder" when name is missing', () => {
+    const collection = importPostmanCollection(
+      JSON.stringify({
+        info: { name: 'No Folder Name Test', schema: '' },
+        item: [
+          {
+            item: [
+              {
+                name: 'Nested Request',
+                request: {
+                  method: 'GET',
+                  url: { raw: 'https://api.example.com' },
+                },
+              },
+            ],
+          },
+        ],
+      })
+    );
+    expect(collection).not.toBeNull();
+    expect(collection!.folders[0].name).toBe('Untitled Folder');
+    expect(collection!.folders[0].requests[0].name).toBe('Nested Request');
+  });
+
+  it('should default the collection name when info.name is missing', () => {
+    const collection = importPostmanCollection(
+      JSON.stringify({
+        info: { schema: '' },
+        item: [],
+      })
+    );
+    expect(collection).not.toBeNull();
+    expect(collection!.name).toBe('Imported Postman Collection');
+  });
+
+  it('should default collection variables to an empty array when the "variable" field is missing', () => {
+    const collection = importPostmanCollection(
+      JSON.stringify({
+        info: { name: 'No Variables Test', schema: '' },
+        item: [],
+      })
+    );
+    expect(collection).not.toBeNull();
+    expect(collection!.variables).toEqual([]);
+  });
+
+  it('should import a fully minimal collection with every optional field omitted', () => {
+    const collection = importPostmanCollection(
+      JSON.stringify({
+        info: { name: 'Minimal Collection', schema: '' },
+        item: [
+          {
+            name: 'Bare Request',
+            request: { method: 'GET' },
+          },
+        ],
+      })
+    );
+    expect(collection).not.toBeNull();
+    expect(collection!.name).toBe('Minimal Collection');
+    expect(collection!.variables).toEqual([]);
+    expect(collection!.requests).toHaveLength(1);
+    const req = collection!.requests[0];
+    expect(req.url).toBe('');
+    expect(req.params).toEqual([]);
+    expect(req.headers).toEqual([]);
+    expect(req.body.type).toBe('none');
+  });
+});
