@@ -356,7 +356,7 @@ export interface PostmanRequest {
   method: string;
   header?: PostmanHeader[];
   body?: PostmanBody;
-  url: PostmanUrl | string;
+  url?: PostmanUrl | string;
   auth?: PostmanAuth;
 }
 
@@ -380,7 +380,7 @@ export interface PostmanBody {
 }
 
 export interface PostmanUrl {
-  raw: string;
+  raw?: string;
   protocol?: string;
   host?: string[];
   path?: string[];
