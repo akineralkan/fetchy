@@ -59,18 +59,24 @@ function setupStore(history: any[], clearHistory = vi.fn()) {
   });
 }
 
+const defaultProps = {
+  search: '',
+  filterMethod: 'all' as const,
+  sortOption: 'date-desc' as const,
+};
+
 // ─── Empty state ──────────────────────────────────────────────────────────────
 
 describe('HistoryPanel – empty state', () => {
   it('shows empty state message when history is empty', () => {
     setupStore([]);
-    render(<HistoryPanel />);
+    render(<HistoryPanel {...defaultProps} />);
     expect(screen.getByText(/no request history/i)).toBeTruthy();
   });
 
   it('does not render history items in empty state', () => {
     setupStore([]);
-    render(<HistoryPanel />);
+    render(<HistoryPanel {...defaultProps} />);
     expect(screen.queryByText('Get Users')).not.toBeTruthy();
   });
 });
@@ -80,38 +86,38 @@ describe('HistoryPanel – empty state', () => {
 describe('HistoryPanel – with history', () => {
   it('renders a history item with request name', () => {
     setupStore([makeHistoryItem()]);
-    render(<HistoryPanel />);
+    render(<HistoryPanel {...defaultProps} />);
     expect(screen.getByText('Get Users')).toBeTruthy();
   });
 
   it('renders item count', () => {
     setupStore([makeHistoryItem(), makeHistoryItem({ id: 'hist-2' })]);
-    render(<HistoryPanel />);
+    render(<HistoryPanel {...defaultProps} />);
     expect(screen.getByText(/2 request/i)).toBeTruthy();
   });
 
   it('renders response status code', () => {
     setupStore([makeHistoryItem()]);
-    render(<HistoryPanel />);
+    render(<HistoryPanel {...defaultProps} />);
     expect(screen.getByText(/200/)).toBeTruthy();
   });
 
   it('renders the request URL', () => {
     setupStore([makeHistoryItem()]);
-    render(<HistoryPanel />);
+    render(<HistoryPanel {...defaultProps} />);
     expect(screen.getByText('https://api.example.com/users')).toBeTruthy();
   });
 
   it('renders Clear All button', () => {
     setupStore([makeHistoryItem()]);
-    render(<HistoryPanel />);
+    render(<HistoryPanel {...defaultProps} />);
     expect(screen.getByText(/clear all/i)).toBeTruthy();
   });
 
   it('calls clearHistory when Clear All is clicked', () => {
     const clearHistory = vi.fn();
     setupStore([makeHistoryItem()], clearHistory);
-    render(<HistoryPanel />);
+    render(<HistoryPanel {...defaultProps} />);
     fireEvent.click(screen.getByText(/clear all/i));
     expect(clearHistory).toHaveBeenCalledTimes(1);
   });
@@ -120,7 +126,7 @@ describe('HistoryPanel – with history', () => {
     const item = makeHistoryItem();
     setupStore([item]);
     const onClick = vi.fn();
-    render(<HistoryPanel onHistoryItemClick={onClick} />);
+    render(<HistoryPanel {...defaultProps} onHistoryItemClick={onClick} />);
     // Click the item div
     const itemEl = screen.getByTitle(/click to load/i);
     fireEvent.click(itemEl);
@@ -134,14 +140,14 @@ describe('HistoryPanel – time formatting', () => {
   it('shows "Just now" for very recent requests', () => {
     const recentItem = makeHistoryItem({ timestamp: Date.now() - 5000 }); // 5 seconds ago
     setupStore([recentItem]);
-    render(<HistoryPanel />);
+    render(<HistoryPanel {...defaultProps} />);
     expect(screen.getByText(/just now/i)).toBeTruthy();
   });
 
   it('shows minutes for requests a few minutes ago', () => {
     const item = makeHistoryItem({ timestamp: Date.now() - 5 * 60000 }); // 5 minutes ago
     setupStore([item]);
-    render(<HistoryPanel />);
+    render(<HistoryPanel {...defaultProps} />);
     expect(screen.getByText(/5m ago/i)).toBeTruthy();
   });
 });
@@ -152,14 +158,14 @@ describe('HistoryPanel – response size', () => {
   it('shows size in B for small responses', () => {
     const item = makeHistoryItem({ response: { status: 200, statusText: 'OK', headers: {}, body: '{}', time: 10, size: 512 } });
     setupStore([item]);
-    render(<HistoryPanel />);
+    render(<HistoryPanel {...defaultProps} />);
     expect(screen.getByText(/512 B/)).toBeTruthy();
   });
 
   it('shows size in KB for larger responses', () => {
     const item = makeHistoryItem({ response: { status: 200, statusText: 'OK', headers: {}, body: '{}', time: 10, size: 2048 } });
     setupStore([item]);
-    render(<HistoryPanel />);
+    render(<HistoryPanel {...defaultProps} />);
     expect(screen.getByText(/KB/)).toBeTruthy();
   });
 });
