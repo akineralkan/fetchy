@@ -162,8 +162,8 @@ jobs:
           body: ${{ steps.changelog.outputs.body }}
           files: |
             release/*.exe
-            release/*.exe.blockmap
-            release/latest.yml
+            release/_extras/*.exe.blockmap
+            release/_extras/latest.yml
           draft: false
           prerelease: false
         env:
