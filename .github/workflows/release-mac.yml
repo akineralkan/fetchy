@@ -107,6 +107,14 @@ jobs:
           # for the app to even launch on Apple Silicon.
           CSC_IDENTITY_AUTO_DISCOVERY: false
 
+      - name: Verify macOS update manifest
+        run: |
+          if [ ! -f release/_extras/latest-mac.yml ]; then
+            echo "::error::electron-builder did not produce release/_extras/latest-mac.yml"
+            find release -maxdepth 2 -type f -print || true
+            exit 1
+          fi
+
       - name: Upload macOS installers to the release
         uses: softprops/action-gh-release@v2
         with:

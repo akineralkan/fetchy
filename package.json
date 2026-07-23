@@ -16,8 +16,8 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"test/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\" \"test/**/*.ts\"",
     "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
-    "electron:build": "node scripts/generate-icons.js && vite build && electron-builder",
-    "electron:build:mac": "export CSC_IDENTITY_AUTO_DISCOVERY=false && node scripts/generate-icons.js && vite build && electron-builder --mac --arm64 --x64 --publish=never",
+    "electron:build": "node scripts/generate-icons.js && vite build && electron-builder && node scripts/finalize-release.js",
+    "electron:build:mac": "export CSC_IDENTITY_AUTO_DISCOVERY=false && node scripts/generate-icons.js && vite build && electron-builder --mac --arm64 --x64 --publish=never && node scripts/finalize-release.js",
     "electron:preview": "vite build && electron ."
   },
   "keywords": [
