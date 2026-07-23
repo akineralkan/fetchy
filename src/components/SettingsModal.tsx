@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { X, Layers, Bot, Eye, EyeOff, Check, Loader2, AlertCircle, ShieldAlert, Info, Link2, Plus, Trash2, Search } from 'lucide-react';
+import { X, Layers, Bot, Eye, EyeOff, Check, Loader2, AlertCircle, ShieldAlert, Info, Link2, Plus, Trash2, Search, Compass } from 'lucide-react';
 import { usePreferencesStore } from '../store/preferencesStore';
 import { useAppStore } from '../store/appStore';
 import { useWorkspacesStore } from '../store/workspacesStore';
@@ -10,10 +10,11 @@ interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onOpenWorkspaces: () => void;
+  onRestartOnboarding?: () => void;
   initialTab?: 'general' | 'ai' | 'integrations';
 }
 
-export default function SettingsModal({ isOpen, onClose, onOpenWorkspaces, initialTab }: SettingsModalProps) {
+export default function SettingsModal({ isOpen, onClose, onOpenWorkspaces, onRestartOnboarding, initialTab }: SettingsModalProps) {
   const { preferences, savePreferences, aiSettings: ai, updateAISettings, jiraSettings, jiraPat, jiraEmail, updateJiraSettings, updateJiraPat, updateJiraEmail } = usePreferencesStore();
   const { panelLayout, setPanelLayout } = useAppStore();
   const { workspaces, activeWorkspaceId } = useWorkspacesStore();
@@ -335,6 +336,24 @@ export default function SettingsModal({ isOpen, onClose, onOpenWorkspaces, initi
                   Uses <code className='text-gray-400'>HTTP_PROXY</code> / <code className='text-gray-400'>HTTPS_PROXY</code> environment variables when set.
                 </p>
               )}
+            </div>
+          </div>
+
+          {/* ─── Onboarding Tour (#93) ─── */}
+          <div className='border-t border-[#2d2d44]' />
+          <div className='space-y-3'>
+            <h3 className='text-sm font-medium text-white uppercase tracking-wider'>Help</h3>
+            <div className='flex items-center justify-between p-3 bg-[#0f0f1a] rounded border border-[#2d2d44]'>
+              <div className='flex items-center gap-2 min-w-0'>
+                <Compass size={16} className='text-purple-400 shrink-0' />
+                <div className='min-w-0'>
+                  <p className='text-sm text-white truncate'>Onboarding Tour</p>
+                  <p className='text-xs text-gray-500 truncate'>Revisit the introduction to Fetchy&apos;s main features</p>
+                </div>
+              </div>
+              <button onClick={onRestartOnboarding} className='shrink-0 px-3 py-1.5 text-xs bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors ml-3'>
+                Replay Tour
+              </button>
             </div>
           </div>
             </>

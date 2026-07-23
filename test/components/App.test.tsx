@@ -22,6 +22,7 @@ import App from '../../src/App';
 import { useAppStore } from '../../src/store/appStore';
 import { usePreferencesStore } from '../../src/store/preferencesStore';
 import { useWorkspacesStore } from '../../src/store/workspacesStore';
+import SettingsModal from '../../src/components/SettingsModal';
 
 // ─── Store mocks ──────────────────────────────────────────────────────────────
 vi.mock('../../src/store/appStore', () => ({
@@ -52,8 +53,15 @@ vi.mock('../../src/components/EnvironmentModal', () => ({ default: () => null })
 vi.mock('../../src/components/ImportModal', () => ({ default: () => null }));
 vi.mock('../../src/components/ImportRequestModal', () => ({ default: () => null }));
 vi.mock('../../src/components/ExportModal', () => ({ default: () => null }));
-vi.mock('../../src/components/SettingsModal', () => ({ default: () => null }));
+vi.mock('../../src/components/SettingsModal', () => ({ default: vi.fn(() => null) }));
 vi.mock('../../src/components/WorkspacesModal', () => ({ default: () => null }));
+vi.mock('../../src/components/OnboardingTour', () => ({
+  default: (props: { onComplete: () => void }) => (
+    <div data-testid="onboarding-tour">
+      <button data-testid="onboarding-tour-dismiss" onClick={props.onComplete}>Mock Dismiss</button>
+    </div>
+  ),
+}));
 vi.mock('../../src/components/KeyboardShortcutsModal', () => ({ default: () => null }));
 vi.mock('../../src/components/EnvironmentDropdown', () => ({ default: () => <div data-testid="env-dropdown" /> }));
 vi.mock('../../src/components/WorkspaceDropdown', () => ({ default: () => <div data-testid="workspace-dropdown" /> }));
@@ -95,6 +103,7 @@ function buildPrefsStore(overrides: Record<string, unknown> = {}) {
     loadPreferences: vi.fn().mockResolvedValue(undefined),
     loadAISecrets: vi.fn().mockResolvedValue(undefined),
     loadJiraSecrets: vi.fn().mockResolvedValue(undefined),
+    completeOnboarding: vi.fn().mockResolvedValue(undefined),
     ...overrides,
   };
 }
@@ -310,6 +319,91 @@ describe('App', () => {
       const githubBtn = document.querySelector('.lucide-github')?.closest('button') as HTMLElement | null;
       expect(githubBtn).toBeTruthy();
       expect(() => fireEvent.click(githubBtn!)).not.toThrow();
+    });
+  });
+
+  describe('GH-93: Interactive Onboarding Tour integration', () => {
+    afterEach(() => {
+      // mockImplementation overrides survive vi.clearAllMocks(); restore explicitly.
+      vi.mocked(SettingsModal).mockImplementation(() => null);
+    });
+
+    it('shows the onboarding tour on first launch when onboardingCompleted is false', async () => {
+      vi.mocked(usePreferencesStore).mockReturnValue(
+        buildPrefsStore({
+          preferences: { theme: 'dark', autoSave: true, maxHistoryItems: 100, onboardingCompleted: false },
+        }) as never
+      );
+      render(<App />);
+      expect(await screen.findByTestId('onboarding-tour')).toBeTruthy();
+    });
+
+    it('shows the onboarding tour on first launch when onboardingCompleted is undefined (legacy preferences)', async () => {
+      vi.mocked(usePreferencesStore).mockReturnValue(buildPrefsStore() as never);
+      render(<App />);
+      expect(await screen.findByTestId('onboarding-tour')).toBeTruthy();
+    });
+
+    it('does not show the onboarding tour once onboardingCompleted is true', async () => {
+      const loadAISecrets = vi.fn().mockResolvedValue(undefined);
+      vi.mocked(usePreferencesStore).mockReturnValue(
+        buildPrefsStore({
+          preferences: { theme: 'dark', autoSave: true, maxHistoryItems: 100, onboardingCompleted: true },
+          loadAISecrets,
+        }) as never
+      );
+      render(<App />);
+      await waitFor(() => {
+        expect(loadAISecrets).toHaveBeenCalled();
+        expect(screen.queryByTestId('onboarding-tour')).toBeNull();
+      });
+    });
+
+    it('calls completeOnboarding and hides the tour when the tour is dismissed (Skip tour)', async () => {
+      const completeOnboarding = vi.fn().mockResolvedValue(undefined);
+      vi.mocked(usePreferencesStore).mockReturnValue(
+        buildPrefsStore({
+          preferences: { theme: 'dark', autoSave: true, maxHistoryItems: 100, onboardingCompleted: false },
+          completeOnboarding,
+        }) as never
+      );
+      render(<App />);
+      const dismissBtn = await screen.findByTestId('onboarding-tour-dismiss');
+      fireEvent.click(dismissBtn);
+      expect(completeOnboarding).toHaveBeenCalledTimes(1);
+      await waitFor(() => {
+        expect(screen.queryByTestId('onboarding-tour')).toBeNull();
+      });
+    });
+
+    it('reopens the tour via Settings \u2192 Replay Tour after it was completed', async () => {
+      const loadAISecrets = vi.fn().mockResolvedValue(undefined);
+      vi.mocked(usePreferencesStore).mockReturnValue(
+        buildPrefsStore({
+          preferences: { theme: 'dark', autoSave: true, maxHistoryItems: 100, onboardingCompleted: true },
+          loadAISecrets,
+        }) as never
+      );
+      vi.mocked(SettingsModal).mockImplementation(((props: { onRestartOnboarding?: () => void }) => (
+        <button data-testid="mock-replay-tour" onClick={props.onRestartOnboarding}>Mock Replay Tour</button>
+      )) as never);
+
+      render(<App />);
+
+      await waitFor(() => {
+        expect(loadAISecrets).toHaveBeenCalled();
+        expect(screen.queryByTestId('onboarding-tour')).toBeNull();
+      });
+
+      const settingsBtn = document.querySelector('.lucide-settings')?.closest('button') as HTMLElement | null;
+      expect(settingsBtn).toBeTruthy();
+      fireEvent.click(settingsBtn!);
+
+      const replayBtn = await screen.findByTestId('mock-replay-tour');
+      fireEvent.click(replayBtn);
+
+      expect(await screen.findByTestId('onboarding-tour')).toBeTruthy();
+      expect(screen.queryByTestId('mock-replay-tour')).toBeNull();
     });
   });
 });

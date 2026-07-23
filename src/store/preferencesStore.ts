@@ -23,6 +23,7 @@ interface PreferencesStore {
   updateJiraPat: (pat: string) => Promise<void>;
   updateJiraEmail: (email: string) => Promise<void>;
   updateKeyboardShortcuts: (config: KeyboardShortcutsConfig) => Promise<void>;
+  completeOnboarding: () => Promise<void>;
   selectHomeDirectory: () => Promise<string | null>;
   setHomeDirectory: (directory: string, migrateData?: boolean) => Promise<boolean>;
   getHomeDirectory: () => Promise<string>;
@@ -36,6 +37,7 @@ const defaultPreferences: AppPreferences = {
   customThemes: [],
   aiSettings: defaultAISettings, // Kept for backward-compat shape; stripped before saving
   proxy: { mode: 'system', url: '' },
+  onboardingCompleted: false,
 };
 
 export const defaultJiraSettings: JiraSettings = {
@@ -321,6 +323,16 @@ export const usePreferencesStore = create<PreferencesStore>()((set, get) => ({
 
   updateKeyboardShortcuts: async (config: KeyboardShortcutsConfig) => {
     await get().savePreferences({ keyboardShortcuts: config });
+  },
+
+  /**
+   * Mark the interactive onboarding tour (#93) as completed so it is not
+   * shown again on subsequent launches. Re-launching the tour from the
+   * menu/settings does not need a store action — it only toggles local UI
+   * state in App.tsx.
+   */
+  completeOnboarding: async () => {
+    await get().savePreferences({ onboardingCompleted: true });
   },
 
   selectHomeDirectory: async () => {

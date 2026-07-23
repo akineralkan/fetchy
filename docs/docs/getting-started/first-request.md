@@ -22,6 +22,10 @@ On first launch, Fetchy prompts you to create a workspace:
 
 Click **Create Workspace** to proceed.
 
+:::tip
+Right after creating your workspace, a short interactive tour introduces Fetchy's main features. Skip it anytime, or replay it later from **Settings → General → Replay Tour**.
+:::
+
 ---
 
 ## Step 2 — Create a New Request
