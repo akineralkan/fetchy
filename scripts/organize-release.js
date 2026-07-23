@@ -20,9 +20,9 @@ const path = require('path');
  * into `release/_extras/` instead — still on disk, still uploaded as
  * GitHub Release assets by CI (see .github/workflows/release-windows.yml
  * and release-mac.yml, which read from this new location), just out of the
- * way for local browsing. Nothing about the auto-update flow changes: the
- * files themselves are untouched, only their folder changed, and CI is
- * updated to upload them from their new location alongside the exe/dmg.
+ * way for local browsing. Update manifests are moved by
+ * `scripts/finalize-release.js` after electron-builder finishes writing them;
+ * `afterAllArtifactBuild` runs too early to handle those files reliably.
  *
  * The unpacked app staging directories (`mac/`, `mac-arm64/`, `win-unpacked/`)
  * are intermediate build output with no purpose after packaging, so they're
@@ -63,22 +63,6 @@ module.exports = async function organizeRelease(context) {
     } catch (err) {
       console.error(`[organize-release] Failed to move ${artifactPath}:`, err.message);
       updatedPaths.push(artifactPath);
-    }
-  }
-
-  // Move the auto-update manifests too (latest.yml / latest-mac.yml). These
-  // aren't part of context.artifactPaths — electron-builder writes them to
-  // outDir directly.
-  for (const manifest of ['latest.yml', 'latest-mac.yml', 'latest-linux.yml']) {
-    const src = path.join(outDir, manifest);
-    if (fs.existsSync(src)) {
-      const dest = path.join(extrasDir, manifest);
-      try {
-        fs.renameSync(src, dest);
-        console.log(`[organize-release] Moved ${manifest} -> _extras/`);
-      } catch (err) {
-        console.error(`[organize-release] Failed to move ${manifest}:`, err.message);
-      }
     }
   }
 

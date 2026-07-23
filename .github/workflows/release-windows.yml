@@ -154,6 +154,15 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Verify Windows update manifest
+        shell: bash
+        run: |
+          if [ ! -f release/_extras/latest.yml ]; then
+            echo "::error::electron-builder did not produce release/_extras/latest.yml"
+            find release -maxdepth 2 -type f -printf '%p\n' 2>/dev/null || true
+            exit 1
+          fi
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
