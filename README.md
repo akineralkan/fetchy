@@ -203,6 +203,12 @@ Variables in the request are resolved before generating the snippet.
 - **JSON Storage** - All data is stored as human-readable JSON files
 - **Automatic Persistence** - Changes are saved automatically (when auto-save is enabled)
 
+### 🧭 Onboarding Tour
+
+- **Interactive First-Launch Tour** - A short, five-step guided tour highlights collections, the request/response panels, environments, and the AI assistant the first time you open Fetchy
+- **Skip Anytime** - Dismiss the tour with the **Skip tour** link, the close button, or the `Esc` key
+- **Replay On Demand** - Revisit the tour anytime from **Settings → General → Replay Tour**
+
 ---
 
 ## 🚀 Getting Started
@@ -267,6 +273,12 @@ Releases are published automatically by CI: pushing to `main` triggers [release-
 ---
 
 ## 📖 Usage Guide
+
+### Taking the Onboarding Tour
+
+1. The first time you launch Fetchy (right after creating a workspace), a short interactive tour walks through collections, the request/response panels, environment variables, and the AI assistant
+2. Navigate with **Next** / **Back**, the `←` / `→` arrow keys, or dismiss it with **Skip tour** / `Esc`
+3. Replay it anytime from **Settings → General → Replay Tour**
 
 ### Creating Your First Request
 

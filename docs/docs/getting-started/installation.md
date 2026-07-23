@@ -98,8 +98,13 @@ When Fetchy launches for the first time, you will be prompted to:
 
 1. **Create a workspace** — provide a name, home directory (for collections/environments), and secrets directory (for secret variable values)
 2. The workspace directories will be created on your filesystem
+3. **Take the interactive onboarding tour** — a short, five-step walkthrough of collections, the request/response panels, environments, and the AI assistant
 
 Your API data is stored as plain JSON files in the directories you choose.
+
+:::tip
+You can skip the tour at any time (`Esc`, the close button, or **Skip tour**), and replay it later from **Settings → General → Replay Tour**.
+:::
 
 ---
 

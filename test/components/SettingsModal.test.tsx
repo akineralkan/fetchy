@@ -404,4 +404,28 @@ describe('SettingsModal', () => {
     render(<SettingsModal isOpen={true} onClose={onClose} onOpenWorkspaces={onOpenWorkspaces} />);
     expect(screen.getByText('Default (no workspace)')).toBeDefined();
   });
+
+  // ── GH-93: Interactive Onboarding Tour — Replay Tour ──────────────────────
+  describe('GH-93: Replay Tour', () => {
+    it('shows the Onboarding Tour help entry with a Replay Tour button', () => {
+      mockStores();
+      render(<SettingsModal isOpen={true} onClose={onClose} onOpenWorkspaces={onOpenWorkspaces} onRestartOnboarding={vi.fn()} />);
+      expect(screen.getByText('Onboarding Tour')).toBeDefined();
+      expect(screen.getByRole('button', { name: /replay tour/i })).toBeDefined();
+    });
+
+    it('calls onRestartOnboarding when Replay Tour is clicked', () => {
+      mockStores();
+      const onRestartOnboarding = vi.fn();
+      render(<SettingsModal isOpen={true} onClose={onClose} onOpenWorkspaces={onOpenWorkspaces} onRestartOnboarding={onRestartOnboarding} />);
+      fireEvent.click(screen.getByRole('button', { name: /replay tour/i }));
+      expect(onRestartOnboarding).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not throw when Replay Tour is clicked and onRestartOnboarding is not provided', () => {
+      mockStores();
+      render(<SettingsModal isOpen={true} onClose={onClose} onOpenWorkspaces={onOpenWorkspaces} />);
+      expect(() => fireEvent.click(screen.getByRole('button', { name: /replay tour/i }))).not.toThrow();
+    });
+  });
 });

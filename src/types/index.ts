@@ -285,6 +285,8 @@ export interface AppPreferences {
   jiraSettings?: JiraSettings;
   /** User-defined keyboard shortcut overrides (null = disabled) */
   keyboardShortcuts?: KeyboardShortcutsConfig;
+  /** Whether the user has completed the interactive onboarding tour (#93) */
+  onboardingCompleted?: boolean;
 }
 
 // OpenAPI types

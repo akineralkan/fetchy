@@ -39,6 +39,7 @@ beforeEach(() => {
       maxHistoryItems: 100,
       customThemes: [],
       proxy: { mode: 'system', url: '' },
+      onboardingCompleted: false,
     } as any,
     aiSettings: { provider: 'openai', apiKey: '', model: '' } as any,
     jiraSettings: {
@@ -419,5 +420,69 @@ describe('preferencesStore – setHomeDirectory with migration', () => {
     // In browser mode, migrateData is a no-op, just saves preference
     expect(result).toBe(true);
     expect(usePreferencesStore.getState().preferences.homeDirectory).toBe('/new/path');
+  });
+});
+
+// ─── GH-93: Interactive Onboarding Tour ───────────────────────────────────────
+
+describe('preferencesStore – GH-93 onboardingCompleted default', () => {
+  it('defaults onboardingCompleted to false when nothing is stored', async () => {
+    const { loadPreferences } = usePreferencesStore.getState();
+    await loadPreferences();
+    expect(usePreferencesStore.getState().preferences.onboardingCompleted).toBe(false);
+  });
+
+  it('loads a previously persisted onboardingCompleted=true from localStorage', async () => {
+    localStorageStore['fetchy-preferences'] = JSON.stringify({
+      theme: 'dark',
+      onboardingCompleted: true,
+    });
+    const { loadPreferences } = usePreferencesStore.getState();
+    await loadPreferences();
+    expect(usePreferencesStore.getState().preferences.onboardingCompleted).toBe(true);
+  });
+
+  it('defaults onboardingCompleted to false for a stored preferences blob that predates the field', async () => {
+    localStorageStore['fetchy-preferences'] = JSON.stringify({ theme: 'light' });
+    const { loadPreferences } = usePreferencesStore.getState();
+    await loadPreferences();
+    expect(usePreferencesStore.getState().preferences.onboardingCompleted).toBe(false);
+  });
+});
+
+describe('preferencesStore – GH-93 completeOnboarding', () => {
+  it('sets onboardingCompleted to true in memory', async () => {
+    const { loadPreferences, completeOnboarding } = usePreferencesStore.getState();
+    await loadPreferences();
+    expect(usePreferencesStore.getState().preferences.onboardingCompleted).toBe(false);
+    await completeOnboarding();
+    expect(usePreferencesStore.getState().preferences.onboardingCompleted).toBe(true);
+  });
+
+  it('persists onboardingCompleted=true to localStorage', async () => {
+    const { loadPreferences, completeOnboarding } = usePreferencesStore.getState();
+    await loadPreferences();
+    await completeOnboarding();
+    const stored = JSON.parse(localStorageStore['fetchy-preferences'] ?? '{}');
+    expect(stored.onboardingCompleted).toBe(true);
+  });
+
+  it('does not clobber other preference fields when completing onboarding', async () => {
+    localStorageStore['fetchy-preferences'] = JSON.stringify({ theme: 'light', maxHistoryItems: 250 });
+    const { loadPreferences, completeOnboarding } = usePreferencesStore.getState();
+    await loadPreferences();
+    await completeOnboarding();
+    const stored = JSON.parse(localStorageStore['fetchy-preferences'] ?? '{}');
+    expect(stored.theme).toBe('light');
+    expect(stored.maxHistoryItems).toBe(250);
+    expect(stored.onboardingCompleted).toBe(true);
+  });
+
+  it('is idempotent when called multiple times', async () => {
+    const { loadPreferences, completeOnboarding } = usePreferencesStore.getState();
+    await loadPreferences();
+    await completeOnboarding();
+    await completeOnboarding();
+    expect(usePreferencesStore.getState().preferences.onboardingCompleted).toBe(true);
   });
 });

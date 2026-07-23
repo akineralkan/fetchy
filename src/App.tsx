@@ -19,6 +19,7 @@ import ModeDropdown from './components/ModeDropdown';
 import ComingSoonView from './components/ComingSoonView';
 import RestModeView from './components/RestModeView';
 import PublicApisModal from './components/PublicApisModal';
+import OnboardingTour from './components/OnboardingTour';
 import { useAppStore, rehydrateWorkspace } from './store/appStore';
 import { invalidateWriteCache } from './store/persistence';
 import { usePreferencesStore } from './store/preferencesStore';
@@ -46,7 +47,7 @@ function App() {
     panelLayout,
     togglePanelLayout,
   } = useAppStore();
-  const { loadPreferences, loadAISecrets, loadJiraSecrets, preferences } = usePreferencesStore();
+  const { loadPreferences, loadAISecrets, loadJiraSecrets, preferences, completeOnboarding } = usePreferencesStore();
   const { workspaces, activeWorkspaceId, isLoading: workspacesLoading, loadWorkspaces } = useWorkspacesStore();
   const activeWorkspace = workspaces.find((w) => w.id === activeWorkspaceId) ?? null;
   const [showImportModal, setShowImportModal] = useState(false);
@@ -61,6 +62,8 @@ function App() {
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [showAboutModal, setShowAboutModal] = useState(false);
   const [showPublicApisModal, setShowPublicApisModal] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingChecked, setOnboardingChecked] = useState(false);
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const [postUpdateInfo, setPostUpdateInfo] = useState<any>(null);
   const [githubStars, setGithubStars] = useState<number | null>(null);
@@ -105,9 +108,28 @@ function App() {
     loadPreferences().then(() => {
       loadAISecrets();
       loadJiraSecrets();
+      setOnboardingChecked(true);
     });
     loadWorkspaces();
   }, [loadPreferences, loadAISecrets, loadJiraSecrets, loadWorkspaces]);
+
+  // Show the interactive onboarding tour on first launch, once preferences
+  // have finished loading (#93).
+  useEffect(() => {
+    if (onboardingChecked && !preferences.onboardingCompleted) {
+      setShowOnboarding(true);
+    }
+  }, [onboardingChecked, preferences.onboardingCompleted]);
+
+  const handleCompleteOnboarding = useCallback(() => {
+    setShowOnboarding(false);
+    completeOnboarding();
+  }, [completeOnboarding]);
+
+  const handleRestartOnboarding = useCallback(() => {
+    setShowSettingsModal(false);
+    setShowOnboarding(true);
+  }, []);
 
   // Listen for custom event to open AI settings directly
   useEffect(() => {
@@ -386,6 +408,7 @@ function App() {
           isOpen={showSettingsModal}
           onClose={() => setShowSettingsModal(false)}
           onOpenWorkspaces={() => setShowWorkspacesModal(true)}
+          onRestartOnboarding={handleRestartOnboarding}
           initialTab={settingsInitialTab}
         />
       )}
@@ -405,6 +428,10 @@ function App() {
 
       {showAboutModal && (
         <AboutModal onClose={() => setShowAboutModal(false)} />
+      )}
+
+      {showOnboarding && (
+        <OnboardingTour onComplete={handleCompleteOnboarding} />
       )}
 
       {showPublicApisModal && (
