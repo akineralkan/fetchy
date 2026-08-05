@@ -580,8 +580,14 @@ export const createCustomStorage = (): StateStorage => {
       },
 
       setItem: async (_name: string, value: string): Promise<void> => {
+        const api = (window as any).electronAPI;
+        // Guard the whole multi-file write (environments/collections + secrets)
+        // so the fs watcher never triggers a rehydrate mid-save (#macOS secret
+        // values being wiped when Keychain access makes the secrets write slow).
         try {
-          const api = (window as any).electronAPI;
+          await api?.setWriteInProgress?.(true);
+        } catch { /* ignore */ }
+        try {
           const stateWrapper = JSON.parse(value);
 
           // Shared write pipeline: truncate history, strip transient, extract secrets (#27)
@@ -671,6 +677,10 @@ export const createCustomStorage = (): StateStorage => {
           });
         } catch (error) {
           console.error('Error writing to split file storage:', error);
+        } finally {
+          try {
+            await api?.setWriteInProgress?.(false);
+          } catch { /* ignore */ }
         }
       },
 

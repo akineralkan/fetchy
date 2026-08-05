@@ -34,6 +34,14 @@ let customSecretsDirectory = null;
 let storageWatcher = null;
 let lastWriteTimestamp = 0; // updated whenever we write fetchy-storage.json ourselves
 let storageWatchDebounceTimer = null;
+// True while the renderer's persistence pipeline is mid-way through writing
+// the environments/collections/secrets files for a single save. Secrets are
+// written last (and can be slow on macOS due to Keychain access prompts), so
+// without this guard the watcher can fire and trigger a full rehydrate from
+// disk *between* the environment file write (secret value blanked out) and
+// the secrets file write (real value persisted), wiping the value the user
+// just set.
+let writeInProgress = false;
 
 function startStorageWatcher(directory) {
   stopStorageWatcher();
@@ -44,8 +52,11 @@ function startStorageWatcher(directory) {
       if (!filename || !filename.endsWith('.json')) return;
       // Ignore changes in .secrets directory
       if (filename.startsWith('.secrets') || filename.startsWith('.secrets/') || filename.startsWith('.secrets\\')) return;
-      // Ignore changes that are our own writes (within 2 seconds)
-      if (Date.now() - lastWriteTimestamp < 2000) return;
+      // Ignore events fired while our own multi-file save is still in progress
+      if (writeInProgress) return;
+      // Ignore changes that are our own writes (within a few seconds, to allow
+      // for slow trailing writes such as Keychain-backed secret encryption)
+      if (Date.now() - lastWriteTimestamp < 3000) return;
       // Debounce rapid file events
       if (storageWatchDebounceTimer) clearTimeout(storageWatchDebounceTimer);
       storageWatchDebounceTimer = setTimeout(() => {
@@ -388,6 +399,12 @@ const ipcDeps = {
   setCustomSecretsDirectory: (dir) => { customSecretsDirectory = dir; },
   getLastWriteTimestamp: () => lastWriteTimestamp,
   setLastWriteTimestamp: (ts) => { lastWriteTimestamp = ts; },
+  setWriteInProgress: (value) => {
+    writeInProgress = !!value;
+    // When the save finishes, refresh the timestamp so the trailing grace
+    // window (above) also covers any fs events still queued/in-flight.
+    if (!writeInProgress) lastWriteTimestamp = Date.now();
+  },
   safeWriteFileSync,
   loadPreferences,
   savePreferences,

@@ -12,6 +12,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   writeData: (data) => ipcRenderer.invoke('write-data', data),
   listDataDir: (subDir) => ipcRenderer.invoke('list-data-dir', subDir),
   deleteDataFile: (filename) => ipcRenderer.invoke('delete-data-file', filename),
+  // Signals to the main process that a multi-file persistence save (env +
+  // collections + secrets) is starting/finishing, so the file watcher doesn't
+  // trigger a full rehydrate mid-save and wipe values not yet flushed to disk.
+  setWriteInProgress: (value) => ipcRenderer.invoke('set-write-in-progress', value),
 
   // Secrets storage (stored in secrets directory)
   readSecrets: () => ipcRenderer.invoke('read-secrets'),

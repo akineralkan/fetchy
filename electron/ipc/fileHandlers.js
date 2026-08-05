@@ -46,6 +46,7 @@ function register(ipcMain, deps) {
     safeWriteFileSync,
     getLastWriteTimestamp,
     setLastWriteTimestamp,
+    setWriteInProgress,
     dialog,
   } = deps;
 
@@ -141,6 +142,11 @@ function register(ipcMain, deps) {
       console.error('Error deleting data file:', error);
       return false;
     }
+  });
+
+  ipcMain.handle('set-write-in-progress', (event, value) => {
+    if (typeof setWriteInProgress === 'function') setWriteInProgress(!!value);
+    return true;
   });
 }
 

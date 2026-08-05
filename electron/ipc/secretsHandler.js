@@ -26,7 +26,16 @@ function readEncryptedSecrets(secretsDir, baseName, { safeStorage, safeWriteFile
   if (fs.existsSync(encPath)) {
     if (safeStorage.isEncryptionAvailable()) {
       const encBuffer = fs.readFileSync(encPath);
-      return safeStorage.decryptString(encBuffer);
+      try {
+        return safeStorage.decryptString(encBuffer);
+      } catch (e) {
+        // Decryption can fail transiently (e.g. Keychain access was denied/
+        // timed out on macOS). Don't delete the file — just report no secrets
+        // for this read so the caller falls back gracefully instead of
+        // treating this as "no secrets ever existed".
+        console.warn(`Failed to decrypt ${encPath}, will retry next read:`, e);
+        return null;
+      }
     }
     // Encryption not available (e.g. missing keychain) — can't read
     console.warn(`safeStorage unavailable; cannot decrypt ${encPath}`);

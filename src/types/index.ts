@@ -494,6 +494,7 @@ export interface ElectronAPI {
   writeData: (data: { filename: string; content: string }) => Promise<boolean>;
   listDataDir: (subDir: string) => Promise<string[]>;
   deleteDataFile: (filename: string) => Promise<boolean>;
+  setWriteInProgress: (value: boolean) => Promise<boolean>;
   // Secrets
   readSecrets: () => Promise<string | null>;
   writeSecrets: (data: { content: string }) => Promise<boolean>;
