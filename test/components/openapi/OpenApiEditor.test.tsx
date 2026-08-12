@@ -668,6 +668,29 @@ describe('OpenApiEditor', () => {
       expect(putTexts.length).toBeGreaterThanOrEqual(1);
     });
 
+    it('renders QUERY operations from an API spec with the QUERY method style', () => {
+      const querySpec = {
+        ...fullSpec,
+        paths: {
+          ...fullSpec.paths,
+          '/search': {
+            query: {
+              tags: ['users'],
+              summary: 'Search users with QUERY',
+              responses: { '200': { description: 'Successful response' } },
+            },
+          },
+        },
+      };
+
+      mockStores({ spec: querySpec });
+      render(<OpenApiEditor />);
+
+      const queryBadge = screen.getByText('query');
+      expect(queryBadge.className).toContain('bg-teal-500/20');
+      expect(screen.getByText('Search users with QUERY')).toBeDefined();
+    });
+
     it('shows endpoint paths', () => {
       mockStores();
       render(<OpenApiEditor />);

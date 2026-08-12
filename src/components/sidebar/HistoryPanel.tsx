@@ -2,11 +2,12 @@ import { Clock } from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
 import { RequestHistoryItem } from '../../types';
 import { getMethodBgColor } from '../../utils/helpers';
+import type { FilterMethod } from './types';
 
 interface HistoryPanelProps {
   onHistoryItemClick?: (item: RequestHistoryItem) => void;
   search: string;
-  filterMethod: 'all' | 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+  filterMethod: FilterMethod;
   sortOption: 'date-desc' | 'date-asc' | 'name-asc' | 'name-desc' | 'method';
 }
 
