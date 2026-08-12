@@ -104,7 +104,7 @@ export function buildGenerateRequestPrompt(description: string): AIMessage[] {
       content: `You are an expert API developer assistant integrated into a REST client application called Fetchy.
 When the user describes an API request in natural language, generate a valid JSON object with this exact structure:
 {
-  "method": "GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS",
+  "method": "GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS|QUERY",
   "url": "full URL with protocol",
   "headers": [{"key": "Content-Type", "value": "application/json", "enabled": true}],
   "params": [{"key": "param", "value": "value", "enabled": true}],

@@ -119,6 +119,21 @@ describe('parseCurlCommand — methods', () => {
     expect(result!.method).toBe('PATCH');
   });
 
+  it('parses QUERY with headers and a JSON body without aliasing the method', () => {
+    const result = parseCurlCommand(
+      `curl --request QUERY -H 'Content-Type: application/json' -H 'X-Query: enabled' -d '{"filter":"active"}' https://api.example.com/query`
+    );
+
+    expect(result).not.toBeNull();
+    expect(result!.method).toBe('QUERY');
+    expect(result!.headers).toEqual(expect.arrayContaining([
+      expect.objectContaining({ key: 'Content-Type', value: 'application/json', enabled: true }),
+      expect.objectContaining({ key: 'X-Query', value: 'enabled', enabled: true }),
+    ]));
+    expect(result!.body.type).toBe('json');
+    expect(JSON.parse(result!.body.raw!)).toEqual({ filter: 'active' });
+  });
+
   it('defaults to GET when no method specified', () => {
     const result = parseCurlCommand('curl https://api.example.com');
     expect(result!.method).toBe('GET');

@@ -27,11 +27,11 @@ import type {
 
 // ─── HttpMethod ───────────────────────────────────────────────────────────────
 
-const HTTP_METHODS: HttpMethod[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
+const HTTP_METHODS: HttpMethod[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'QUERY'];
 
 describe('HttpMethod', () => {
-  it('includes all 7 standard HTTP methods', () => {
-    expect(HTTP_METHODS).toHaveLength(7);
+  it('includes all 8 supported HTTP methods', () => {
+    expect(HTTP_METHODS).toHaveLength(8);
   });
 
   it('includes GET, POST, PUT, PATCH, DELETE', () => {
@@ -45,6 +45,10 @@ describe('HttpMethod', () => {
   it('includes HEAD and OPTIONS', () => {
     expect(HTTP_METHODS).toContain('HEAD');
     expect(HTTP_METHODS).toContain('OPTIONS');
+  });
+
+  it('includes QUERY', () => {
+    expect(HTTP_METHODS).toContain('QUERY');
   });
 });
 

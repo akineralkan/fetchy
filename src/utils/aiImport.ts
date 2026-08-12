@@ -27,7 +27,7 @@ const COLLECTION_SCHEMA = `{
   "requests": [
     {
       "name": "string — descriptive request name",
-      "method": "GET | POST | PUT | PATCH | DELETE | HEAD | OPTIONS",
+      "method": "GET | POST | PUT | PATCH | DELETE | HEAD | OPTIONS | QUERY",
       "url": "string — full URL with protocol",
       "headers": [
         { "key": "string", "value": "string", "enabled": true, "description": "" }
@@ -77,7 +77,7 @@ const ENVIRONMENT_SCHEMA = `{
 
 const REQUEST_SCHEMA = `{
   "name": "string — descriptive request name",
-  "method": "GET | POST | PUT | PATCH | DELETE | HEAD | OPTIONS",
+  "method": "GET | POST | PUT | PATCH | DELETE | HEAD | OPTIONS | QUERY",
   "url": "string — full URL with protocol",
   "headers": [
     { "key": "string", "value": "string", "enabled": true, "description": "" }

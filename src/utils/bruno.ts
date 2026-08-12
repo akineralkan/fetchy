@@ -463,7 +463,7 @@ const convertBrunoJsonRequest = (item: BrunoJsonItem): ApiRequest | null => {
   }
 
   const method = (req.method?.toUpperCase() || 'GET') as HttpMethod;
-  const validMethods: HttpMethod[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
+  const validMethods: HttpMethod[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'QUERY'];
   const safeMethod = validMethods.includes(method) ? method : 'GET';
 
   const params: KeyValue[] = (req.params || []).map((p) => ({
@@ -521,7 +521,7 @@ const convertBrunoJsonItems = (
 const convertBruFileToRequest = (content: string, name?: string): ApiRequest => {
   const parsed = parseBruRequestFile(content);
   const method = (parsed.method || 'GET') as HttpMethod;
-  const validMethods: HttpMethod[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
+  const validMethods: HttpMethod[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'QUERY'];
   const safeMethod = validMethods.includes(method) ? method : 'GET';
 
   // Merge query params and path params into params

@@ -455,6 +455,19 @@ body.black-theme {
     @apply bg-pink-600/20 text-pink-700;
   }
 
+  .method-query {
+    @apply bg-teal-500/20 text-teal-400;
+  }
+  body.light-theme .method-query {
+    background-color: rgba(0, 191, 165, 0.15);
+    color: #00bfa5;
+  }
+  body.ocean-theme .method-query,
+  body.earth-theme .method-query,
+  body.candy-theme .method-query {
+    @apply bg-teal-600/20 text-teal-700;
+  }
+
   /* AI Feature Colors — uses CSS variable so all themes (including custom) are respected */
   .ai-text {
     color: var(--ai-color);

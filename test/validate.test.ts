@@ -279,13 +279,13 @@ describe('requireDirectoryPath', () => {
 
 describe('requireHttpMethod', () => {
   it('accepts all standard HTTP methods (uppercase)', () => {
-    for (const m of ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS']) {
+    for (const m of ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'QUERY']) {
       expect(requireHttpMethod(m, 'method')).toBe(m);
     }
   });
 
   it('accepts lowercase methods', () => {
-    for (const m of ['get', 'post', 'put', 'patch', 'delete', 'head', 'options']) {
+    for (const m of ['get', 'post', 'put', 'patch', 'delete', 'head', 'options', 'query']) {
       expect(requireHttpMethod(m, 'method')).toBe(m);
     }
   });

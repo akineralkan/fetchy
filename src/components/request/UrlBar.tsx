@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import VariableInput from '../VariableInput';
 import Tooltip from '../Tooltip';
 
-const HTTP_METHODS: HttpMethod[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
+const HTTP_METHODS: HttpMethod[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'QUERY'];
 
 const CODE_LANGUAGES = [
   { id: 'curl', label: 'cURL', icon: '⚡' },

@@ -155,6 +155,11 @@ describe('buildGenerateRequestPrompt', () => {
     const msgs = buildGenerateRequestPrompt('test');
     expect(msgs[0].content).toContain('JSON');
   });
+
+  it('system message advertises QUERY as a supported method', () => {
+    const msgs = buildGenerateRequestPrompt('send a query request');
+    expect(msgs[0].content).toContain('QUERY');
+  });
 });
 
 // ─── buildGenerateScriptPrompt ────────────────────────────────────────────────

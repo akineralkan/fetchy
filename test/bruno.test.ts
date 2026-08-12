@@ -785,3 +785,71 @@ describe('importBrunoEnvironment — additional edge cases', () => {
     expect(envs[0].name).toBe('Bruno Environment');
   });
 });
+
+describe('importBrunoCollection — QUERY method support', () => {
+  it('preserves QUERY method, headers, params, and JSON body from Bruno JSON', () => {
+    const json = {
+      name: 'Bruno Query Collection',
+      items: [{
+        type: 'http-request',
+        name: 'Query Request',
+        request: {
+          method: 'QUERY',
+          url: 'https://api.example.com/query',
+          headers: { 'Content-Type': 'application/json', 'X-Query': 'enabled' },
+          params: [{ name: 'filter', value: 'active', enabled: true }],
+          body: { mode: 'json', json: '{"filter":"active"}' },
+        },
+      }],
+    };
+
+    const request = importBrunoCollection(JSON.stringify(json)).requests[0];
+
+    expect(request.method).toBe('QUERY');
+    expect(request.url).toBe('https://api.example.com/query');
+    expect(request.headers).toEqual(expect.arrayContaining([
+      expect.objectContaining({ key: 'Content-Type', value: 'application/json', enabled: true }),
+      expect.objectContaining({ key: 'X-Query', value: 'enabled', enabled: true }),
+    ]));
+    expect(request.params).toEqual([
+      expect.objectContaining({ key: 'filter', value: 'active', enabled: true }),
+    ]);
+    expect(request.body).toEqual({ type: 'json', raw: '{"filter":"active"}' });
+  });
+
+  it('parses QUERY from a Bruno http block without confusing the query params block', () => {
+    const bru = `meta {
+  name: Query HTTP Block
+  type: http
+}
+
+http {
+  url: https://api.example.com/query
+  method: QUERY
+}
+
+query {
+  filter: active
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {"filter":"active"}
+}
+`;
+
+    const request = importBrunoCollection(bru).requests[0];
+
+    expect(request.method).toBe('QUERY');
+    expect(request.params).toEqual([
+      expect.objectContaining({ key: 'filter', value: 'active', enabled: true }),
+    ]);
+    expect(request.headers).toEqual([
+      expect.objectContaining({ key: 'Content-Type', value: 'application/json', enabled: true }),
+    ]);
+    expect(request.body).toEqual({ type: 'json', raw: '{"filter":"active"}' });
+  });
+});

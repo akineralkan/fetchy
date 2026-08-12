@@ -65,7 +65,7 @@ function convertHoppscotchScript(script) {
 // ---------------------------------------------------------------------------
 // Clean a single request — keep Hoppscotch field names, strip noise
 // ---------------------------------------------------------------------------
-const VALID_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
+const VALID_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'QUERY'];
 
 function cleanRequest(req) {
   const method = (req.method || 'GET').toUpperCase();
