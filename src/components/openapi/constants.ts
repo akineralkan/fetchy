@@ -384,5 +384,6 @@ export const METHOD_COLORS: Record<string, string> = {
   delete: 'bg-red-500/20 text-red-400 border-red-500/30',
   head: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
   options: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
+  query: 'bg-teal-500/20 text-teal-400 border-teal-500/30',
 };
 

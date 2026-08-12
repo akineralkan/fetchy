@@ -985,3 +985,51 @@ describe('importPostmanCollection – GH-94 missing optional fields', () => {
     expect(req.body.type).toBe('none');
   });
 });
+
+describe('Postman QUERY method round-trip', () => {
+  it('preserves QUERY method, headers, params, and JSON body through import/export/import', () => {
+    const source = JSON.stringify({
+      info: { name: 'Query Round Trip', schema: '' },
+      item: [{
+        name: 'Query Request',
+        request: {
+          method: 'QUERY',
+          url: {
+            raw: 'https://api.example.com/query',
+            query: [{ key: 'filter', value: 'active', disabled: false }],
+          },
+          header: [
+            { key: 'Content-Type', value: 'application/json', disabled: false },
+            { key: 'X-Query', value: 'enabled', disabled: false },
+          ],
+          body: {
+            mode: 'raw',
+            raw: '{"filter":"active"}',
+            options: { raw: { language: 'json' } },
+          },
+        },
+      }],
+    });
+
+    const imported = importPostmanCollection(source)!;
+    const importedRequest = imported.requests[0];
+    expect(importedRequest.method).toBe('QUERY');
+    expect(importedRequest.body).toEqual({ type: 'json', raw: '{"filter":"active"}' });
+
+    const exported = JSON.parse(exportToPostman(imported));
+    const exportedRequest = exported.item[0].request;
+    expect(exportedRequest.method).toBe('QUERY');
+    expect(exportedRequest.url.query).toEqual([
+      expect.objectContaining({ key: 'filter', value: 'active', disabled: false }),
+    ]);
+    expect(exportedRequest.header).toEqual(expect.arrayContaining([
+      expect.objectContaining({ key: 'Content-Type', value: 'application/json', disabled: false }),
+      expect.objectContaining({ key: 'X-Query', value: 'enabled', disabled: false }),
+    ]));
+    expect(exportedRequest.body).toMatchObject({ mode: 'raw', raw: '{"filter":"active"}' });
+
+    const reimported = importPostmanCollection(JSON.stringify(exported))!;
+    expect(reimported.requests[0].method).toBe('QUERY');
+    expect(reimported.requests[0].body).toEqual({ type: 'json', raw: '{"filter":"active"}' });
+  });
+});

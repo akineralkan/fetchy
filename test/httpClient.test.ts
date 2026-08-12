@@ -300,6 +300,35 @@ describe('executeRequest', () => {
     globalThis.fetch = originalFetch;
   });
 
+  it('sends QUERY as a real method with a JSON body, query params, and headers in browser mode', async () => {
+    const req = {
+      ...baseRequest,
+      method: 'QUERY' as const,
+      params: [{ id: '1', key: 'filter', value: 'active', enabled: true }],
+      headers: [{ id: '2', key: 'X-Request-Class', value: 'query', enabled: true }],
+      body: { type: 'json' as const, raw: '{"filter":"active"}' },
+    };
+
+    const originalFetch = globalThis.fetch;
+    const fetchMock = vi.fn().mockResolvedValue({
+      json: () => Promise.resolve({ status: 200, statusText: 'OK', headers: {}, body: '', time: 0, size: 0 }),
+    });
+    globalThis.fetch = fetchMock;
+
+    await executeRequest({ request: req });
+    const callBody = JSON.parse(fetchMock.mock.calls[0][1].body);
+
+    expect(callBody.method).toBe('QUERY');
+    expect(callBody.url).toBe('https://api.example.com/data?filter=active');
+    expect(callBody.headers).toEqual({
+      'X-Request-Class': 'query',
+      'Content-Type': 'application/json',
+    });
+    expect(callBody.body).toBe('{"filter":"active"}');
+
+    globalThis.fetch = originalFetch;
+  });
+
   it('sets Content-Type for urlencoded body', async () => {
     const req = {
       ...baseRequest,
@@ -486,6 +515,63 @@ describe('executeRequest', () => {
       }),
     );
   });
+
+  it('sends QUERY as a real method with body and headers through Electron IPC', async () => {
+    const req = {
+      ...baseRequest,
+      method: 'QUERY' as const,
+      headers: [
+        { id: '1', key: 'Content-Type', value: 'application/query+json', enabled: true },
+        { id: '2', key: 'X-Request-Class', value: 'query', enabled: true },
+      ],
+      body: { type: 'json' as const, raw: '{"filter":"active"}' },
+    };
+    const httpRequest = vi.fn().mockResolvedValue({
+      status: 200,
+      statusText: 'OK',
+      headers: {},
+      body: '{}',
+      time: 10,
+      size: 2,
+    });
+
+    (globalThis as any).window = {
+      electronAPI: {
+        httpRequest,
+        abortHttpRequest: vi.fn(),
+      },
+    };
+
+    await executeRequest({ request: req });
+
+    expect(httpRequest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        method: 'QUERY',
+        body: '{"filter":"active"}',
+        headers: {
+          'Content-Type': 'application/query+json',
+          'X-Request-Class': 'query',
+        },
+      }),
+    );
+  });
+
+  it.each(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'] as const)(
+    'continues to send existing %s methods unchanged',
+    async (method) => {
+      const originalFetch = globalThis.fetch;
+      const fetchMock = vi.fn().mockResolvedValue({
+        json: () => Promise.resolve({ status: 200, statusText: 'OK', headers: {}, body: '', time: 0, size: 0 }),
+      });
+      globalThis.fetch = fetchMock;
+
+      await executeRequest({ request: { ...baseRequest, method } as any });
+      const callBody = JSON.parse(fetchMock.mock.calls[0][1].body);
+      expect(callBody.method).toBe(method);
+
+      globalThis.fetch = originalFetch;
+    },
+  );
 
   it('sends form-data body as serialized entries in Electron mode', async () => {
     const req = {

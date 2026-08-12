@@ -103,7 +103,7 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
 
   // History filter and sort states
   const [historySearch, setHistorySearch] = useState('');
-  const [historyFilterMethod, setHistoryFilterMethod] = useState<'all' | 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'>('all');
+  const [historyFilterMethod, setHistoryFilterMethod] = useState<FilterMethod>('all');
   const [historySortOption, setHistorySortOption] = useState<'date-desc' | 'date-asc' | 'name-asc' | 'name-desc' | 'method'>('date-desc');
   const [showHistoryFilterMenu, setShowHistoryFilterMenu] = useState(false);
   const [apiFilterFormat, setApiFilterFormat] = useState<'all' | 'yaml' | 'json'>('all');
@@ -898,7 +898,7 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
                   <div className="fixed inset-0 z-40" onClick={() => setShowFilterMenu(false)} />
                   <div className="absolute right-0 top-full mt-1 z-50 bg-fetchy-dropdown border border-fetchy-border rounded-lg shadow-xl py-2 min-w-[180px]">
                     <div className="px-3 py-1 text-xs font-medium text-fetchy-text-muted uppercase">Filter by Method</div>
-                    {(['all', 'GET', 'POST', 'PUT', 'PATCH', 'DELETE'] as const).map((method) => (
+                    {(['all', 'GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'QUERY'] as const).map((method) => (
                       <button
                         key={method}
                         className={`w-full px-3 py-1.5 text-left text-sm hover:bg-fetchy-border flex items-center gap-2 ${filterMethod === method ? 'text-fetchy-accent' : ''}`}
@@ -1012,7 +1012,7 @@ export default function Sidebar({ onImport, onHistoryItemClick }: SidebarProps) 
                   <div className="fixed inset-0 z-40" onClick={() => setShowHistoryFilterMenu(false)} />
                   <div className="absolute right-0 top-full mt-1 z-50 bg-fetchy-dropdown border border-fetchy-border rounded-lg shadow-xl py-2 min-w-[180px]">
                     <div className="px-3 py-1 text-xs font-medium text-fetchy-text-muted uppercase">Filter by Method</div>
-                    {(['all', 'GET', 'POST', 'PUT', 'PATCH', 'DELETE'] as const).map((method) => (
+                    {(['all', 'GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'QUERY'] as const).map((method) => (
                       <button
                         key={method}
                         className={`w-full px-3 py-1.5 text-left text-sm hover:bg-fetchy-border flex items-center gap-2 ${historyFilterMethod === method ? 'text-fetchy-accent' : ''}`}

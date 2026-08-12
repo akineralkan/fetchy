@@ -141,8 +141,8 @@ function requireDirectoryPath(value, name) {
  * Validate an HTTP method.
  */
 const ALLOWED_METHODS = new Set([
-  'GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS',
-  'get', 'post', 'put', 'patch', 'delete', 'head', 'options',
+  'GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'QUERY',
+  'get', 'post', 'put', 'patch', 'delete', 'head', 'options', 'query',
 ]);
 
 function requireHttpMethod(value, name) {

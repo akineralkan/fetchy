@@ -290,6 +290,40 @@ describe('prepareForWrite', () => {
     expect(() => prepareForWrite(null)).not.toThrow();
     expect(() => prepareForWrite({})).not.toThrow();
   });
+
+  it('preserves QUERY method, headers, and body through history persistence round-trip', () => {
+    const stateWrapper = {
+      state: {
+        history: [{
+          id: 'history-query',
+          request: {
+            id: 'request-query',
+            name: 'Query History',
+            method: 'QUERY',
+            url: 'https://api.example.com/query',
+            headers: [{ id: 'h1', key: 'Content-Type', value: 'application/json', enabled: true }],
+            params: [{ id: 'p1', key: 'filter', value: 'active', enabled: true }],
+            body: { type: 'json', raw: '{"filter":"active"}' },
+            auth: { type: 'none' },
+          },
+          response: { status: 200, statusText: 'OK', headers: {}, body: '{}', time: 1, size: 2 },
+          timestamp: Date.now(),
+        }],
+        environments: [],
+        collections: [],
+      },
+    };
+
+    const { cleanState } = prepareForWrite(stateWrapper);
+    const restored = hydrateAfterRead(cleanState, {}).state.history[0].request;
+
+    expect(restored).toMatchObject({
+      method: 'QUERY',
+      headers: [expect.objectContaining({ key: 'Content-Type', value: 'application/json' })],
+      params: [expect.objectContaining({ key: 'filter', value: 'active' })],
+      body: { type: 'json', raw: '{"filter":"active"}' },
+    });
+  });
 });
 
 // ─── hydrateAfterRead ───────────────────────────────────────────────────────

@@ -132,6 +132,24 @@ describe('HistoryPanel – with history', () => {
     fireEvent.click(itemEl);
     expect(onClick).toHaveBeenCalledWith(item);
   });
+
+  it('filters history entries by QUERY method', () => {
+    const getItem = makeHistoryItem();
+    const queryItem = makeHistoryItem({
+      id: 'hist-query',
+      request: {
+        ...getItem.request,
+        name: 'Query Users',
+        method: 'QUERY',
+      },
+    });
+
+    setupStore([getItem, queryItem]);
+    render(<HistoryPanel {...defaultProps} filterMethod="QUERY" />);
+
+    expect(screen.getByText('Query Users')).toBeTruthy();
+    expect(screen.queryByText('Get Users')).toBeNull();
+  });
 });
 
 // ─── Time formatting ──────────────────────────────────────────────────────────

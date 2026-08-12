@@ -225,7 +225,7 @@ const convertHoppBody = (body?: HoppRESTBody): RequestBody => {
 
 const convertHoppRequest = (req: HoppRESTRequest): ApiRequest => {
   const method = (req.method?.toUpperCase() || 'GET') as HttpMethod;
-  const validMethods: HttpMethod[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
+  const validMethods: HttpMethod[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'QUERY'];
   const safeMethod = validMethods.includes(method) ? method : 'GET';
 
   const headers: KeyValue[] = (req.headers || []).map((h) => ({

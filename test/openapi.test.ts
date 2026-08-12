@@ -318,3 +318,41 @@ describe('importOpenAPISpec – tag grouping', () => {
     expect(result.folders.some(f => f.name === 'Primary')).toBe(true);
   });
 });
+
+describe('importOpenAPISpec – QUERY method support', () => {
+  it('imports QUERY operations with request body, headers, and query params', () => {
+    const spec = JSON.stringify({
+      openapi: '3.0.0',
+      info: { title: 'Query API', version: '1' },
+      paths: {
+        '/search': {
+          query: {
+            summary: 'Query search',
+            parameters: [
+              { name: 'filter', in: 'query', required: true },
+              { name: 'X-Query-Token', in: 'header', required: true },
+            ],
+            requestBody: {
+              content: { 'application/json': { schema: { type: 'object' } } },
+            },
+            responses: { '200': { description: 'OK' } },
+          },
+        },
+      },
+    });
+
+    const result = importOpenAPISpec(spec);
+    const request = result.requests[0] ?? result.folders[0].requests[0];
+
+    expect(request.method).toBe('QUERY');
+    expect(request.url).toContain('/search');
+    expect(request.params).toEqual([
+      expect.objectContaining({ key: 'filter', enabled: true }),
+    ]);
+    expect(request.headers).toEqual(expect.arrayContaining([
+      expect.objectContaining({ key: 'X-Query-Token', enabled: true }),
+      expect.objectContaining({ key: 'Content-Type', value: 'application/json', enabled: true }),
+    ]));
+    expect(request.body).toEqual({ type: 'json', raw: '{}' });
+  });
+});

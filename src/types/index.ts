@@ -1,6 +1,6 @@
 // Type definitions for the REST Client Application
 
-export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS';
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS' | 'QUERY';
 
 export type AppMode = 'rest' | 'graphql' | 'grpc' | 'websocket' | 'mqtt' | 'socketio' | 'sse';
 

@@ -93,6 +93,7 @@ describe('UrlBar', () => {
     expect(options).toContain('PATCH');
     expect(options).toContain('HEAD');
     expect(options).toContain('OPTIONS');
+    expect(options).toContain('QUERY');
   });
 
   it('calls onChange with new method when method select changes', () => {
@@ -101,6 +102,14 @@ describe('UrlBar', () => {
     render(<UrlBar {...defaultProps} onChange={onChange} />);
     fireEvent.change(screen.getByRole('combobox'), { target: { value: 'POST' } });
     expect(onChange).toHaveBeenCalledWith({ method: 'POST' });
+  });
+
+  it('calls onChange with QUERY when the method select changes', () => {
+    const onChange = vi.fn();
+    vi.mocked(useAppStore).mockReturnValue(baseStore() as never);
+    render(<UrlBar {...defaultProps} onChange={onChange} />);
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'QUERY' } });
+    expect(onChange).toHaveBeenCalledWith({ method: 'QUERY' });
   });
 
   it('renders URL input with the provided URL', () => {

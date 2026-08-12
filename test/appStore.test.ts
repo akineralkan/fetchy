@@ -309,6 +309,28 @@ describe('appStore – history', () => {
     expect(useAppStore.getState().history).toHaveLength(1);
   });
 
+  it('stores QUERY requests in history without aliasing the method', () => {
+    const { addToHistory } = useAppStore.getState();
+    addToHistory({
+      request: {
+        id: 'query-history-request',
+        name: 'Query History',
+        method: 'QUERY',
+        url: 'https://api.example.com/query',
+        headers: [{ id: 'h1', key: 'Content-Type', value: 'application/json', enabled: true }],
+        params: [],
+        body: { type: 'json', raw: '{"filter":"active"}' },
+        auth: { type: 'none' },
+      },
+      response: { status: 200, statusText: 'OK', headers: {}, body: '{}', time: 1, size: 2 },
+    });
+
+    const historyRequest = useAppStore.getState().history[0].request;
+    expect(historyRequest.method).toBe('QUERY');
+    expect(historyRequest.body).toEqual({ type: 'json', raw: '{"filter":"active"}' });
+    expect(historyRequest.headers[0]).toMatchObject({ key: 'Content-Type', value: 'application/json' });
+  });
+
   it('clearHistory removes all entries', () => {
     const { addToHistory, clearHistory } = useAppStore.getState();
     addToHistory({ method: 'GET', url: 'https://api.dev', status: 200 } as any);
@@ -409,6 +431,32 @@ describe('appStore – exportFullStorage / importFullStorage', () => {
       activeEnvironmentId: null,
     });
     expect(useAppStore.getState().collections.some(c => c.name === 'Imported Col')).toBe(true);
+  });
+
+  it('preserves QUERY request fields through full storage export/import', () => {
+    const { addCollection, addRequest, exportFullStorage, importFullStorage } = useAppStore.getState();
+    const collection = addCollection('Query Collection');
+    addRequest(collection.id, null, {
+      name: 'Query Request',
+      method: 'QUERY',
+      url: 'https://api.example.com/query',
+      headers: [{ id: 'h1', key: 'X-Query', value: 'enabled', enabled: true }],
+      params: [{ id: 'p1', key: 'filter', value: 'active', enabled: true }],
+      body: { type: 'json', raw: '{"filter":"active"}' },
+    });
+
+    const snapshot = exportFullStorage();
+    importFullStorage(snapshot);
+
+    const restored = useAppStore.getState().collections
+      .find(c => c.name === 'Query Collection')!.requests[0];
+    expect(restored).toMatchObject({
+      method: 'QUERY',
+      url: 'https://api.example.com/query',
+      headers: [expect.objectContaining({ key: 'X-Query', value: 'enabled', enabled: true })],
+      params: [expect.objectContaining({ key: 'filter', value: 'active', enabled: true })],
+      body: { type: 'json', raw: '{"filter":"active"}' },
+    });
   });
 });
 

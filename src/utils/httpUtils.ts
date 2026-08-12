@@ -25,6 +25,7 @@ export const getMethodColor = (method: HttpMethod): string => {
     DELETE: 'text-red-400',
     HEAD: 'text-gray-400',
     OPTIONS: 'text-pink-400',
+    QUERY: 'text-teal-400',
   };
   return colors[method] || 'text-gray-400';
 };
@@ -39,6 +40,7 @@ export const getMethodBgColor = (method: HttpMethod): string => {
     DELETE: 'method-delete',
     HEAD: 'method-head',
     OPTIONS: 'method-options',
+    QUERY: 'method-query',
   };
   return colors[method] || 'method-head';
 };
