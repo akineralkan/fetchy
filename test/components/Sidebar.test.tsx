@@ -71,7 +71,7 @@ vi.mock('../../src/components/sidebar/SortableRequestItem', () => ({
 }));
 
 vi.mock('../../src/components/sidebar/HistoryPanel', () => ({
-  default: ({ onHistoryItemClick }: any) => <div data-testid="history-panel">History Panel</div>,
+  default: ({ filterMethod }: any) => <div data-testid="history-panel" data-filter-method={filterMethod}>History Panel</div>,
 }));
 
 vi.mock('../../src/components/sidebar/ApiDocsPanel', () => ({
@@ -156,6 +156,8 @@ function mockStores(overrides: Record<string, any> = {}) {
     tabs: [],
     activeTabId: null,
     openApiDocuments: [],
+    history: [],
+    clearHistory: vi.fn(),
     addCollection,
     updateCollection,
     toggleCollectionExpanded,
@@ -171,7 +173,9 @@ function mockStores(overrides: Record<string, any> = {}) {
     moveFolder,
     ...overrides,
   };
-  vi.mocked(useAppStore).mockReturnValue(defaultState as any);
+  (useAppStore as any).mockImplementation((selector?: (state: typeof defaultState) => unknown) => (
+    selector ? selector(defaultState) : defaultState
+  ));
   (useAppStore as any).getState = vi.fn(() => defaultState);
 }
 
@@ -293,6 +297,7 @@ describe('Sidebar', () => {
     fireEvent.click(filterBtn!);
     expect(screen.getByText('Filter by Method')).toBeDefined();
     expect(screen.getByText('All Methods')).toBeDefined();
+    expect(screen.getByText('QUERY')).toBeDefined();
   });
 
   // 8. Sort option changes
@@ -594,20 +599,43 @@ describe('Sidebar', () => {
     expect(toggleCollectionExpanded).toHaveBeenCalledWith('col-1');
   });
 
-  it('filters requests by HTTP method', () => {
+  it('filters requests by QUERY method', () => {
     const req1 = makeRequest({ id: 'r1', name: 'Get Users', method: 'GET' });
-    const req2 = makeRequest({ id: 'r2', name: 'Create Post', method: 'POST' });
+    const req2 = makeRequest({ id: 'r2', name: 'Query Users', method: 'QUERY' });
     const col = makeCollection({ requests: [req1, req2] });
     mockStores({ collections: [col] });
     render(<Sidebar onImport={onImport} />);
     const filterBtn = screen.getAllByRole('button').find(b => b.querySelector('[data-testid="icon-filter"]'));
     fireEvent.click(filterBtn!);
     // Use getAllByText to find the filter menu option (a button with role='button' in the dropdown)
-    const getOptions = screen.getAllByText('GET');
-    const filterOption = getOptions.find(el => el.tagName === 'BUTTON');
+    const queryOptions = screen.getAllByText('QUERY');
+    const filterOption = queryOptions.find(el => el.tagName === 'BUTTON');
     fireEvent.click(filterOption!);
-    expect(screen.getByText('Get Users')).toBeDefined();
-    expect(screen.queryByText('Create Post')).toBeNull();
+    expect(screen.getByText('Query Users')).toBeDefined();
+    expect(screen.queryByText('Get Users')).toBeNull();
+  });
+
+  it('offers and applies the QUERY filter in request history', () => {
+    mockStores({
+      history: [{
+        id: 'history-query',
+        request: makeRequest({ method: 'QUERY' }),
+        timestamp: Date.now(),
+      }],
+    });
+    render(<Sidebar onImport={onImport} onHistoryItemClick={onHistoryItemClick} />);
+
+    const historyBtn = screen.getAllByRole('button').find(b => b.querySelector('[data-testid="icon-clock"]'));
+    fireEvent.click(historyBtn!);
+
+    const filterBtn = screen.getAllByRole('button').find(b => b.querySelector('[data-testid="icon-filter"]'));
+    fireEvent.click(filterBtn!);
+
+    const queryOptions = screen.getAllByText('QUERY');
+    const filterOption = queryOptions.find(el => el.tagName === 'BUTTON');
+    fireEvent.click(filterOption!);
+
+    expect(screen.getByTestId('history-panel').getAttribute('data-filter-method')).toBe('QUERY');
   });
 
   it('clears all collection filters', () => {

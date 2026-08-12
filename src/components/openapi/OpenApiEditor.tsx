@@ -367,7 +367,7 @@ export default function OpenApiEditor({ documentId }: OpenApiEditorProps) {
     const grouped = new Map<string, Array<{ path: string; method: string; operation: PathOperation; pathItem: Record<string, unknown> }>>();
 
     // Valid HTTP methods in OpenAPI
-    const httpMethods = new Set(['get', 'put', 'post', 'delete', 'options', 'head', 'patch', 'trace']);
+    const httpMethods = new Set(['get', 'put', 'post', 'delete', 'options', 'head', 'patch', 'trace', 'query']);
 
     for (const [path, methods] of Object.entries(parsedSpec.paths)) {
       for (const [method, operation] of Object.entries(methods)) {

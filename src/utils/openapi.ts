@@ -132,7 +132,7 @@ export const importOpenAPISpec = (content: string): Collection | null => {
       if (!methods || typeof methods !== 'object') continue;
 
       for (const [method, operation] of Object.entries(methods)) {
-        if (['get', 'post', 'put', 'patch', 'delete', 'head', 'options'].includes(method.toLowerCase())) {
+        if (['get', 'post', 'put', 'patch', 'delete', 'head', 'options', 'query'].includes(method.toLowerCase())) {
           const request = convertOpenAPIOperation(path, method, operation as OpenAPIOperation, baseUrl);
 
           const tags = (operation as OpenAPIOperation).tags;

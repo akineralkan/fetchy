@@ -76,8 +76,12 @@ describe('getMethodColor', () => {
     expect(getMethodColor('DELETE')).toContain('red');
   });
 
+  it('returns teal for QUERY', () => {
+    expect(getMethodColor('QUERY')).toBe('text-teal-400');
+  });
+
   it('returns a color for every standard method', () => {
-    const methods: HttpMethod[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
+    const methods: HttpMethod[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'QUERY'];
     methods.forEach(method => {
       expect(getMethodColor(method)).toBeTruthy();
     });
@@ -88,11 +92,15 @@ describe('getMethodColor', () => {
 
 describe('getMethodBgColor', () => {
   it('returns a CSS class for each standard method', () => {
-    const methods: HttpMethod[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
+    const methods: HttpMethod[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'QUERY'];
     methods.forEach(method => {
       const cls = getMethodBgColor(method);
       expect(cls).toMatch(/^method-/);
     });
+  });
+
+  it('returns the QUERY badge class', () => {
+    expect(getMethodBgColor('QUERY')).toBe('method-query');
   });
 });
 

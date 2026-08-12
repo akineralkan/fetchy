@@ -112,6 +112,13 @@ describe('buildRequestConversionPrompt', () => {
     const msgs = buildRequestConversionPrompt('data');
     expect(msgs[0].content).toContain('Request');
   });
+
+  it('system schema lists QUERY as a supported method', () => {
+    const collectionPrompt = buildCollectionConversionPrompt('data');
+    const requestPrompt = buildRequestConversionPrompt('data');
+    expect(collectionPrompt[0].content).toContain('QUERY');
+    expect(requestPrompt[0].content).toContain('QUERY');
+  });
 });
 
 // ─── aiConvertCollection ──────────────────────────────────────────────────────

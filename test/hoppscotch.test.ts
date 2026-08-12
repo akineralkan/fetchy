@@ -2,8 +2,10 @@
  * Tests for Hoppscotch collection and environment import parsers.
  */
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'fs';
+import { execFileSync } from 'child_process';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import { join } from 'path';
+import { tmpdir } from 'os';
 import { importHoppscotchCollection, importHoppscotchEnvironment } from '../src/utils/hoppscotch';
 
 const fixturesDir = join(__dirname, 'data');
@@ -523,5 +525,64 @@ describe('importHoppscotchEnvironment — additional branch coverage', () => {
     }));
     expect(result[0].variables[0].value).toBe('fromValue');
     expect(result[0].variables[0].initialValue).toBe('fromValue');
+  });
+});
+
+describe('Hoppscotch QUERY method support', () => {
+  it('imports QUERY with body, headers, and params', () => {
+    const result = importHoppscotchCollection(JSON.stringify({
+      name: 'Query Collection',
+      requests: [{
+        name: 'Query Request',
+        method: 'QUERY',
+        endpoint: 'https://api.example.com/query',
+        params: [{ key: 'filter', value: 'active', active: true }],
+        headers: [{ key: 'Content-Type', value: 'application/json', active: true }],
+        body: { contentType: 'application/json', body: '{"filter":"active"}' },
+      }],
+    }));
+
+    const request = result[0].requests[0];
+    expect(request.method).toBe('QUERY');
+    expect(request.url).toBe('https://api.example.com/query');
+    expect(request.params).toEqual([
+      expect.objectContaining({ key: 'filter', value: 'active', enabled: true }),
+    ]);
+    expect(request.headers).toEqual([
+      expect.objectContaining({ key: 'Content-Type', value: 'application/json', enabled: true }),
+    ]);
+    expect(request.body).toEqual({ type: 'json', raw: '{"filter":"active"}' });
+  });
+
+  it('keeps QUERY through the Hoppscotch conversion script', () => {
+    const workDir = mkdtempSync(join(tmpdir(), 'fetchy-hoppscotch-query-'));
+    const inputPath = join(workDir, 'input.json');
+    const outputPath = join(workDir, 'output.json');
+    const scriptPath = join(__dirname, '..', 'scripts', 'convert-hoppscotch.js');
+
+    try {
+      writeFileSync(inputPath, JSON.stringify({
+        name: 'Converted Query Collection',
+        requests: [{
+          name: 'Converted Query',
+          method: 'QUERY',
+          endpoint: 'https://api.example.com/query',
+          headers: [{ key: 'X-Query', value: 'enabled', active: true }],
+          body: { contentType: 'application/json', body: '{"filter":"active"}' },
+        }],
+      }));
+
+      execFileSync(process.execPath, [scriptPath, inputPath, outputPath], { stdio: 'ignore' });
+      const converted = JSON.parse(readFileSync(outputPath, 'utf-8'));
+      const request = converted[0].requests[0];
+
+      expect(request.method).toBe('QUERY');
+      expect(request.headers).toEqual([
+        expect.objectContaining({ key: 'X-Query', value: 'enabled', active: true }),
+      ]);
+      expect(request.body).toEqual({ contentType: 'application/json', body: '{"filter":"active"}' });
+    } finally {
+      rmSync(workDir, { recursive: true, force: true });
+    }
   });
 });
