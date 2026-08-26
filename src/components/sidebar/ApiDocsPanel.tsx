@@ -18,9 +18,11 @@ import {
 } from '@dnd-kit/sortable';
 import { Plus, FileCode } from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
+import { usePreferencesStore } from '../../store/preferencesStore';
 import { OpenAPIDocument } from '../../types';
 import { importOpenAPISpec } from '../../utils/helpers';
 import { DEFAULT_OPENAPI_YAML } from '../openapi/constants';
+import ConfirmDialog from '../ConfirmDialog';
 import SortableApiDocItem from './SortableApiDocItem';
 
 interface ApiDocsPanelProps {
@@ -42,10 +44,16 @@ export default function ApiDocsPanel({ filteredApiDocuments, onResetSort }: ApiD
     updateTab,
   } = useAppStore();
 
+  const { preferences } = usePreferencesStore();
+  const confirmBeforeDelete = preferences.confirmBeforeDelete !== false;
+
   // Editing state (local to this panel)
   const [editingApiSpecId, setEditingApiSpecId] = useState<string | null>(null);
   const [editingApiSpecName, setEditingApiSpecName] = useState('');
   const apiSpecInputRef = useRef<HTMLInputElement>(null);
+
+  // Pending delete confirmation (#103)
+  const [pendingDeleteDoc, setPendingDeleteDoc] = useState<{ id: string; name: string } | null>(null);
 
   // DnD state (scoped to api-doc items)
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -161,7 +169,9 @@ export default function ApiDocsPanel({ filteredApiDocuments, onResetSort }: ApiD
                   }}
                   onDelete={(e) => {
                     e.stopPropagation();
-                    if (confirm('Delete this OpenAPI spec?')) {
+                    if (confirmBeforeDelete) {
+                      setPendingDeleteDoc({ id: doc.id, name: doc.name });
+                    } else {
                       deleteOpenApiDocument(doc.id);
                     }
                   }}
@@ -254,6 +264,17 @@ export default function ApiDocsPanel({ filteredApiDocuments, onResetSort }: ApiD
             )}
           </DragOverlay>
         </DndContext>
+      )}
+      {pendingDeleteDoc && (
+        <ConfirmDialog
+          title="Delete API Spec?"
+          itemName={pendingDeleteDoc.name}
+          onCancel={() => setPendingDeleteDoc(null)}
+          onConfirm={() => {
+            deleteOpenApiDocument(pendingDeleteDoc.id);
+            setPendingDeleteDoc(null);
+          }}
+        />
       )}
     </div>
   );

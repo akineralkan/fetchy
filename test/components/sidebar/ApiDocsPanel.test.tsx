@@ -8,11 +8,16 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import ApiDocsPanel from '../../../src/components/sidebar/ApiDocsPanel';
 import { useAppStore } from '../../../src/store/appStore';
+import { usePreferencesStore } from '../../../src/store/preferencesStore';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
 vi.mock('../../../src/store/appStore', () => ({
   useAppStore: vi.fn(),
+}));
+
+vi.mock('../../../src/store/preferencesStore', () => ({
+  usePreferencesStore: vi.fn(),
 }));
 
 vi.mock('@dnd-kit/core', () => ({
@@ -52,20 +57,36 @@ vi.mock('../../../src/components/openapi/constants', () => ({
 }));
 
 vi.mock('../../../src/components/sidebar/SortableApiDocItem', () => ({
-  default: ({ doc, onClick }: { doc: any; onClick: () => void }) => (
+  default: ({ doc, onClick, onDelete }: { doc: any; onClick: () => void; onDelete: (event: any) => void }) => (
     <div data-testid={`api-doc-${doc.id}`} onClick={onClick}>
       {doc.name}
+      <button
+        type="button"
+        aria-label={`Delete ${doc.name}`}
+        onClick={(event) => {
+          event.stopPropagation();
+          onDelete(event);
+        }}
+      >
+        Delete
+      </button>
     </div>
   ),
 }));
 
 const mockUseAppStore = useAppStore as ReturnType<typeof vi.fn>;
+const mockUsePreferencesStore = usePreferencesStore as ReturnType<typeof vi.fn>;
+const savePreferences = vi.fn();
 
 function makeDoc(id: string, name: string) {
   return { id, name, content: '...', createdAt: Date.now() };
 }
 
 function setupStore(overrides?: object) {
+  mockUsePreferencesStore.mockReturnValue({
+    preferences: { confirmBeforeDelete: true },
+    savePreferences,
+  });
   const defaults = {
     openApiDocuments: [],
     addOpenApiDocument: vi.fn(),
@@ -104,6 +125,35 @@ describe('ApiDocsPanel', () => {
     render(<ApiDocsPanel filteredApiDocuments={docs} onResetSort={vi.fn()} />);
     expect(screen.getByText('Petstore API')).toBeTruthy();
     expect(screen.getByText('Users API')).toBeTruthy();
+  });
+
+  it('asks for confirmation before deleting an API spec', () => {
+    const deleteOpenApiDocument = vi.fn();
+    const docs = [makeDoc('doc-1', 'Petstore API')];
+    setupStore({ openApiDocuments: docs, deleteOpenApiDocument });
+    render(<ApiDocsPanel filteredApiDocuments={docs} onResetSort={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete Petstore API' }));
+    expect(screen.getByText(/are you sure/i)).toBeTruthy();
+    expect(deleteOpenApiDocument).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: /^delete$/i }));
+    expect(deleteOpenApiDocument).toHaveBeenCalledWith('doc-1');
+  });
+
+  it('deletes an API spec directly when confirmation is disabled', () => {
+    const deleteOpenApiDocument = vi.fn();
+    const docs = [makeDoc('doc-1', 'Petstore API')];
+    setupStore({ openApiDocuments: docs, deleteOpenApiDocument });
+    mockUsePreferencesStore.mockReturnValue({
+      preferences: { confirmBeforeDelete: false },
+      savePreferences,
+    });
+    render(<ApiDocsPanel filteredApiDocuments={docs} onResetSort={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete Petstore API' }));
+    expect(deleteOpenApiDocument).toHaveBeenCalledWith('doc-1');
+    expect(screen.queryByText(/are you sure/i)).toBeNull();
   });
 
   it('calls addOpenApiDocument when add button is clicked', () => {

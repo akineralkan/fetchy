@@ -106,11 +106,11 @@ export default function VariableTooltip({ variableName, position, onClose }: Var
   return (
     <div
       ref={tooltipRef}
-      className="bg-fetchy-tooltip border border-fetchy-border rounded-lg shadow-xl min-w-[280px] max-w-[400px] overflow-hidden"
+      className="bg-fetchy-tooltip border border-fetchy-border rounded-lg shadow-xl min-w-[280px] max-w-[400px] max-h-[400px] flex flex-col overflow-hidden"
       style={tooltipStyle}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 bg-fetchy-card border-b border-fetchy-border">
+      <div className="flex items-center justify-between px-3 py-2 bg-fetchy-card border-b border-fetchy-border shrink-0">
         <div className="flex items-center gap-2">
           <span
             className={`font-mono text-sm ${
@@ -151,7 +151,7 @@ export default function VariableTooltip({ variableName, position, onClose }: Var
       </div>
 
       {/* Content */}
-      <div className="p-3">
+      <div className="p-3 overflow-y-auto">
         {isDefined ? (
           <>
             {/* Environment info */}

@@ -275,6 +275,10 @@ export default function SettingsModal({ isOpen, onClose, onOpenWorkspaces, onRes
                   <option value='vertical'>Down</option>
                 </select>
               </div>
+              <div className='flex items-center justify-between'>
+                <div><label className='text-sm text-gray-300'>Confirm Before Deleting</label><p className='text-xs text-gray-500'>Ask for confirmation when deleting requests, folders, collections or API specs</p></div>
+                <input type='checkbox' checked={preferences.confirmBeforeDelete ?? true} onChange={(e) => savePreferences({ confirmBeforeDelete: e.target.checked })} className='w-4 h-4 rounded border-[#2d2d44] bg-[#0f0f1a] text-purple-500 focus:ring-purple-500' />
+              </div>
             </div>
           </div>
 

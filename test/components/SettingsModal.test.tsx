@@ -45,7 +45,7 @@ const onOpenWorkspaces = vi.fn();
 
 function mockStores() {
   vi.mocked(usePreferencesStore).mockReturnValue({
-    preferences: { theme: 'dark', autosaveDelay: 1000, maxHistoryItems: 100, panelLayout: 'horizontal' },
+    preferences: { theme: 'dark', autosaveDelay: 1000, maxHistoryItems: 100, panelLayout: 'horizontal', confirmBeforeDelete: true },
     savePreferences,
     aiSettings: {
       enabled: false,
@@ -184,6 +184,29 @@ describe('SettingsModal', () => {
     const input = screen.getByDisplayValue('100');
     fireEvent.change(input, { target: { value: '200' } });
     expect(savePreferences).toHaveBeenCalledWith({ maxHistoryItems: 200 });
+  });
+
+  it('disables delete confirmations from General settings', () => {
+    mockStores();
+    render(<SettingsModal isOpen={true} onClose={onClose} onOpenWorkspaces={onOpenWorkspaces} />);
+    const checkbox = screen.getByRole('checkbox') as HTMLInputElement;
+    expect(checkbox.checked).toBe(true);
+    fireEvent.click(checkbox);
+    expect(savePreferences).toHaveBeenCalledWith({ confirmBeforeDelete: false });
+  });
+
+  it('re-enables delete confirmations from General settings', () => {
+    mockStores();
+    const current = vi.mocked(usePreferencesStore)();
+    vi.mocked(usePreferencesStore).mockReturnValue({
+      ...current,
+      preferences: { ...current.preferences, confirmBeforeDelete: false },
+    } as ReturnType<typeof usePreferencesStore>);
+    render(<SettingsModal isOpen={true} onClose={onClose} onOpenWorkspaces={onOpenWorkspaces} />);
+    const checkbox = screen.getByRole('checkbox') as HTMLInputElement;
+    expect(checkbox.checked).toBe(false);
+    fireEvent.click(checkbox);
+    expect(savePreferences).toHaveBeenCalledWith({ confirmBeforeDelete: true });
   });
 
   it('toggles AI enabled checkbox', () => {

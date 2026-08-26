@@ -38,6 +38,7 @@ const defaultPreferences: AppPreferences = {
   aiSettings: defaultAISettings, // Kept for backward-compat shape; stripped before saving
   proxy: { mode: 'system', url: '' },
   onboardingCompleted: false,
+  confirmBeforeDelete: true,
 };
 
 export const defaultJiraSettings: JiraSettings = {

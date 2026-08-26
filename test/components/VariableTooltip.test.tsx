@@ -71,6 +71,28 @@ describe('VariableTooltip', () => {
     expect(screen.getByText('https://api.dev')).toBeTruthy();
   });
 
+  it('keeps long values in a bounded scrollable dialog with actions visible', () => {
+    const longValue = 'long-value-'.repeat(200);
+    const env = makeEnv([{ id: 'v1', key: 'largeVar', value: longValue, enabled: true }]);
+    vi.mocked(useAppStore).mockReturnValue(
+      baseStore({
+        getActiveEnvironment: vi.fn(() => env),
+        environments: [env],
+        activeEnvironmentId: 'env-1',
+      }) as never
+    );
+    const { container } = render(
+      <VariableTooltip variableName="largeVar" position={position} onClose={vi.fn()} />
+    );
+
+    const tooltip = container.firstElementChild as HTMLElement;
+    expect(tooltip.className).toContain('max-h-[400px]');
+    expect(tooltip.querySelector('.overflow-y-auto')).not.toBeNull();
+    expect(screen.getByText(longValue)).toBeTruthy();
+    expect(screen.getByRole('button', { name: /copy/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /edit/i })).toBeTruthy();
+  });
+
   it('masks the value for secret variables', () => {
     const env = makeEnv([
       { id: 'v1', key: 'secretToken', value: 'super-secret', enabled: true, isSecret: true },

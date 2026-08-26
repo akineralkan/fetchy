@@ -287,6 +287,8 @@ export interface AppPreferences {
   keyboardShortcuts?: KeyboardShortcutsConfig;
   /** Whether the user has completed the interactive onboarding tour (#93) */
   onboardingCompleted?: boolean;
+  /** Whether Request/Collection/Folder/API Spec delete operations show a confirmation dialog (#103). Default: true */
+  confirmBeforeDelete?: boolean;
 }
 
 // OpenAPI types

@@ -40,6 +40,7 @@ beforeEach(() => {
       customThemes: [],
       proxy: { mode: 'system', url: '' },
       onboardingCompleted: false,
+      confirmBeforeDelete: true,
     } as any,
     aiSettings: { provider: 'openai', apiKey: '', model: '' } as any,
     jiraSettings: {
@@ -64,6 +65,11 @@ describe('preferencesStore – initial state', () => {
   it('has dark theme as default', () => {
     const { preferences } = usePreferencesStore.getState();
     expect(preferences.theme).toBe('dark');
+  });
+
+  it('has delete confirmation enabled by default', () => {
+    const { preferences } = usePreferencesStore.getState();
+    expect(preferences.confirmBeforeDelete).toBe(true);
   });
 
   it('isLoading starts as true', () => {
