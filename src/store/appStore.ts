@@ -633,11 +633,23 @@ export const useAppStore = create<AppStore>()(
         set(s => {
           const collectionIndex = s.collections.findIndex(c => c.id === collectionId);
           if (collectionIndex === -1) return;
+          const idx = s._entityIndex as any as EntityIndex;
 
-          // Add to root level of collection for simplicity
-          s.collections[collectionIndex].requests.push(newRequest);
-          // Register in index (at collection root)
-          indexRequest(s._entityIndex as any as EntityIndex, newRequest.id, collectionId, null);
+          // Insert the duplicate directly under the source request in its actual
+          // container (collection root or parent folder) instead of always
+          // appending to the collection root (#102).
+          const container = getRequestContainer(s.collections as Collection[], idx, requestId);
+          if (container) {
+            const sourceIndex = container.requests.findIndex(r => r.id === requestId);
+            const insertAt = sourceIndex === -1 ? container.requests.length : sourceIndex + 1;
+            container.requests.splice(insertAt, 0, newRequest);
+            const parentId = idx.requests.get(requestId)?.parentId ?? null;
+            indexRequest(idx, newRequest.id, collectionId, parentId);
+          } else {
+            // Fallback: append to collection root
+            s.collections[collectionIndex].requests.push(newRequest);
+            indexRequest(idx, newRequest.id, collectionId, null);
+          }
         });
       },
 

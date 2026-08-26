@@ -17,8 +17,10 @@ import {
   Settings,
 } from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
+import { usePreferencesStore } from '../../store/preferencesStore';
 import { RequestFolder, ApiRequest } from '../../types';
 import { exportToPostman } from '../../utils/helpers';
+import ConfirmDialog from '../ConfirmDialog';
 import type { ContextMenuState, SortOption } from './types';
 
 interface SidebarContextMenuProps {
@@ -69,10 +71,14 @@ export default function SidebarContextMenu({
     openTab,
   } = useAppStore();
 
+  const { preferences } = usePreferencesStore();
+  const confirmBeforeDelete = preferences.confirmBeforeDelete !== false;
+
   const [pendingDelete, setPendingDelete] = useState<{
-    type: 'collection' | 'folder';
+    type: 'collection' | 'folder' | 'request';
     collectionId: string;
     folderId?: string;
+    requestId?: string;
     name: string;
   } | null>(null);
 
@@ -195,7 +201,12 @@ export default function SidebarContextMenu({
               className="w-full px-3 py-2 text-left text-sm hover:bg-fetchy-border flex items-center gap-2 text-red-400"
               onClick={() => {
                 const name = collections.find(c => c.id === contextMenu.collectionId)?.name || 'this collection';
-                setPendingDelete({ type: 'collection', collectionId: contextMenu.collectionId, name });
+                if (confirmBeforeDelete) {
+                  setPendingDelete({ type: 'collection', collectionId: contextMenu.collectionId, name });
+                } else {
+                  deleteCollection(contextMenu.collectionId);
+                  closeContextMenu();
+                }
               }}
             >
               <Trash2 size={14} /> Delete
@@ -291,7 +302,12 @@ export default function SidebarContextMenu({
                 const collection = collections.find(c => c.id === contextMenu.collectionId);
                 const folder = collection ? findFolderById(collection.folders, contextMenu.folderId!) : null;
                 const name = folder?.name || 'this folder';
-                setPendingDelete({ type: 'folder', collectionId: contextMenu.collectionId, folderId: contextMenu.folderId!, name });
+                if (confirmBeforeDelete) {
+                  setPendingDelete({ type: 'folder', collectionId: contextMenu.collectionId, folderId: contextMenu.folderId!, name });
+                } else {
+                  deleteFolder(contextMenu.collectionId, contextMenu.folderId!);
+                  closeContextMenu();
+                }
               }}
             >
               <Trash2 size={14} /> Delete
@@ -445,8 +461,13 @@ export default function SidebarContextMenu({
               <button
                 className="w-full px-3 py-2 text-left text-sm hover:bg-fetchy-border flex items-center gap-2 text-red-400"
                 onClick={() => {
-                  deleteRequest(contextMenu.collectionId, contextMenu.requestId!);
-                  closeContextMenu();
+                  if (confirmBeforeDelete) {
+                    const name = parent.requests[requestIndex]?.name || 'this request';
+                    setPendingDelete({ type: 'request', collectionId: contextMenu.collectionId, requestId: contextMenu.requestId!, name });
+                  } else {
+                    deleteRequest(contextMenu.collectionId, contextMenu.requestId!);
+                    closeContextMenu();
+                  }
                 }}
               >
                 <Trash2 size={14} /> Delete
@@ -458,38 +479,24 @@ export default function SidebarContextMenu({
 
       {/* Delete confirmation dialog */}
       {pendingDelete && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60">
-          <div className="bg-fetchy-modal border border-fetchy-border rounded-lg shadow-2xl p-6 mx-4 max-w-sm w-full">
-            <h3 className="text-base font-semibold text-fetchy-text mb-2">
-              Delete {pendingDelete.type === 'collection' ? 'Collection' : 'Folder'}?
-            </h3>
-            <p className="text-sm text-fetchy-text-muted mb-5">
-              Are you sure you want to delete <span className="font-medium text-fetchy-text">"{pendingDelete.name}"</span>? This action cannot be undone.
-            </p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setPendingDelete(null)}
-                className="btn btn-secondary"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  if (pendingDelete.type === 'collection') {
-                    deleteCollection(pendingDelete.collectionId);
-                  } else {
-                    deleteFolder(pendingDelete.collectionId, pendingDelete.folderId!);
-                  }
-                  setPendingDelete(null);
-                  closeContextMenu();
-                }}
-                className="btn bg-red-600 hover:bg-red-700 text-white"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmDialog
+          title={`Delete ${
+            pendingDelete.type === 'collection' ? 'Collection' : pendingDelete.type === 'folder' ? 'Folder' : 'Request'
+          }?`}
+          itemName={pendingDelete.name}
+          onCancel={() => setPendingDelete(null)}
+          onConfirm={() => {
+            if (pendingDelete.type === 'collection') {
+              deleteCollection(pendingDelete.collectionId);
+            } else if (pendingDelete.type === 'folder') {
+              deleteFolder(pendingDelete.collectionId, pendingDelete.folderId!);
+            } else {
+              deleteRequest(pendingDelete.collectionId, pendingDelete.requestId!);
+            }
+            setPendingDelete(null);
+            closeContextMenu();
+          }}
+        />
       )}
     </>,
     document.body

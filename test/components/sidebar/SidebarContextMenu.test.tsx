@@ -8,12 +8,17 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import SidebarContextMenu from '../../../src/components/sidebar/SidebarContextMenu';
 import { useAppStore } from '../../../src/store/appStore';
+import { usePreferencesStore } from '../../../src/store/preferencesStore';
 import type { ContextMenuState } from '../../../src/components/sidebar/types';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
 vi.mock('../../../src/store/appStore', () => ({
   useAppStore: vi.fn(),
+}));
+
+vi.mock('../../../src/store/preferencesStore', () => ({
+  usePreferencesStore: vi.fn(),
 }));
 
 vi.mock('../../../src/utils/helpers', () => ({
@@ -27,6 +32,8 @@ if (typeof URL.createObjectURL === 'undefined') {
 }
 
 const mockUseAppStore = useAppStore as ReturnType<typeof vi.fn>;
+const mockUsePreferencesStore = usePreferencesStore as ReturnType<typeof vi.fn>;
+const savePreferences = vi.fn();
 
 function makeCollection(id: string, name: string) {
   return {
@@ -40,6 +47,10 @@ function makeCollection(id: string, name: string) {
 }
 
 function setupStore(overrides?: object) {
+  mockUsePreferencesStore.mockReturnValue({
+    preferences: { confirmBeforeDelete: true },
+    savePreferences,
+  });
   const defaults = {
     collections: [makeCollection('col-1', 'My Collection')],
     addRequest: vi.fn(),
@@ -183,7 +194,7 @@ describe('SidebarContextMenu – request', () => {
     expect(duplicateRequest).toHaveBeenCalled();
   });
 
-  it('calls deleteRequest when Delete is clicked on a request', () => {
+  it('calls deleteRequest when Delete is clicked on a request and confirmed', () => {
     const { deleteRequest } = setupStore({
       collections: [{
         ...makeCollection('col-1', 'My Collection'),
@@ -195,6 +206,11 @@ describe('SidebarContextMenu – request', () => {
     });
     render(<SidebarContextMenu contextMenu={makeRequestMenu()} {...defaultProps} />);
     fireEvent.click(screen.getByText(/delete/i));
+    // Deleting a request now asks for confirmation (#103) before calling deleteRequest
+    const confirmBtn = screen.getAllByText(/delete/i).find(
+      el => el.closest('.btn')?.className.includes('bg-red')
+    );
+    if (confirmBtn) fireEvent.click(confirmBtn);
     expect(deleteRequest).toHaveBeenCalledWith('col-1', 'req-1');
   });
 
@@ -318,6 +334,26 @@ describe('SidebarContextMenu – collection extended', () => {
     expect(store.deleteCollection).toHaveBeenCalledWith('col-1');
   });
 
+  it('deletes a collection without a dialog when confirmation is disabled', () => {
+    const store = setupStore();
+    mockUsePreferencesStore.mockReturnValue({
+      preferences: { confirmBeforeDelete: false },
+      savePreferences,
+    });
+    render(<SidebarContextMenu contextMenu={makeCollectionMenu()} {...defaultProps} />);
+    fireEvent.click(screen.getByRole('button', { name: /^delete$/i }));
+    expect(store.deleteCollection).toHaveBeenCalledWith('col-1');
+    expect(screen.queryByText(/are you sure/i)).toBeNull();
+  });
+
+  it('saves the preference when Dont ask me again is selected', () => {
+    setupStore();
+    render(<SidebarContextMenu contextMenu={makeCollectionMenu()} {...defaultProps} />);
+    fireEvent.click(screen.getByRole('button', { name: /^delete$/i }));
+    fireEvent.click(screen.getByRole('checkbox', { name: /don.t ask me again/i }));
+    expect(savePreferences).toHaveBeenCalledWith({ confirmBeforeDelete: false });
+  });
+
   it('cancels deletion when Cancel is clicked in the dialog', () => {
     const store = setupStore();
     render(<SidebarContextMenu contextMenu={makeCollectionMenu()} {...defaultProps} />);
@@ -407,6 +443,18 @@ describe('SidebarContextMenu – folder extended', () => {
     render(<SidebarContextMenu contextMenu={makeFolderMenu()} {...defaultProps} />);
     fireEvent.click(screen.getByText(/delete/i));
     expect(screen.getByText(/are you sure/i)).toBeTruthy();
+  });
+
+  it('confirms deletion of a folder', () => {
+    const store = setupStore({ collections: [folderCollection] });
+    render(<SidebarContextMenu contextMenu={makeFolderMenu()} {...defaultProps} />);
+    fireEvent.click(screen.getByText(/delete/i));
+    const confirmButton = screen.getAllByRole('button', { name: /^delete$/i }).find(
+      button => button.className.includes('bg-red')
+    );
+    expect(confirmButton).toBeDefined();
+    fireEvent.click(confirmButton!);
+    expect(store.deleteFolder).toHaveBeenCalledWith('col-1', 'folder-1');
   });
 
   it('calls setEditingId on folder Rename', () => {

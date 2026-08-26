@@ -190,12 +190,41 @@ describe('appStore – requests', () => {
   it('duplicateRequest creates a copy with a new id', () => {
     const { addCollection, addRequest, duplicateRequest } = useAppStore.getState();
     const col = addCollection('Col');
+    addRequest(col.id, null, { name: 'Before' });
     const req = addRequest(col.id, null, { name: 'Original' });
+    addRequest(col.id, null, { name: 'After' });
     duplicateRequest(col.id, req.id);
     const { collections } = useAppStore.getState();
-    expect(collections[0].requests).toHaveLength(2);
-    const copy = collections[0].requests[1];
+    expect(collections[0].requests.map(request => request.name)).toEqual([
+      'Before',
+      'Original',
+      'Original (Copy)',
+      'After',
+    ]);
+    const copy = collections[0].requests[2];
     expect(copy.id).not.toBe(req.id);
+  });
+
+  it('duplicateRequest inserts a copy next to a source inside its folder', () => {
+    const { addCollection, addFolder, addRequest, duplicateRequest } = useAppStore.getState();
+    const col = addCollection('Nested Col');
+    addFolder(col.id, null, 'Folder');
+    const folder = useAppStore.getState().collections[0].folders[0];
+    addRequest(col.id, folder.id, { name: 'Before Nested' });
+    const req = addRequest(col.id, folder.id, { name: 'Nested Original' });
+    addRequest(col.id, folder.id, { name: 'After Nested' });
+
+    duplicateRequest(col.id, req.id);
+
+    const updated = useAppStore.getState().collections[0];
+    expect(updated.requests).toHaveLength(0);
+    expect(updated.folders[0].requests.map(request => request.name)).toEqual([
+      'Before Nested',
+      'Nested Original',
+      'Nested Original (Copy)',
+      'After Nested',
+    ]);
+    expect(updated.folders[0].requests[2].id).not.toBe(req.id);
   });
 });
 

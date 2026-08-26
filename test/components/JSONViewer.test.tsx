@@ -85,10 +85,21 @@ describe('JSONViewer', () => {
     expect(screen.getByText('[]')).toBeDefined();
   });
 
-  it('truncates very long strings', () => {
+  it('does not truncate long strings in the response panel (#101)', () => {
     const longStr = JSON.stringify('a'.repeat(600));
     render(<JSONViewer data={longStr} />);
-    expect(screen.getByText(/\.\.\."/)).toBeDefined();
+    expect(screen.getByText(new RegExp('a'.repeat(600)))).toBeDefined();
+  });
+
+  it('renders the complete long value for a JSON field without truncation', () => {
+    const longValue = 'response-value-'.repeat(100);
+    const { container } = render(
+      <JSONViewer data={JSON.stringify({ payload: longValue })} />
+    );
+
+    expect(container.textContent).toContain('"payload"');
+    expect(container.textContent).toContain(longValue);
+    expect(container.textContent).not.toContain('...');
   });
 
   it('falls back to raw text for invalid JSON', () => {

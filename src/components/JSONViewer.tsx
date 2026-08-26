@@ -3,9 +3,7 @@ import { isJWT, decodeJWT } from '../utils/helpers';
 import JWTTooltip from './JWTTooltip';
 import {
   parseJsonSafely,
-  truncateJsonString,
   isLargeIntegerString,
-  STRING_TRUNCATE_MAX,
 } from '../utils/jsonViewerUtils';
 
 interface JSONViewerProps {
@@ -42,7 +40,7 @@ function JsonLeaf({ value }: { value: unknown }) {
         );
       }
     }
-    return <span className="json-string break-all">"{truncateJsonString(value, STRING_TRUNCATE_MAX)}"</span>;
+    return <span className="json-string break-all">"{value}"</span>;
   }
   return <span className="text-fetchy-text">{String(value)}</span>;
 }
